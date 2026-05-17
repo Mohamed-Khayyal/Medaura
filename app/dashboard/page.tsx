@@ -30,13 +30,14 @@ function Dashboard({ childern }: { childern: React.ReactNode }) {
   useEffect(() => {
     async function fetchDashboardData() {
       try {
-        const response = await fetch("/api/admin/dashboard", {
+        const response = await fetch("/api/admin/admin-stats", {
           credentials: "include",
         });
         const result = await response.json();
-        if (result.success) {
+        if (result?.success || result?.status === "success") {
           setDashboardData(result.data);
         }
+        console.log("Dashboard Data:", result.data);
       } catch (error) {
         console.error("Failed to fetch admin dashboard data:", error);
       } finally {
@@ -62,40 +63,23 @@ function Dashboard({ childern }: { childern: React.ReactNode }) {
     const itemDate = new Date(item.date);
     return itemDate >= range.from && itemDate <= range.to;
   });
+  const stats = dashboardData?.stats ?? dashboardData ?? {};
 
   return (
     <div className="flex w-full">
-      
       <div className="flex w-full flex-col bg-(--background) min-h-screen transition-colors duration-300">
-        
         <div className="p-6">
-
           <DashboardHeader range={range} setRange={setRange} />
 
           {/* Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-6">
-            
-            <StatsCard
-              title="المعاملات"
-              value={dashboardData?.stats?.totalStaff ?? 0}
-              percentage={12}
-              icon={<Wallet size={20} strokeWidth={2} className="text-white" />}
-              iconBg="bg-[#CC25B0]"
-              chartColor="#CC25B0"
-              data={[
-                { value: 10 },
-                { value: 20 },
-                { value: 15 },
-                { value: 25 },
-                { value: 22 },
-              ]}
-            />
-
             <StatsCard
               title=" إجمالي الأطباء"
-              value={dashboardData?.stats?.totalDoctors ?? 0}
+              value={stats?.totalDoctors ?? 0}
               percentage={18}
-              icon={<Stethoscope size={20} strokeWidth={2} className="text-white" />}
+              icon={
+                <Stethoscope size={20} strokeWidth={2} className="text-white" />
+              }
               iconBg="bg-[#6A1B9A]"
               chartColor="#6A1B9A"
               data={[
@@ -109,7 +93,7 @@ function Dashboard({ childern }: { childern: React.ReactNode }) {
 
             <StatsCard
               title="إجمالي المرضى"
-              value={dashboardData?.stats?.totalPatients ?? 0}
+              value={stats?.totalPatients ?? 0}
               percentage={20}
               icon={<User size={20} strokeWidth={2} className="text-white" />}
               iconBg="bg-[#1F6DB2]"
@@ -125,9 +109,11 @@ function Dashboard({ childern }: { childern: React.ReactNode }) {
 
             <StatsCard
               title="إجمالي العيادات"
-              value={dashboardData?.stats?.totalClinics ?? 0}
+              value={stats?.totalClinics ?? 0}
               percentage={-15}
-              icon={<Calendar size={20} strokeWidth={2} className="text-white" />}
+              icon={
+                <Calendar size={20} strokeWidth={2} className="text-white" />
+              }
               iconBg="bg-[#E65100]"
               chartColor="#E65100"
               data={[
@@ -138,18 +124,15 @@ function Dashboard({ childern }: { childern: React.ReactNode }) {
                 { value: 16 },
               ]}
             />
-
           </div>
 
           {/* Charts + Requests */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            
             <div className="lg:col-span-1">
               <ChartBar data={filteredData} />
             </div>
 
             <AppointsmentRequests requests={dashboardData?.pendingRequests} />
-
           </div>
 
           {/* Cards */}
@@ -161,7 +144,6 @@ function Dashboard({ childern }: { childern: React.ReactNode }) {
 
           {/* Table + Pie */}
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-8">
-            
             <div className="lg:col-span-2">
               <PatientsTable patients={dashboardData?.patients} />
             </div>
@@ -169,14 +151,12 @@ function Dashboard({ childern }: { childern: React.ReactNode }) {
             <div className="lg:col-span-1">
               <DepartmentsChart />
             </div>
-
           </div>
 
           {/* Appointments */}
           <div className="grid grid-cols-1 gap-6 mb-8">
             <AppointmentsTable appointments={dashboardData?.recentBookings} />
           </div>
-
         </div>
       </div>
     </div>

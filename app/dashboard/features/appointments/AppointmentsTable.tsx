@@ -1,11 +1,13 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { MoreVertical , ChevronRight , ChevronLeft } from "lucide-react";
-import { useRouter } from 'next/navigation';
+import { MoreVertical, ChevronRight, ChevronLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 type Appointment = {
   id: string;
+  patientId: string;
+  patientNumber?: string;
   name: string;
   type: string;
   doctor: string;
@@ -13,261 +15,179 @@ type Appointment = {
   date: string;
 };
 
+type AdminBooking = {
+  booking_id?: number | string;
+  id?: number | string;
+  booking_date?: string;
+  booking_from?: string;
+  booking_to?: string;
+  date_time?: string;
+  status?: string;
+  doctor_name?: string | null;
+  session_type?: string | null;
+  patient_id?: number | string;
+  patient_name?: string | null;
+  patient_number?: string | null;
+};
+
 type ApiListResult = {
   items: Appointment[];
   total: number;
 };
 
-const data: Appointment[] = [
-  {
-    id: "PT0025",
-    name: "محمد احمد",
-    type: "زيارة",
-    doctor: "د.احمد السيد",
-    status: "قريباً",
-    date: "25 Jun 2026, 09:00 AM to 10:00 AM",
-  },
-  {
-    id: "PT0024",
-    name: "بسمة احمد",
-    type: "استشارة",
-    doctor: "د.اميرة السيد",
-    status: "قريباً",
-    date: "27 Jun 2026, 10:30 AM to 11:30 AM",
-  },
-  {
-    id: "PT0023",
-    name: "احمد السيد",
-    type: "زيارة",
-    doctor: "د.محمود مجاهد",
-    status: "مكتمل",
-    date: "18 Jun 2026, 01:15 PM to 02:15 PM",
-  },
-  {
-    id: "PT0022",
-    name: "هند حسن",
-    type: "استشارة",
-    doctor: "د.محمد احمد",
-    status: "مكتمل",
-    date: "19 Jun 2026, 11:30 AM to 12:30 PM",
-  },
-  {
-    id: "PT0022",
-    name: "هند حسن",
-    type: "استشارة",
-    doctor: "د.محمد احمد",
-    status: "مكتمل",
-    date: "19 Jun 2026, 11:30 AM to 12:30 PM",
-  },
-  {
-    id: "PT0022",
-    name: "هند حسن",
-    type: "استشارة",
-    doctor: "د.محمد احمد",
-    status: "مكتمل",
-    date: "19 Jun 2026, 11:30 AM to 12:30 PM",
-  },
-  {
-    id: "PT0022",
-    name: "هند حسن",
-    type: "استشارة",
-    doctor: "د.محمد احمد",
-    status: "مكتمل",
-    date: "19 Jun 2026, 11:30 AM to 12:30 PM",
-  },
-  {
-    id: "PT0022",
-    name: "هند حسن",
-    type: "استشارة",
-    doctor: "د.محمد احمد",
-    status: "مكتمل",
-    date: "19 Jun 2026, 11:30 AM to 12:30 PM",
-  },
-  {
-    id: "PT0022",
-    name: "هند حسن",
-    type: "استشارة",
-    doctor: "د.محمد احمد",
-    status: "مكتمل",
-    date: "19 Jun 2026, 11:30 AM to 12:30 PM",
-  },
-  {
-    id: "PT0022",
-    name: "هند حسن",
-    type: "استشارة",
-    doctor: "د.محمد احمد",
-    status: "مكتمل",
-    date: "19 Jun 2026, 11:30 AM to 12:30 PM",
-  },
-  {
-    id: "PT0022",
-    name: "هند حسن",
-    type: "استشارة",
-    doctor: "د.محمد احمد",
-    status: "مكتمل",
-    date: "19 Jun 2026, 11:30 AM to 12:30 PM",
-  },
-  {
-    id: "PT0022",
-    name: "هند حسن",
-    type: "استشارة",
-    doctor: "د.محمد احمد",
-    status: "مكتمل",
-    date: "19 Jun 2026, 11:30 AM to 12:30 PM",
-  },
-  {
-    id: "PT0022",
-    name: "هند حسن",
-    type: "استشارة",
-    doctor: "د.محمد احمد",
-    status: "مكتمل",
-    date: "19 Jun 2026, 11:30 AM to 12:30 PM",
-  },
-  {
-    id: "PT0022",
-    name: "هند حسن",
-    type: "استشارة",
-    doctor: "د.محمد احمد",
-    status: "مكتمل",
-    date: "19 Jun 2026, 11:30 AM to 12:30 PM",
-  },
-  {
-    id: "PT0022",
-    name: "هند حسن",
-    type: "استشارة",
-    doctor: "د.محمد احمد",
-    status: "مكتمل",
-    date: "19 Jun 2026, 11:30 AM to 12:30 PM",
-  },
-  {
-    id: "PT0022",
-    name: "هند حسن",
-    type: "استشارة",
-    doctor: "د.محمد احمد",
-    status: "مكتمل",
-    date: "19 Jun 2026, 11:30 AM to 12:30 PM",
-  },
-  {
-    id: "PT0022",
-    name: "هند حسن",
-    type: "استشارة",
-    doctor: "د.محمد احمد",
-    status: "مكتمل",
-    date: "19 Jun 2026, 11:30 AM to 12:30 PM",
-  },
-  {
-    id: "PT0022",
-    name: "هند حسن",
-    type: "استشارة",
-    doctor: "د.محمد احمد",
-    status: "مكتمل",
-    date: "19 Jun 2026, 11:30 AM to 12:30 PM",
-  },
-  {
-    id: "PT0022",
-    name: "هند حسن",
-    type: "استشارة",
-    doctor: "د.محمد احمد",
-    status: "مكتمل",
-    date: "19 Jun 2026, 11:30 AM to 12:30 PM",
-  },
-  {
-    id: "PT0022",
-    name: "هند حسن",
-    type: "استشارة",
-    doctor: "د.محمد احمد",
-    status: "مكتمل",
-    date: "19 Jun 2026, 11:30 AM to 12:30 PM",
-  },
-  {
-    id: "PT0022",
-    name: "هند حسن",
-    type: "استشارة",
-    doctor: "د.محمد احمد",
-    status: "مكتمل",
-    date: "19 Jun 2026, 11:30 AM to 12:30 PM",
-  },
-  {
-    id: "PT0022",
-    name: "هند حسن",
-    type: "استشارة",
-    doctor: "د.محمد احمد",
-    status: "مكتمل",
-    date: "19 Jun 2026, 11:30 AM to 12:30 PM",
-  },
-  {
-    id: "PT0022",
-    name: "هند حسن",
-    type: "استشارة",
-    doctor: "د.محمد احمد",
-    status: "مكتمل",
-    date: "19 Jun 2026, 11:30 AM to 12:30 PM",
-  },
-  {
-    id: "PT0022",
-    name: "هند حسن",
-    type: "استشارة",
-    doctor: "د.محمد احمد",
-    status: "مكتمل",
-    date: "19 Jun 2026, 11:30 AM to 12:30 PM",
-  },
-];
-
 export async function fetchAppointmentsFromApi(
-  url = "/api/appointments",
+  url = "/api/admin/bookings",
   page = 1,
-  limit = 10
+  limit = 10,
 ): Promise<ApiListResult> {
   const q = new URL(
     url,
-    typeof window !== "undefined" ? window.location.origin : "http://localhost"
+    typeof window !== "undefined" ? window.location.origin : "http://localhost",
   );
   q.searchParams.set("page", String(page));
   q.searchParams.set("limit", String(limit));
 
   const res = await fetch(q.toString());
-  if (!res.ok)
-    throw new Error(`Failed to fetch appointments: ${res.status}`);
+  if (!res.ok) throw new Error(`Failed to fetch appointments: ${res.status}`);
 
-  const items = await res.json();
+  const result = await res.json();
   const totalHeader = res.headers.get("X-Total-Count");
+  const rawItems = Array.isArray(result)
+    ? result
+    : Array.isArray(result?.bookings)
+      ? result.bookings
+      : Array.isArray(result?.data)
+        ? result.data
+        : Array.isArray(result?.items)
+          ? result.items
+          : [];
+  const items = rawItems.map(normalizeAppointment);
 
   const total = totalHeader
     ? parseInt(totalHeader, 10)
-    : Array.isArray(items)
-    ? items.length
-    : 0;
+    : typeof result?.result === "number"
+      ? result.result
+      : items.length;
 
   return { items, total };
 }
 
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case "قريباً":
-      return "bg-purple-100 text-purple-600";
-    case "مكتمل":
-      return "bg-green-100 text-green-600";
-    default:
-      return "bg-gray-100 text-gray-600";
+function normalizeAppointment(item: Appointment | AdminBooking): Appointment {
+  if ("name" in item && "doctor" in item && "date" in item) {
+    return {
+      ...item,
+      patientId: item.patientId ?? item.id,
+      patientNumber: item.patientNumber ?? item.patientId ?? item.id,
+    };
   }
+
+  const booking = item as AdminBooking;
+  const date = (booking.date_time ?? booking.booking_date ?? "").slice(0, 10);
+
+  return {
+    id: String(booking.booking_id ?? booking.id ?? booking.patient_id ?? ""),
+    patientId: String(booking.patient_id ?? ""),
+    patientNumber:
+      booking.patient_number ??
+      (booking.patient_id !== undefined ? String(booking.patient_id) : ""),
+    name: booking.patient_name ?? "-",
+    type: booking.session_type ?? "-",
+    doctor: booking.doctor_name ?? "-",
+    status: booking.status ?? "-",
+    date: date || "-",
+  };
+}
+
+function formatDateOnly(value: string): string {
+  const trimmed = value?.trim();
+  if (!trimmed) return "-";
+
+  const date = new Date(trimmed);
+
+  if (isNaN(date.getTime())) return trimmed;
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+const getStatusColor = (status: string): React.CSSProperties => {
+  const normalized = status.trim().toLowerCase();
+
+  if (["pending", "قيد الانتظار"].includes(normalized)) {
+    return {
+      backgroundColor: "#fef9c2",
+      color: "#a65f00",
+      borderColor: "#fff085",
+    };
+  }
+
+  if (
+    ["confirmed", "approved", "مؤكد", "مؤكّد", "تمت الموافقة"].includes(
+      normalized,
+    )
+  ) {
+    return {
+      backgroundColor: "#dbeafe",
+      color: "#1d4ed8",
+      borderColor: "#bfdbfe",
+    };
+  }
+
+  if (["completed", "مكتمل", "مكتملة", "تمت", "منتهية"].includes(normalized)) {
+    return {
+      backgroundColor: "#dcfce7",
+      color: "#15803d",
+      borderColor: "#bbf7d0",
+    };
+  }
+
+  if (
+    [
+      "cancelled",
+      "canceled",
+      "ملغي",
+      "ملغى",
+      "أُلغي",
+      "اعتذر",
+      "مرفوض",
+    ].includes(normalized)
+  ) {
+    return {
+      backgroundColor: "#ffe2e2",
+      color: "#c10007",
+      borderColor: "#ffc9c9",
+    };
+  }
+
+  return {
+    backgroundColor: "#f3f4f6",
+    color: "#374151",
+    borderColor: "#e5e7eb",
+  };
 };
 
-export default function AppointmentsTable({ appointments: appointmentsProp }: { appointments?: Appointment[] }) {
-  const [appointments, setAppointments] = useState<Appointment[]>(appointmentsProp || []);
+export default function AppointmentsTable({
+  appointments: appointmentsProp,
+}: {
+  appointments?: (Appointment | AdminBooking)[];
+}) {
+  const [appointments, setAppointments] = useState<Appointment[]>(
+    appointmentsProp?.map(normalizeAppointment) || [],
+  );
   const [loading, setLoading] = useState<boolean>(false);
   const [page, setPage] = useState<number>(1);
   const [limit] = useState<number>(10);
-  const [total, setTotal] = useState<number>(appointmentsProp?.length || data.length);
+  const [total, setTotal] = useState<number>(appointmentsProp?.length || 0);
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
-  const [detailModal, setDetailModal] = useState<Appointment | null>(null);
-  const [editModal, setEditModal] = useState<Appointment | null>(null);
-  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
 
   const router = useRouter();
 
   useEffect(() => {
-    if (appointmentsProp) {
-      setAppointments(appointmentsProp);
+    if (appointmentsProp !== undefined) {
+      setAppointments(appointmentsProp.map(normalizeAppointment));
       setTotal(appointmentsProp.length);
     }
   }, [appointmentsProp]);
@@ -276,9 +196,9 @@ export default function AppointmentsTable({ appointments: appointmentsProp }: { 
     setLoading(true);
     try {
       const res = await fetchAppointmentsFromApi(
-        "/api/appointments",
+        "/api/admin/bookings",
         pg,
-        limit
+        limit,
       );
       if (res && Array.isArray(res.items)) {
         setAppointments(res.items);
@@ -292,17 +212,16 @@ export default function AppointmentsTable({ appointments: appointmentsProp }: { 
   };
 
   useEffect(() => {
+    if (appointmentsProp !== undefined) return;
     loadAppointments(page);
-  }, [page]);
-
-  const pageCount = Math.max(1, Math.ceil(total / limit));
+  }, [appointmentsProp, page]);
 
   const openMenu = (id: string) => {
     setMenuOpenId((prev) => (prev === id ? null : id));
   };
-    const pageSize = 5;
-    const totalPages = Math.ceil(appointments.length / pageSize);
-    const getPages = () => {
+  const pageSize = 5;
+  const totalPages = Math.max(1, Math.ceil(appointments.length / pageSize));
+  const getPages = () => {
     const pages: (number | string)[] = [];
 
     if (totalPages <= 3) {
@@ -325,13 +244,12 @@ export default function AppointmentsTable({ appointments: appointmentsProp }: { 
     return ["...", page - 1, page, page + 1, "..."];
   };
   const datas = useMemo(() => {
-    return appointments.length > 0 ? appointments : data;
+    return appointments;
   }, [appointments]);
-    const paginated = datas.slice((page - 1) * pageSize, page * pageSize);
+  const paginated = datas.slice((page - 1) * pageSize, page * pageSize);
 
   return (
     <div className="bg-(--card-bg) rounded-2xl p-5 shadow-sm border border-(--card-border) w-full">
-      
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold text-(--text-primary)">
@@ -343,7 +261,6 @@ export default function AppointmentsTable({ appointments: appointmentsProp }: { 
       <div className="overflow-hidden rounded-xl border border-(--card-border)">
         <div className=" sm:block overflow-x-auto">
           <table className="w-full min-w-max text-sm text-right">
-
             <thead className="bg-(--hover-bg) text-center text-(--text-secondary)">
               <tr>
                 <th className="px-4 py-3"></th>
@@ -372,14 +289,13 @@ export default function AppointmentsTable({ appointments: appointmentsProp }: { 
                   </td>
 
                   <td className="px-4 py-3 text-(--text-secondary)">
-                    {item.date}
+                    {formatDateOnly(item.date)}
                   </td>
 
                   <td className="px-4 py-3">
                     <span
-                      className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                        item.status
-                      )}`}
+                      className="inline-flex min-w-20 justify-center rounded-full border px-3 py-1 text-xs font-medium"
+                      style={getStatusColor(item.status)}
                     >
                       {item.status}
                     </span>
@@ -397,13 +313,15 @@ export default function AppointmentsTable({ appointments: appointmentsProp }: { 
                     {item.name}
                   </td>
 
-                  <td className="px-4 py-3 text-(--text-secondary)">
-                    {item.id}
+                  <td
+                    className="px-4 py-3 font-semibold text-(--text-primary)"
+                    dir="ltr"
+                  >
+                    {item.patientNumber || item.patientId || "-"}
                   </td>
                 </tr>
               ))}
             </tbody>
-
           </table>
         </div>
       </div>
@@ -411,7 +329,7 @@ export default function AppointmentsTable({ appointments: appointmentsProp }: { 
       {/* Pagination */}
       <div className="flex flex-col gap-3 mt-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-wrap items-center gap-2">
-            <button
+          <button
             onClick={() => setPage((p) => Math.max(p - 1, 1))}
             className=" cursor-pointer text-2xl flex items-center justify-center border border-(--input-border) rounded-md p-1 hover:bg-(--semi-card-bg) transition"
           >
@@ -435,7 +353,7 @@ export default function AppointmentsTable({ appointments: appointmentsProp }: { 
             </button>
           ))}
 
-         <button
+          <button
             onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
             className=" cursor-pointer text-2xl flex items-center justify-center border border-(--input-border) rounded-md p-1 hover:bg-(--semi-card-bg) transition"
           >
@@ -444,7 +362,7 @@ export default function AppointmentsTable({ appointments: appointmentsProp }: { 
         </div>
 
         <p className="text-sm text-(--text-secondary)">
-          عرض {page} -{" "} {totalPages} من أصل {datas.length} مريض
+          عرض {page} - {totalPages} من أصل {datas.length} مريض
         </p>
       </div>
     </div>

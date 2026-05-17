@@ -156,12 +156,33 @@ export const adminService = {
   },
 
   async listAllBookings(token: string) {
-    const res = await apiClient.get<ApiResponse<unknown[]>>("/api/admin/bookings", { token });
-    return res.data || [];
+    const res = await apiClient.get<
+      | ApiResponse<unknown[]>
+      | unknown[]
+      | {
+          status?: string;
+          bookings?: unknown[];
+          data?: unknown[];
+        }
+    >("/api/admin/bookings", { token });
+
+    if (Array.isArray(res)) {
+      return res;
+    }
+
+    if (Array.isArray(res.data)) {
+      return res.data;
+    }
+
+    if ("bookings" in res && Array.isArray(res.bookings)) {
+      return res.bookings;
+    }
+
+    return [];
   },
 
   async getDashboardStats(token: string) {
-    const res = await apiClient.get<ApiResponse<unknown>>("/api/admin/dashboard-stats", { token });
+    const res = await apiClient.get<ApiResponse<unknown>>("/api/admin/admin-stats", { token });
     return res.data;
   },
 

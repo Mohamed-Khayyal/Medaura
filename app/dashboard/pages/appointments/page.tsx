@@ -17,6 +17,8 @@ type Appointment = {
   patient_image?: string;
   full_name?: string;
   image?: string;
+  patient_id?: number | string;
+  patient_number?: string | null;
 };
 
 type ApiListResult = {
@@ -107,14 +109,43 @@ export async function fetchAppointmentsFromApi(
 }
 
 const getStatusColor = (status: string) => {
-  switch (status) {
-    case "قريباً":
-      return "bg-purple-100 text-purple-600";
-    case "مكتمل":
-      return "bg-green-100 text-green-600";
-    default:
-      return "bg-gray-100 text-gray-600";
+  const normalized = status.trim().toLowerCase();
+
+  if (["pending", "قيد الانتظار"].includes(normalized)) {
+    return "bg-[#FEF9C2] text-[#A65F00] border border-[#FFF085]";
   }
+
+  if (
+    ["confirmed", "approved", "مؤكد", "مؤكّد", "تمت الموافقة"].includes(
+      normalized,
+    )
+  ) {
+    return "bg-[#DBEAFE] text-[#1D4ED8] border border-[#BFDBFE]";
+  }
+
+  if (["completed", "مكتمل", "مكتملة", "تمت", "منتهية"].includes(normalized)) {
+    return "bg-[#DCFCE7] text-[#15803D] border border-[#BBF7D0]";
+  }
+
+  if (
+    [
+      "cancelled",
+      "canceled",
+      "ملغي",
+      "ملغى",
+      "أُلغي",
+      "اعتذر",
+      "مرفوض",
+    ].includes(normalized)
+  ) {
+    return "bg-[#FFE2E2] text-[#C10007] border border-[#FFC9C9]";
+  }
+
+  if (["قريباً", "قادمة", "قادم"].includes(normalized)) {
+    return "bg-[#E0E7FF] text-[#4338CA] border border-[#C7D2FE]";
+  }
+
+  return "bg-gray-100 text-gray-600 border border-gray-200";
 };
 
 export default function Appointments() {
@@ -245,8 +276,8 @@ export default function Appointments() {
                     <img src={item.patient_image || item.image || `https://i.pravatar.cc/100?u=${item.id}`} className=" w-9 h-9 rounded-full object-cover" alt="" />
                   </td>
 
-                  <td className="px-4 py-3 text-(--text-secondary)">
-                    {item.id}
+                  <td className="px-4 py-3 text-(--text-secondary)" dir="ltr">
+                    {item.patient_number || item.patient_id || item.id || "-"}
                   </td>
                 </tr>
               ))}
