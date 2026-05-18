@@ -358,8 +358,9 @@ export default function BookingPage() {
   }, []);
 
   useEffect(() => {
-    const handleLocaleChange: EventListener = (event) => {
-      setLocale((event as CustomEvent<string>).detail);
+    const handleLocaleChange = (event: Event) => {
+      const newLocale = (event as CustomEvent).detail as "ar" | "en";
+      setLocale(newLocale);
     };
     window.addEventListener("localeChange", handleLocaleChange);
     return () => window.removeEventListener("localeChange", handleLocaleChange);
