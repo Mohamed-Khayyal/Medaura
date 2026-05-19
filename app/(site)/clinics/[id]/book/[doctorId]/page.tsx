@@ -237,7 +237,7 @@ function RatingStars({
 
 function formatDisplayDate(date: string, locale: string) {
   if (!date) return "";
-  return new Intl.DateTimeFormat(locale === "ar" ? "ar-EG" : "en-US", {
+  return new Intl.DateTimeFormat(locale === "en" ? "ar-EG" : "en-US", {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -247,7 +247,7 @@ function formatDisplayDate(date: string, locale: string) {
 function formatWorkingDays(value: string, locale: string) {
   if (!value) return "";
   const dayMap =
-    locale === "ar"
+    locale === "en"
       ? {
           sun: "الاحد",
           mon: "الاثنين",
@@ -296,7 +296,7 @@ function formatWorkingDays(value: string, locale: string) {
     })
     .filter(Boolean);
 
-  const separator = locale === "ar" ? "، " : ", ";
+  const separator = locale === "en" ? "، " : ", ";
   return parts.join(separator);
 }
 
@@ -410,7 +410,7 @@ export default function BookingPage() {
         setProfileError(
           getErrorMessage(
             error,
-            locale === "ar"
+            locale === "en"
               ? "تعذر تحميل بيانات الطبيب."
               : "Failed to load staff profile.",
           ),
@@ -458,7 +458,7 @@ export default function BookingPage() {
         setSlotsError(
           getErrorMessage(
             error,
-            locale === "ar"
+            locale === "en"
               ? "تعذر تحميل المواعيد المتاحة."
               : "Failed to load available times.",
           ),
@@ -614,7 +614,7 @@ export default function BookingPage() {
 
     if (staffRatingValue < 1 || staffRatingValue > 5) {
       setStaffRatingSubmitError(
-        locale === "ar"
+        locale === "en"
           ? "برجاء اختيار تقييم من ١ إلى ٥."
           : "Please select a rating from 1 to 5.",
       );
@@ -649,7 +649,7 @@ export default function BookingPage() {
       }
 
       setStaffRatingSubmitSuccess(
-        locale === "ar"
+        locale === "en"
           ? "تم إرسال التقييم بنجاح."
           : "Rating submitted successfully.",
       );
@@ -661,7 +661,7 @@ export default function BookingPage() {
       setStaffRatingSubmitError(
         getErrorMessage(
           error,
-          locale === "ar" ? "تعذر إرسال التقييم." : "Failed to submit rating.",
+          locale === "en" ? "تعذر إرسال التقييم." : "Failed to submit rating.",
         ),
       );
     } finally {
@@ -675,7 +675,7 @@ export default function BookingPage() {
         type: "warning",
         title: t("booking.validation.alreadyBooked.title", locale),
         message:
-          locale === "ar"
+          locale === "en"
             ? "هذا الطبيب غير متاح للحجز حاليا."
             : "This staff member is not available for booking right now.",
       });
@@ -752,10 +752,10 @@ export default function BookingPage() {
       setValidationModalData({
         type: "warning",
         title:
-          locale === "ar" ? "تعذر إتمام الحجز" : "Could not complete booking",
+          locale === "en" ? "تعذر إتمام الحجز" : "Could not complete booking",
         message: getErrorMessage(
           error,
-          locale === "ar"
+          locale === "en"
             ? "حدث خطأ أثناء إنشاء الحجز."
             : "Something went wrong while creating the booking.",
         ),
@@ -770,7 +770,7 @@ export default function BookingPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p className="font-semibold text-[#001A6E]">
-          {locale === "ar" ? "جاري تحميل الملف..." : "Loading profile..."}
+          {locale === "en" ? "جاري تحميل الملف..." : "Loading profile..."}
         </p>
       </div>
     );
@@ -794,14 +794,14 @@ export default function BookingPage() {
           className="mb-8 flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-bold text-[#001A6E] shadow-sm transition hover:bg-[#eef3ff]"
         >
           <ArrowRight
-            className={`w-5 h-5 ${locale === "ar" ? "" : "rotate-180"}`}
+            className={`w-5 h-5 ${locale === "en" ? "" : "rotate-180"}`}
           />
           {t("booking.back", locale)}
         </button>
 
         <div className="flex flex-col gap-8 lg:flex-row">
           <div
-            className={`flex-1 space-y-8 ${locale === "ar" ? "order-1 lg:order-1" : "order-1"}`}
+            className={`flex-1 space-y-8 ${locale === "en" ? "order-1 lg:order-1" : "order-1"}`}
           >
             <div className="rounded-[28px] border border-[#dce5f6] bg-white p-5 shadow-[0_18px_55px_rgba(20,45,100,0.08)] sm:p-7">
               <div className="flex flex-col items-start gap-8 md:flex-row">
@@ -826,7 +826,7 @@ export default function BookingPage() {
                       </h1>
                       {formattedWorkingDays && (
                         <span className="text-xs font-semibold text-[#001A6E] bg-blue-50 px-3 py-1 rounded-full">
-                          {locale === "ar"
+                          {locale === "en"
                             ? `ايام العمل: ${formattedWorkingDays}`
                             : `Working days: ${formattedWorkingDays}`}
                         </span>
@@ -855,7 +855,7 @@ export default function BookingPage() {
                       </p>
                       <p className="font-bold text-[#001A6E]">
                         {staff.consultation_price ?? "-"}{" "}
-                        {locale === "ar" ? "ج.م" : "EGP"}
+                        {locale === "en" ? "ج.م" : "EGP"}
                       </p>
                     </div>
                     <div className="rounded-2xl bg-[#f4f7ff] p-4">
@@ -890,7 +890,7 @@ export default function BookingPage() {
                       className="flex-1 rounded-2xl bg-[#001A6E] py-4 font-bold text-white shadow-lg shadow-blue-900/10 transition-colors hover:bg-[#162f80] disabled:cursor-not-allowed disabled:opacity-70"
                     >
                       {isBooking
-                        ? locale === "ar"
+                        ? locale === "en"
                           ? "جاري الحجز..."
                           : "Booking..."
                         : t("booking.bookNow", locale)}
@@ -910,7 +910,7 @@ export default function BookingPage() {
               </h2>
               <p className="text-gray-500 leading-relaxed text-sm">
                 {staff.bio ||
-                  (locale === "ar"
+                  (locale === "en"
                     ? "استشاري متخصص بخبرة واسعة في مجاله، يحرص على تقديم أفضل رعاية طبية للمرضى."
                     : "Specialized consultant with extensive experience, focused on providing high quality medical care.")}
               </p>
@@ -918,7 +918,7 @@ export default function BookingPage() {
           </div>
 
           <div
-            className={`lg:w-80 shrink-0 ${locale === "ar" ? "order-2 lg:order-2" : "order-2"}`}
+            className={`lg:w-80 shrink-0 ${locale === "en" ? "order-2 lg:order-2" : "order-2"}`}
           >
             <div className="sticky top-28 rounded-[28px] border border-[#dce5f6] bg-white p-6 shadow-[0_18px_55px_rgba(20,45,100,0.08)]">
               <h2 className="text-xl font-bold text-[#001A6E] mb-6">
@@ -991,7 +991,7 @@ export default function BookingPage() {
           <div className="mt-6">
             {staffRatingsLoading ? (
               <p className="text-center text-[#001A6E]">
-                {locale === "ar"
+                {locale === "en"
                   ? "جاري تحميل التقييمات..."
                   : "Loading ratings..."}
               </p>
@@ -999,7 +999,7 @@ export default function BookingPage() {
               <p className="text-center text-red-600">{staffRatingsError}</p>
             ) : staffRatings.length === 0 ? (
               <p className="text-center text-gray-400">
-                {locale === "ar" ? "لا توجد تقييمات بعد." : "No reviews yet."}
+                {locale === "en" ? "لا توجد تقييمات بعد." : "No reviews yet."}
               </p>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
@@ -1032,7 +1032,7 @@ export default function BookingPage() {
                       </div>
                       <p className="text-xs font-semibold text-gray-500">
                         {review.patient_name ||
-                          (locale === "ar" ? "مريض" : "Patient")}
+                          (locale === "en" ? "مريض" : "Patient")}
                       </p>
                     </div>
                     {review.comment ? (
@@ -1041,7 +1041,7 @@ export default function BookingPage() {
                       </p>
                     ) : (
                       <p className="text-gray-400 text-sm">
-                        {locale === "ar" ? "بدون تعليق" : "No comment"}
+                        {locale === "en" ? "بدون تعليق" : "No comment"}
                       </p>
                     )}
                   </div>
@@ -1059,10 +1059,10 @@ export default function BookingPage() {
                 disabled={staffRatingsPage <= 1}
                 className="rounded-full border border-[#dce5f6] px-4 py-2 text-sm font-semibold text-[#001A6E] disabled:opacity-50"
               >
-                {locale === "ar" ? "السابق" : "Previous"}
+                {locale === "en" ? "السابق" : "Previous"}
               </button>
               <span className="text-sm text-gray-500">
-                {locale === "ar"
+                {locale === "en"
                   ? `صفحة ${staffRatingsPage} من ${staffRatingsTotalPages}`
                   : `Page ${staffRatingsPage} of ${staffRatingsTotalPages}`}
               </span>
@@ -1075,14 +1075,14 @@ export default function BookingPage() {
                 disabled={staffRatingsPage >= staffRatingsTotalPages}
                 className="rounded-full border border-[#dce5f6] px-4 py-2 text-sm font-semibold text-[#001A6E] disabled:opacity-50"
               >
-                {locale === "ar" ? "التالي" : "Next"}
+                {locale === "en" ? "التالي" : "Next"}
               </button>
             </div>
           )}
 
           <div className="mt-10 border-t border-[#e6ecf6] pt-8 text-center">
             <h3 className="text-lg font-bold text-[#001A6E] mb-4">
-              {locale === "ar" ? "قيّم هذا الطبيب" : "Rate this doctor"}
+              {locale === "en" ? "قيّم هذا الطبيب" : "Rate this doctor"}
             </h3>
             <div className="mx-auto flex max-w-xl flex-col items-center gap-4">
               <div className="flex items-center gap-1">
@@ -1107,7 +1107,7 @@ export default function BookingPage() {
                 value={staffRatingComment}
                 onChange={(event) => setStaffRatingComment(event.target.value)}
                 placeholder={
-                  locale === "ar"
+                  locale === "en"
                     ? "اكتب تعليقك هنا (اختياري)"
                     : "Write your comment (optional)"
                 }
@@ -1128,10 +1128,10 @@ export default function BookingPage() {
                 className="rounded-2xl bg-[#001A6E] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-blue-900/10 transition-colors hover:bg-[#162f80] disabled:cursor-not-allowed disabled:opacity-70"
               >
                 {staffRatingSubmitting
-                  ? locale === "ar"
+                  ? locale === "en"
                     ? "جاري الإرسال..."
                     : "Submitting..."
-                  : locale === "ar"
+                  : locale === "en"
                     ? "إرسال التقييم"
                     : "Submit rating"}
               </button>

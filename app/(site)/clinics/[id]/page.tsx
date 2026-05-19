@@ -464,7 +464,7 @@ export default function ClinicDetailsPage() {
 
     if (clinicRatingValue < 1 || clinicRatingValue > 5) {
       setClinicRatingSubmitError(
-        locale === "ar"
+        locale === "en"
           ? "برجاء اختيار تقييم من ١ إلى ٥."
           : "Please select a rating from 1 to 5.",
       );
@@ -499,7 +499,7 @@ export default function ClinicDetailsPage() {
       }
 
       setClinicRatingSubmitSuccess(
-        locale === "ar"
+        locale === "en"
           ? "تم إرسال التقييم بنجاح."
           : "Rating submitted successfully.",
       );
@@ -511,7 +511,7 @@ export default function ClinicDetailsPage() {
       setClinicRatingSubmitError(
         getErrorMessage(
           error,
-          locale === "ar"
+          locale === "en"
             ? "تعذر إرسال التقييم."
             : "Failed to submit rating.",
         ),
@@ -551,7 +551,7 @@ export default function ClinicDetailsPage() {
         <div className="mb-16 overflow-hidden rounded-[32px] border border-[#dce5f6] bg-white shadow-[0_24px_70px_rgba(20,45,100,0.10)]">
           <div
             className={`grid gap-0 lg:grid-cols-[1.05fr_0.95fr] ${
-              locale === "ar" ? "lg:[direction:rtl]" : ""
+              locale === "en" ? "lg:[direction:rtl]" : ""
             }`}
           >
             <div className="relative min-h-[340px] overflow-hidden bg-[#eaf0fb] lg:min-h-[520px]">
@@ -646,7 +646,7 @@ export default function ClinicDetailsPage() {
           <div className="mb-10 flex flex-wrap gap-4 rounded-3xl bg-[#f6f8fc] p-4">
             <div className="relative min-w-50">
               <select
-                className={`w-full appearance-none rounded-2xl border border-[#dce5f6] bg-white py-3 text-sm font-semibold text-[#40527f] focus:border-[#001A6E] focus:outline-none ${locale === "ar" ? "px-6" : "px-10"}`}
+                className={`w-full appearance-none rounded-2xl border border-[#dce5f6] bg-white py-3 text-sm font-semibold text-[#40527f] focus:border-[#001A6E] focus:outline-none ${locale === "en" ? "px-6" : "px-10"}`}
                 value={selectedSpecialty}
                 onChange={(e) => setSelectedSpecialty(e.target.value)}
               >
@@ -658,13 +658,13 @@ export default function ClinicDetailsPage() {
                 ))}
               </select>
               <ChevronDown
-                className={`w-4 h-4 absolute ${locale === "ar" ? "left-4" : "right-4"} top-1/2 -translate-y-1/2 pointer-events-none text-gray-400`}
+                className={`w-4 h-4 absolute ${locale === "en" ? "left-4" : "right-4"} top-1/2 -translate-y-1/2 pointer-events-none text-gray-400`}
               />
             </div>
 
             <div className="relative min-w-37.5">
               <select
-                className={`w-full appearance-none rounded-2xl border border-[#dce5f6] bg-white py-3 text-sm font-semibold text-[#40527f] focus:border-[#001A6E] focus:outline-none ${locale === "ar" ? "px-6" : "px-10"}`}
+                className={`w-full appearance-none rounded-2xl border border-[#dce5f6] bg-white py-3 text-sm font-semibold text-[#40527f] focus:border-[#001A6E] focus:outline-none ${locale === "en" ? "px-6" : "px-10"}`}
                 value={selectedGender}
                 onChange={(e) => setSelectedGender(e.target.value)}
               >
@@ -673,7 +673,7 @@ export default function ClinicDetailsPage() {
                 <option value="female">{t("clinics.female", locale)}</option>
               </select>
               <ChevronDown
-                className={`w-4 h-4 absolute ${locale === "ar" ? "left-4" : "right-4"} top-1/2 -translate-y-1/2 pointer-events-none text-gray-400`}
+                className={`w-4 h-4 absolute ${locale === "en" ? "left-4" : "right-4"} top-1/2 -translate-y-1/2 pointer-events-none text-gray-400`}
               />
             </div>
 
@@ -780,13 +780,13 @@ export default function ClinicDetailsPage() {
           <div className="mt-10">
             {clinicRatingsLoading ? (
               <p className="text-center text-[#001A6E]">
-                {locale === "ar" ? "جاري تحميل التقييمات..." : "Loading ratings..."}
+                {locale === "en" ? "جاري تحميل التقييمات..." : "Loading ratings..."}
               </p>
             ) : clinicRatingsError ? (
               <p className="text-center text-red-600">{clinicRatingsError}</p>
             ) : clinicRatings.length === 0 ? (
               <p className="text-center text-gray-400">
-                {locale === "ar"
+                {locale === "en"
                   ? "لا توجد تقييمات بعد."
                   : "No reviews yet."}
               </p>
@@ -821,7 +821,7 @@ export default function ClinicDetailsPage() {
                       </div>
                       <p className="text-xs font-semibold text-gray-500">
                         {review.patient_name ||
-                          (locale === "ar" ? "مريض" : "Patient")}
+                          (locale === "en" ? "مريض" : "Patient")}
                       </p>
                     </div>
                     {review.comment ? (
@@ -830,7 +830,7 @@ export default function ClinicDetailsPage() {
                       </p>
                     ) : (
                       <p className="text-gray-400 text-sm">
-                        {locale === "ar" ? "بدون تعليق" : "No comment"}
+                        {locale === "en" ? "بدون تعليق" : "No comment"}
                       </p>
                     )}
                   </div>
@@ -848,10 +848,10 @@ export default function ClinicDetailsPage() {
                 disabled={clinicRatingsPage <= 1}
                 className="rounded-full border border-[#dce5f6] px-4 py-2 text-sm font-semibold text-[#001A6E] disabled:opacity-50"
               >
-                {locale === "ar" ? "السابق" : "Previous"}
+                {locale === "en" ? "السابق" : "Previous"}
               </button>
               <span className="text-sm text-gray-500">
-                {locale === "ar"
+                {locale === "en"
                   ? `صفحة ${clinicRatingsPage} من ${clinicRatingsTotalPages}`
                   : `Page ${clinicRatingsPage} of ${clinicRatingsTotalPages}`}
               </span>
@@ -864,14 +864,14 @@ export default function ClinicDetailsPage() {
                 disabled={clinicRatingsPage >= clinicRatingsTotalPages}
                 className="rounded-full border border-[#dce5f6] px-4 py-2 text-sm font-semibold text-[#001A6E] disabled:opacity-50"
               >
-                {locale === "ar" ? "التالي" : "Next"}
+                {locale === "en" ? "التالي" : "Next"}
               </button>
             </div>
           )}
 
           <div className="mt-10 border-t border-[#e6ecf6] pt-8">
             <h3 className="text-lg font-bold text-[#001A6E] mb-4">
-              {locale === "ar" ? "قيّم هذه العيادة" : "Rate this clinic"}
+              {locale === "en" ? "قيّم هذه العيادة" : "Rate this clinic"}
             </h3>
             <div className="mx-auto flex max-w-xl flex-col items-center gap-4">
               <div className="flex items-center gap-1">
@@ -896,8 +896,8 @@ export default function ClinicDetailsPage() {
                 value={clinicRatingComment}
                 onChange={(event) => setClinicRatingComment(event.target.value)}
                 placeholder={
-                  locale === "ar"
-                    ? "اكتب تعليقك هنا (اختياري)"
+                  locale === "en"
+                    ? "اكتب تعليقك هنا"
                     : "Write your comment (optional)"
                 }
                 rows={3}
@@ -919,10 +919,10 @@ export default function ClinicDetailsPage() {
                 className="rounded-2xl bg-[#001A6E] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-blue-900/10 transition-colors hover:bg-[#162f80] disabled:cursor-not-allowed disabled:opacity-70"
               >
                 {clinicRatingSubmitting
-                  ? locale === "ar"
+                  ? locale === "en"
                     ? "جاري الإرسال..."
                     : "Submitting..."
-                  : locale === "ar"
+                  : locale === "en"
                     ? "إرسال التقييم"
                     : "Submit rating"}
               </button>

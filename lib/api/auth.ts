@@ -5,6 +5,9 @@ import type {
   AuthResponse,
   LogoutRequest,
   RefreshTokenRequest,
+  ForgotPasswordRequest,
+  VerifyResetOtpRequest,
+  ResetPasswordRequest,
 } from "@/lib/types/api";
 
 export const authService = {
@@ -24,6 +27,19 @@ export const authService = {
 
   async refresh(data: RefreshTokenRequest) {
     return apiClient.post<AuthResponse>("/api/auth/refresh", data);
+  },
+
+  async forgotPassword(data: ForgotPasswordRequest) {
+    return apiClient.post("/api/auth/forgot-password", data);
+  },
+
+  async verifyResetOtp(data: VerifyResetOtpRequest) {
+    return apiClient.post("/api/auth/verify-reset-otp", data);
+  },
+
+  async resetPassword(token: string, data: ResetPasswordRequest) {
+    const safeToken = encodeURIComponent(token);
+    return apiClient.patch(`/api/auth/reset-password/${safeToken}`, data);
   },
 
   async getProfile(token?: string) {

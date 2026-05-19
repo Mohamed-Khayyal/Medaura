@@ -67,7 +67,7 @@ export default function TimePicker({
 
         {loading ? (
           <p className="py-10 text-center font-semibold text-[#001A6E]">
-            {locale === "ar"
+            {locale === "en"
               ? "جاري تحميل المواعيد..."
               : "Loading available times..."}
           </p>
@@ -77,7 +77,7 @@ export default function TimePicker({
           </p>
         ) : slots.length === 0 ? (
           <p className="py-10 text-center font-semibold text-gray-500">
-            {locale === "ar"
+            {locale === "en"
               ? "لا توجد مواعيد متاحة لهذا اليوم."
               : "No available times for this date."}
           </p>

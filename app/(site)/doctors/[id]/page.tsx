@@ -168,7 +168,7 @@ function normalizeRatingsPayload(payload: unknown) {
 
 function formatDisplayDate(date: string, locale: string) {
   if (!date) return "";
-  return new Intl.DateTimeFormat(locale === "ar" ? "ar-EG" : "en-US", {
+  return new Intl.DateTimeFormat(locale === "en" ? "ar-EG" : "en-US", {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -198,7 +198,7 @@ function formatDayToken(token: string, locale: string) {
     const base = new Date("2024-01-07T00:00:00");
     base.setDate(base.getDate() + index);
 
-    return new Intl.DateTimeFormat(locale === "ar" ? "ar-EG" : "en-US", {
+    return new Intl.DateTimeFormat(locale === "en" ? "ar-EG" : "en-US", {
       weekday: "long",
     }).format(base);
   }
@@ -490,7 +490,7 @@ export default function DoctorProfilePage() {
 
     if (doctorRatingValue < 1 || doctorRatingValue > 5) {
       setDoctorRatingSubmitError(
-        locale === "ar"
+        locale === "en"
           ? "برجاء اختيار تقييم من ١ إلى ٥."
           : "Please select a rating from 1 to 5.",
       );
@@ -525,7 +525,7 @@ export default function DoctorProfilePage() {
       }
 
       setDoctorRatingSubmitSuccess(
-        locale === "ar"
+        locale === "en"
           ? "تم إرسال التقييم بنجاح."
           : "Rating submitted successfully.",
       );
@@ -537,7 +537,7 @@ export default function DoctorProfilePage() {
       setDoctorRatingSubmitError(
         getErrorMessage(
           error,
-          locale === "ar"
+          locale === "en"
             ? "تعذر إرسال التقييم."
             : "Failed to submit rating.",
         ),
@@ -825,13 +825,13 @@ export default function DoctorProfilePage() {
           <div>
             {doctorRatingsLoading ? (
               <p className="text-center text-[#001A6E]">
-                {locale === "ar" ? "جاري تحميل التقييمات..." : "Loading ratings..."}
+                {locale === "en" ? "جاري تحميل التقييمات..." : "Loading ratings..."}
               </p>
             ) : doctorRatingsError ? (
               <p className="text-center text-red-600">{doctorRatingsError}</p>
             ) : doctorRatings.length === 0 ? (
               <p className="text-center text-gray-400">
-                {locale === "ar"
+                {locale === "en"
                   ? "لا توجد تقييمات بعد."
                   : "No reviews yet."}
               </p>
@@ -857,7 +857,7 @@ export default function DoctorProfilePage() {
                     <div className="mb-3 flex items-center justify-end gap-3">
                       <p className="text-xs font-semibold text-gray-500">
                         {review.patient_name ||
-                          (locale === "ar" ? "مريض" : "Patient")}
+                          (locale === "en" ? "مريض" : "Patient")}
                       </p>
                       <div className="h-10 w-10 overflow-hidden rounded-full bg-[#eaf0fb]">
                         {review.patient_photo ? (
@@ -875,7 +875,7 @@ export default function DoctorProfilePage() {
                       </p>
                     ) : (
                       <p className="text-gray-400 text-sm">
-                        {locale === "ar" ? "بدون تعليق" : "No comment"}
+                        {locale === "en" ? "بدون تعليق" : "No comment"}
                       </p>
                     )}
                   </div>
@@ -893,10 +893,10 @@ export default function DoctorProfilePage() {
                 disabled={doctorRatingsPage <= 1}
                 className="rounded-full border border-[#dce5f6] px-4 py-2 text-sm font-semibold text-[#001A6E] disabled:opacity-50"
               >
-                {locale === "ar" ? "السابق" : "Previous"}
+                {locale === "en" ? "السابق" : "Previous"}
               </button>
               <span className="text-sm text-gray-500">
-                {locale === "ar"
+                {locale === "en"
                   ? `صفحة ${doctorRatingsPage} من ${doctorRatingsTotalPages}`
                   : `Page ${doctorRatingsPage} of ${doctorRatingsTotalPages}`}
               </span>
@@ -909,14 +909,14 @@ export default function DoctorProfilePage() {
                 disabled={doctorRatingsPage >= doctorRatingsTotalPages}
                 className="rounded-full border border-[#dce5f6] px-4 py-2 text-sm font-semibold text-[#001A6E] disabled:opacity-50"
               >
-                {locale === "ar" ? "التالي" : "Next"}
+                {locale === "en" ? "التالي" : "Next"}
               </button>
             </div>
           )}
 
           <div className="mt-10 border-t border-[#e6ecf6] pt-8 text-center">
             <h3 className="text-lg font-bold text-[#001A6E] mb-4">
-              {locale === "ar" ? "قيّم هذا الطبيب" : "Rate this doctor"}
+              {locale === "en" ? "قيّم هذا الطبيب" : "Rate this doctor"}
             </h3>
             <div className="mx-auto flex max-w-xl flex-col items-center gap-4">
               <div className="flex items-center gap-1">
@@ -941,7 +941,7 @@ export default function DoctorProfilePage() {
                 value={doctorRatingComment}
                 onChange={(event) => setDoctorRatingComment(event.target.value)}
                 placeholder={
-                  locale === "ar"
+                  locale === "en"
                     ? "اكتب تعليقك هنا (اختياري)"
                     : "Write your comment (optional)"
                 }
@@ -964,10 +964,10 @@ export default function DoctorProfilePage() {
                 className="rounded-2xl bg-[#001A6E] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-blue-900/10 transition-colors hover:bg-[#162f80] disabled:cursor-not-allowed disabled:opacity-70"
               >
                 {doctorRatingSubmitting
-                  ? locale === "ar"
+                  ? locale === "en"
                     ? "جاري الإرسال..."
                     : "Submitting..."
-                  : locale === "ar"
+                  : locale === "en"
                     ? "إرسال التقييم"
                     : "Submit rating"}
               </button>

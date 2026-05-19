@@ -3,40 +3,36 @@ import { authService } from "@/lib/api/auth";
 
 // POST /api/auth/logout
 export async function POST(request: NextRequest) {
+  let logoutError: unknown;
+
   try {
     const authHeader = request.headers.get("authorization");
-    const token = authHeader?.replace("Bearer ", "");
+    const headerToken = authHeader?.replace("Bearer ", "");
+    const cookieToken =
+      request.cookies.get("jwt")?.value ||
+      request.cookies.get("access_token")?.value ||
+      request.cookies.get("access")?.value ||
+      request.cookies.get("accessToken")?.value ||
+      request.cookies.get("token")?.value;
 
-    if (!token) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Missing authorization token",
-        },
-        { status: 401 }
-      );
+    const token = headerToken || cookieToken;
+
+    if (token) {
+      await authService.logout({ token });
     }
-
-    await authService.logout({ token });
-
-    const res = NextResponse.json({
-      success: true,
-      message: "Logged out successfully",
-    });
-
-    // Clear cookies
-    res.cookies.set("jwt", "", { maxAge: 0 });
-    res.cookies.set("refresh_token", "", { maxAge: 0 });
-
-    return res;
-  } catch (error: any) {
+  } catch (error: unknown) {
+    logoutError = error;
     console.error("Logout error:", error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: error.message || "Logout failed",
-      },
-      { status: error.status || 500 }
-    );
   }
+
+  const res = NextResponse.json({
+    success: true,
+    message: logoutError ? "Logged out locally" : "Logged out successfully",
+  });
+
+  // Clear cookies even if backend logout fails
+  res.cookies.set("jwt", "", { maxAge: 0, path: "/" });
+  res.cookies.set("refresh_token", "", { maxAge: 0, path: "/" });
+
+  return res;
 }

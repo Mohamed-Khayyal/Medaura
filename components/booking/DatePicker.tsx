@@ -38,7 +38,7 @@ export default function DatePicker({
     new Date(year, month, 1).getDay();
 
   const monthNames =
-    locale === "ar"
+    locale === "en"
       ? [
           "يناير",
           "فبراير",
@@ -69,7 +69,7 @@ export default function DatePicker({
         ];
 
   const dayNames =
-    locale === "ar"
+    locale === "en"
       ? ["أحد", "اثنين", "ثلاثاء", "أربعاء", "خميس", "جمعة", "سبت"]
       : ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 

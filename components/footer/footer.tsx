@@ -27,7 +27,7 @@ export default function Footer() {
     <footer className="bg-[#071022] px-6 py-8 text-white">
       <div
         className={`max-w-7xl mx-auto grid gap-8 sm:grid-cols-2 md:grid-cols-6 items-start lg:gap-6 ${
-          locale === "ar" ? "text-right" : "text-left"
+          locale === "en" ? "text-right" : "text-left"
         }`}
       >
         {/* Brand / description */}

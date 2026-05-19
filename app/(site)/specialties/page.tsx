@@ -131,7 +131,7 @@ export default function SpecialtiesPage() {
   const [selectedSpecialty, setSelectedSpecialty] = useState("cardio");
   const [locale] = useState("ar");
 
-  const isArabic = locale === "ar";
+  const isArabic = locale === "en";
   const heroTitle = isArabic ? "اختر تخصصك لحالتك" : "Choose Your Specialty";
   const heroSubtitle = isArabic
     ? "احجز موعدك مع أفضل الاطباء في غضون دقائق"

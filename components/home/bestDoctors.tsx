@@ -150,7 +150,7 @@ export default function BestDoctors() {
         viewport={{ once: true, amount: 0.3 }}
         transition={{ duration: 0.7, delay: 0.1 }}
         className={`mb-8 flex ${
-          locale === "ar" ? "justify-start" : "justify-end"
+          locale === "en" ? "justify-start" : "justify-end"
         }`}
       >
         <Link
@@ -158,7 +158,7 @@ export default function BestDoctors() {
           className="inline-flex items-center gap-2 rounded-full border border-[#d1ddff] px-4 py-2 text-sm font-semibold text-[#001a6e] transition hover:bg-[#f4f7ff]"
         >
           {t("bestDoctors.viewAll", locale)}
-          {locale === "ar" ? (
+          {locale === "en" ? (
             <ChevronLeft size={18} />
           ) : (
             <ChevronRight size={18} />

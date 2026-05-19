@@ -76,6 +76,21 @@ export interface RefreshTokenRequest {
   refreshToken?: string;
 }
 
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface VerifyResetOtpRequest {
+  email: string;
+  otp: string;
+}
+
+export interface ResetPasswordRequest {
+  password: string;
+  confirmPassword?: string;
+  passwordConfirm?: string;
+}
+
 // User Types
 export interface UserProfile {
   id: number;

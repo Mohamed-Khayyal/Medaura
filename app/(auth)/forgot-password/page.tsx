@@ -2,14 +2,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { validateEmail, simulateApiCall } from "../validators";
+import { useRouter } from "next/navigation";
+import { validateEmail } from "../validators";
 import { ErrorAlert, EmailInput } from "../components";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const router = useRouter();
 
   function validate() {
     const e: Record<string, string> = {};
@@ -24,45 +25,30 @@ export default function ForgotPasswordPage() {
     if (!validate()) return;
     setLoading(true);
     try {
-      await simulateApiCall();
-      setSubmitted(true);
+      const response = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+        credentials: "include",
+      });
+
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "تعذر إرسال رمز إعادة التعيين");
+      }
+
+      router.push(`/verify-reset-otp?email=${encodeURIComponent(email)}`);
+      return;
+    } catch (error) {
+      setErrors({
+        form:
+          error instanceof Error
+            ? error.message
+            : "تعذر إرسال رمز إعادة التعيين",
+      });
     } finally {
       setLoading(false);
     }
-  }
-
-  if (submitted) {
-    return (
-      <div className="text-center space-y-4">
-        <div className="flex justify-center mb-4">
-          <div className="h-16 w-16 rounded-full bg-green-50 flex items-center justify-center">
-            <svg
-              className="h-8 w-8 text-green-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
-          </div>
-        </div>
-        <h2 className="text-2xl font-semibold text-indigo-900">تم الإرسال!</h2>
-        <p className="text-zinc-600">
-          تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني.
-        </p>
-        <Link
-          href="/login"
-          className="inline-block w-full bg-indigo-900 text-white py-2 sm:py-2.5 rounded-md text-sm sm:text-base transition-all duration-300 hover:bg-indigo-800 hover:shadow-lg active:scale-95"
-        >
-          العودة إلى تسجيل الدخول
-        </Link>
-      </div>
-    );
   }
 
   return (
