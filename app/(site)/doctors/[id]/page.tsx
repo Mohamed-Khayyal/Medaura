@@ -31,6 +31,10 @@ type DoctorProfileData = {
   total_ratings?: number;
   bio?: string;
   can_be_booked?: number | boolean;
+  geo_location?: {
+    latitude?: number | string | null;
+    longitude?: number | string | null;
+  } | null;
 };
 
 type BookingSlot = {
@@ -468,6 +472,14 @@ export default function DoctorProfilePage() {
     [locale, selectedDate]
   );
 
+  const mapLatitude = doctor?.geo_location?.latitude;
+  const mapLongitude = doctor?.geo_location?.longitude;
+  const mapSrc = mapLatitude && mapLongitude
+    ? `https://maps.google.com/maps?q=${mapLatitude},${mapLongitude}&z=15&output=embed`
+    : `https://maps.google.com/maps?q=${encodeURIComponent(
+        doctor?.location || "Cairo",
+      )}&z=12&output=embed`;
+
   const openTimePicker = () => {
     if (!selectedDate) {
       setValidationModalData({
@@ -751,6 +763,23 @@ export default function DoctorProfilePage() {
               <p className="text-gray-500 leading-relaxed text-sm">
                 {doctor.bio || "No bio available."}
               </p>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-bold text-[#001A6E] mb-4">
+                {t("clinics.clinicLocation", locale)}
+              </h2>
+              <div className="relative h-72 overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-xs">
+                <iframe
+                  src={mapSrc}
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  allowFullScreen={true}
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                ></iframe>
+              </div>
             </section>
           </section>
 

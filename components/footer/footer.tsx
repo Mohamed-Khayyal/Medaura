@@ -6,7 +6,7 @@ import { t } from "@/i18n";
 
 const quickLinks = [
   { key: "nav.home", href: "/" },
-  { key: "nav.specialties", href: "/site/specialties" },
+  { key: "nav.specialties", href: "/specialties" },
   { key: "nav.doctors", href: "/doctors" },
   { key: "nav.clinics", href: "/clinics" },
 ];
@@ -96,7 +96,7 @@ export default function Footer() {
               </Link>
             </li>
             <li>
-              <Link href="/site/specialties" className="hover:text-white">
+              <Link href="/specialties" className="hover:text-white">
                 {t("nav.specialties", locale)}
               </Link>
             </li>

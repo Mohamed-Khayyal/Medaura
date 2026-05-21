@@ -176,8 +176,8 @@ export default function DoctorSearchExample() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                   {slots.map((slot) => (
                     <button
-                      key={slot.time}
-                      onClick={() => handleBooking(slot.time)}
+                      key={slot.from}
+                      onClick={() => handleBooking(slot.from)}
                       disabled={!slot.available}
                       className={`p-2 rounded text-sm font-medium transition ${
                         !slot.available
@@ -185,7 +185,7 @@ export default function DoctorSearchExample() {
                           : "bg-blue-500 text-white hover:bg-blue-600"
                       }`}
                     >
-                      {slot.time}
+                      {slot.from}
                     </button>
                   ))}
                 </div>

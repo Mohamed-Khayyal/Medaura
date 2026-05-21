@@ -296,12 +296,35 @@ export interface AdminStaffList {
 }
 
 export interface AuditLog {
-  id: number;
-  user_id: number;
-  action: string;
-  resource_type: string;
-  resource_id: number;
-  timestamp: string;
+  id?: number;
+  user_id?: number;
+  action?: string;
+  resource_type?: string;
+  resource_id?: number;
+  timestamp?: string;
+  actor_role?: string;
+  actor_user_id?: number | null;
+  body?: Record<string, unknown> | null;
+  duration_ms?: number | null;
+  event_type?: string;
+  ip?: string;
+  level?: string;
+  method?: string;
+  path?: string;
+  query?: Record<string, unknown> | null;
+  status_code?: number | null;
+  user_agent?: string;
+  error_code?: string | null;
+  error_message?: string | null;
+  error_details?: unknown;
+}
+
+export interface AuditStats {
+  total_logs?: number;
+  total_info_logs?: number;
+  total_error_logs?: number;
+  total_success_logs?: number;
+  total_failed_logs?: number;
 }
 
 export interface AdminCreateRequest {

@@ -118,7 +118,7 @@ export default function WeeklyAppointmentsChart() {
             <Tooltip
               labelFormatter={(
                 label,
-                payload: TooltipPayload<number, string>[]
+                payload: readonly any[]
               ) => {
                 if (payload && payload.length) {
                   const data = payload[0].payload;

@@ -89,7 +89,7 @@ const Specialties = () => {
         className="mb-8 flex justify-start"
       >
         <Link
-          href="/site/specialties"
+          href="/specialties"
           className="inline-flex items-center gap-2 rounded-full border border-[#d1ddff] px-4 py-2 text-sm font-semibold text-[#001a6e] transition hover:bg-[#f4f7ff]"
         >
           {t("specialties.viewAll", locale)}

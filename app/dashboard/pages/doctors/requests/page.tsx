@@ -91,7 +91,6 @@ const statusMeta = {
 const filters: { key: FilterStatus; label: string }[] = [
   { key: "pending", label: "محتاج توثيق" },
   { key: "approved", label: "موثق" },
-  { key: "rejected", label: "مرفوض" },
   { key: "all", label: "الكل" },
 ];
 
@@ -316,6 +315,41 @@ export default function DoctorRequestsPage() {
       } finally {
         setVerifyingId(null);
       }
+    } else if (status === "pending") {
+      setVerifyingId(id);
+      setError(null);
+
+      const previousDoctors = doctors;
+      setDoctors((current) =>
+        current.map((doctor) =>
+          doctor.doctor_id === id ? { ...doctor, is_verified: false } : doctor,
+        ),
+      );
+
+      try {
+        const response = await fetch(`/api/admin/${id}/unverify`, {
+          method: "PATCH",
+          credentials: "include",
+        });
+        const payload = (await response.json()) as DoctorsApiResponse;
+
+        if (
+          !response.ok ||
+          payload.success === false ||
+          payload.status === "fail"
+        ) {
+          throw new Error(
+            payload.error || payload.message || "فشل إلغاء توثيق الطبيب",
+          );
+        }
+      } catch (err) {
+        setDoctors(previousDoctors);
+        setError(getErrorMessage(err));
+        setVerifyingId(null);
+        return;
+      } finally {
+        setVerifyingId(null);
+      }
     }
 
     setLocalStatuses((current) => ({
@@ -325,8 +359,8 @@ export default function DoctorRequestsPage() {
 
     // عرض SweetAlert
     Swal.fire({
-      title: status === "approved" ? "تم التوثيق" : "تم الرفض",
-      icon: status === "approved" ? "success" : "error",
+      title: status === "approved" ? "تم التوثيق" : "تم إلغاء التوثيق",
+      icon: status === "approved" ? "success" : "info",
       timer: 2000,
       showConfirmButton: false,
       customClass: {
@@ -359,16 +393,14 @@ export default function DoctorRequestsPage() {
             طلبات توثيق الأطباء
           </h1>
           <p className="mt-2 text-sm text-(--text-secondary)">
-            راجع بيانات الطبيب والمستندات ثم وثق الحساب أو ارفض
-            الطلب .
+            راجع بيانات الطبيب والمستندات ثم وثق الحساب.
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <StatCard label="الكل" value={totals.all} />
           <StatCard label="قيد المراجعة" value={totals.pending} />
           <StatCard label="موثق" value={totals.approved} />
-          <StatCard label="مرفوض" value={totals.rejected} />
         </div>
       </div>
 
@@ -578,30 +610,38 @@ export default function DoctorRequestsPage() {
                 </div>
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
-                <button
-                  onClick={() =>
-                    void updateStatus(selectedRequest.id, "approved")
-                  }
-                  disabled={verifyingId === selectedRequest.id}
-                  className="flex items-center justify-center gap-2 rounded-lg bg-[#00A63E] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#008236] disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {verifyingId === selectedRequest.id ? (
-                    <Loader2 size={18} className="animate-spin" />
-                  ) : (
-                    <ShieldCheck size={18} />
-                  )}
-                  توثيق الطبيب
-                </button>
-                <button
-                  onClick={() =>
-                    void updateStatus(selectedRequest.id, "rejected")
-                  }
-                  className="flex items-center justify-center gap-2 rounded-lg border border-[#FFC9C9] px-4 py-3 text-sm font-semibold text-[#C10007] transition hover:bg-[#FFE2E2]"
-                >
-                  <XCircle size={18} />
-                  رفض الطلب
-                </button>
+              <div className="flex flex-col gap-3">
+                {selectedRequest.status === "approved" ? (
+                  <button
+                    onClick={() =>
+                      void updateStatus(selectedRequest.id, "pending")
+                    }
+                    disabled={verifyingId === selectedRequest.id}
+                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 px-4 py-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {verifyingId === selectedRequest.id ? (
+                      <Loader2 size={18} className="animate-spin" />
+                    ) : (
+                      <XCircle size={18} />
+                    )}
+                    إلغاء التوثيق
+                  </button>
+                ) : (
+                  <button
+                    onClick={() =>
+                      void updateStatus(selectedRequest.id, "approved")
+                    }
+                    disabled={verifyingId === selectedRequest.id}
+                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#00A63E] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#008236] disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {verifyingId === selectedRequest.id ? (
+                      <Loader2 size={18} className="animate-spin" />
+                    ) : (
+                      <ShieldCheck size={18} />
+                    )}
+                    توثيق الطبيب
+                  </button>
+                )}
               </div>
 
               {selectedRequest.status === "approved" && (

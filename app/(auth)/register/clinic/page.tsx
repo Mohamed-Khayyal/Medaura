@@ -19,17 +19,12 @@ export default function ClinicRegisterPage() {
   const [address, setAddress] = useState("");
   const [location, setLocation] = useState("");
   const [phone, setPhone] = useState("");
-  const [latitude, setLatitude] = useState("");
-  const [longitude, setLongitude] = useState("");
   const [terms, setTerms] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
   function validate() {
     const nextErrors: Record<string, string> = {};
-    const latValue = Number(latitude);
-    const lngValue = Number(longitude);
-
     if (!clinicName.trim()) nextErrors.name = "اسم العيادة مطلوب";
     if (!email.trim()) nextErrors.email = "البريد الإلكتروني مطلوب";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
@@ -41,10 +36,6 @@ export default function ClinicRegisterPage() {
     if (!address.trim()) nextErrors.address = "العنوان مطلوب";
     if (!location.trim()) nextErrors.location = "المدينة مطلوبة";
     if (!phone.trim()) nextErrors.phone = "رقم الهاتف مطلوب";
-    if (!latitude.trim()) nextErrors.latitude = "خط العرض مطلوب";
-    else if (Number.isNaN(latValue)) nextErrors.latitude = "خط العرض يجب أن يكون رقماً";
-    if (!longitude.trim()) nextErrors.longitude = "خط الطول مطلوب";
-    else if (Number.isNaN(lngValue)) nextErrors.longitude = "خط الطول يجب أن يكون رقماً";
     if (!terms) nextErrors.terms = "يجب الموافقة على الشروط";
 
     setErrors(nextErrors);
@@ -64,8 +55,8 @@ export default function ClinicRegisterPage() {
         location: location.trim(),
         phone: phone.trim(),
         geo_location: {
-          latitude: Number(latitude),
-          longitude: Number(longitude),
+          latitude: 0,
+          longitude: 0,
         },
       };
 
@@ -159,7 +150,11 @@ export default function ClinicRegisterPage() {
           }`}
         />
         {errors.email && (
-          <p id="email-error" role="alert" className="text-sm text-red-700 mt-1">
+          <p
+            id="email-error"
+            role="alert"
+            className="text-sm text-red-700 mt-1"
+          >
             {errors.email}
           </p>
         )}
@@ -251,7 +246,11 @@ export default function ClinicRegisterPage() {
           }`}
         />
         {errors.address && (
-          <p id="address-error" role="alert" className="text-sm text-red-700 mt-1">
+          <p
+            id="address-error"
+            role="alert"
+            className="text-sm text-red-700 mt-1"
+          >
             {errors.address}
           </p>
         )}
@@ -277,7 +276,11 @@ export default function ClinicRegisterPage() {
           }`}
         />
         {errors.location && (
-          <p id="location-error" role="alert" className="text-sm text-red-700 mt-1">
+          <p
+            id="location-error"
+            role="alert"
+            className="text-sm text-red-700 mt-1"
+          >
             {errors.location}
           </p>
         )}
@@ -303,67 +306,20 @@ export default function ClinicRegisterPage() {
           }`}
         />
         {errors.phone && (
-          <p id="phone-error" role="alert" className="text-sm text-red-700 mt-1">
+          <p
+            id="phone-error"
+            role="alert"
+            className="text-sm text-red-700 mt-1"
+          >
             {errors.phone}
           </p>
         )}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label
-            htmlFor="latitude"
-            className="block text-sm font-medium text-zinc-700 mb-1"
-          >
-            خط العرض
-          </label>
-          <input
-            id="latitude"
-            name="latitude"
-            placeholder="30.0444"
-            value={latitude}
-            onChange={(event) => setLatitude(event.target.value)}
-            aria-invalid={!!errors.latitude}
-            aria-describedby={errors.latitude ? "latitude-error" : undefined}
-            className={`w-full text-sm sm:text-base border rounded-md px-3 py-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:scale-[1.01] ${
-              errors.latitude ? "border-red-300" : "border-zinc-200"
-            }`}
-          />
-          {errors.latitude && (
-            <p id="latitude-error" role="alert" className="text-sm text-red-700 mt-1">
-              {errors.latitude}
-            </p>
-          )}
-        </div>
-
-        <div>
-          <label
-            htmlFor="longitude"
-            className="block text-sm font-medium text-zinc-700 mb-1"
-          >
-            خط الطول
-          </label>
-          <input
-            id="longitude"
-            name="longitude"
-            placeholder="31.2357"
-            value={longitude}
-            onChange={(event) => setLongitude(event.target.value)}
-            aria-invalid={!!errors.longitude}
-            aria-describedby={errors.longitude ? "longitude-error" : undefined}
-            className={`w-full text-sm sm:text-base border rounded-md px-3 py-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:scale-[1.01] ${
-              errors.longitude ? "border-red-300" : "border-zinc-200"
-            }`}
-          />
-          {errors.longitude && (
-            <p id="longitude-error" role="alert" className="text-sm text-red-700 mt-1">
-              {errors.longitude}
-            </p>
-          )}
-        </div>
-      </div>
-
-      <label htmlFor="terms" className="flex items-center gap-2 text-sm text-zinc-600">
+      <label
+        htmlFor="terms"
+        className="flex items-center gap-2 text-sm text-zinc-600"
+      >
         <input
           id="terms"
           type="checkbox"

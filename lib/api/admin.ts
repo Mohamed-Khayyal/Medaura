@@ -4,6 +4,7 @@ import type {
   AdminClinicsList,
   AdminStaffList,
   AuditLog,
+  AuditStats,
   AdminCreateRequest,
   ApiResponse,
 } from "@/lib/types/api";
@@ -145,6 +146,14 @@ export const adminService = {
     );
   },
 
+  async unverifyClinic(clinicId: number, token: string) {
+    return apiClient.patch(
+      `/api/admin/clinics/${clinicId}/unverify`,
+      undefined,
+      { token }
+    );
+  },
+
   async listStaff(token: string) {
     const res = await apiClient.get<ApiResponse<AdminStaffList[]>>("/api/admin/staff", { token });
     return res.data || [];
@@ -187,8 +196,51 @@ export const adminService = {
   },
 
   async listAuditLogs(token: string) {
-    const res = await apiClient.get<ApiResponse<AuditLog[]>>("/api/admin/audit-logs", { token });
-    return res.data || [];
+    const res = await apiClient.get<
+      | ApiResponse<AuditLog[]>
+      | AuditLog[]
+      | {
+          status?: string;
+          logs?: AuditLog[];
+          data?: AuditLog[];
+        }
+    >("/api/admin/audit-logs", { token });
+
+    if (Array.isArray(res)) {
+      return res;
+    }
+
+    if (Array.isArray(res.data)) {
+      return res.data;
+    }
+
+    if ("logs" in res && Array.isArray(res.logs)) {
+      return res.logs;
+    }
+
+    return [];
+  },
+
+  async getAuditStats(token: string) {
+    const res = await apiClient.get<
+      | ApiResponse<AuditStats>
+      | AuditStats
+      | {
+          status?: string;
+          stats?: AuditStats;
+          data?: AuditStats;
+        }
+    >("/api/admin/audit-stats", { token });
+
+    if ("data" in res && res.data) {
+      return res.data;
+    }
+
+    if ("stats" in res && res.stats) {
+      return res.stats;
+    }
+
+    return res as AuditStats;
   },
 
   async createAdmin(data: AdminCreateRequest, token: string) {

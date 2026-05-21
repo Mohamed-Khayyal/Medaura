@@ -63,7 +63,7 @@ async function handleReset(
 // PATCH /api/auth/reset-password/:token
 export async function PATCH(
   request: NextRequest,
-  context: { params: ResetPasswordParams }
+  context: { params: Promise<ResetPasswordParams> }
 ) {
   return handleReset(request, context.params);
 }
@@ -71,7 +71,7 @@ export async function PATCH(
 // POST /api/auth/reset-password/:token
 export async function POST(
   request: NextRequest,
-  context: { params: ResetPasswordParams }
+  context: { params: Promise<ResetPasswordParams> }
 ) {
   return handleReset(request, context.params);
 }

@@ -1,9 +1,12 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import authImg from "@/public/images/register.png";
+import { useAuth } from "@/context/AuthContext";
+import { getDashboardPathByUserType } from "@/lib/utils/redirect";
 
 interface AuthLayoutProps {
   children: React.ReactNode;
@@ -43,8 +46,52 @@ const REGISTER_TYPES = [
   },
 ];
 
+
 export default function AuthLayout({ children }: AuthLayoutProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, isAuthenticated, loading } = useAuth();
+
+  // ── Protected route: redirect authenticated users away from auth pages ──
+  useEffect(() => {
+    if (loading) return; // wait until auth state is known
+    if (!isAuthenticated) return; // not logged in, stay on auth page
+
+    const destination = getDashboardPathByUserType(user?.user_type);
+    // Replace so the browser back button won't re-show the auth page
+    router.replace(destination);
+  }, [loading, isAuthenticated, user, router]);
+
+  // If we are on the doctor documents page, render without the auth layout wrapper
+  if (pathname.startsWith("/doctorDocument")) {
+    return <>{children}</>;
+  }
+
+  // While auth is still loading, show a minimal spinner so we don't flash
+  // the login form before deciding to redirect
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#f2f4f8]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#d9e3ff] border-t-indigo-700" />
+          <p className="text-sm text-zinc-500">جاري التحقق...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If the user is authenticated we're about to redirect — render nothing
+  // to avoid flashing the auth form before navigation completes
+  if (isAuthenticated) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#f2f4f8]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#d9e3ff] border-t-indigo-700" />
+          <p className="text-sm text-zinc-500">جاري التوجيه...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Determine active nav item
   const getActiveNav = () => {
@@ -64,11 +111,6 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
   const activeNav = getActiveNav();
   const activeType = getActiveType();
   const isRegisterPage = activeNav === "register";
-
-  // If we are on the doctor documents page, do not render the auth layout wrapper
-  if (pathname.startsWith("/doctorDocument")) {
-    return <>{children}</>;
-  }
 
   return (
     <div className="min-h-screen bg-[#f2f4f8] flex items-center justify-center p-4 sm:p-6 lg:p-8">

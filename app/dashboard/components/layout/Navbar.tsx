@@ -1,10 +1,12 @@
 "use client";
 
 import { Sun, Moon, Bell, Search, LogOut, X, Menu } from "lucide-react";
-import { useState, useRef, useEffect, useContext } from "react";
+import { useState, useRef, useEffect, useContext, useCallback } from "react";
+import { formatDistanceToNow } from "date-fns";
 import { useRouter } from "next/navigation";
 import { DashboardThemeContext } from "../../../providers/DashboardThemeProvider";
 import { useAuth } from "@/context/AuthContext";
+import type { Notification } from "@/lib/types/api";
 
 function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
   const { darkMode, toggleTheme } = useContext(DashboardThemeContext);
@@ -12,34 +14,14 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const adminName = (user?.profile?.full_name as string) || "إسلام";
-  const [notifications, setNotifications] = useState<any[]>([
-    {
-      id: "1",
-      title: "New appointment booked",
-      body: "محمد احمد booked an appointment",
-      time: "2m",
-      read: false,
-      avatar: "https://i.pravatar.cc/40?img=2",
-    },
-    {
-      id: "2",
-      title: "Lab results ready",
-      body: "Results for د.احمد السيد",
-      time: "1h",
-      read: false,
-      avatar: "https://i.pravatar.cc/40?img=3",
-    },
-    {
-      id: "3",
-      title: "System update",
-      body: "Scheduled maintenance tonight",
-      time: "1d",
-      read: true,
-      avatar: "https://i.pravatar.cc/40?img=4",
-    },
-  ]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notificationsLoading, setNotificationsLoading] = useState(false);
+  const [notificationsError, setNotificationsError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
-  const img = "https://i.pravatar.cc/40?img=1";
+  const avatarSrc =
+    (typeof user?.photo === "string" && user.photo) ||
+    (user?.profile?.photo as string) ||
+    "/images/blank-profile-picture.png";
   const notifRef = useRef<HTMLDivElement | null>(null);
   const profileRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
@@ -78,6 +60,88 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
       window.removeEventListener("keydown", keyHandler);
     };
   }, [query, router]);
+
+  const loadNotifications = useCallback(async () => {
+    try {
+      setNotificationsLoading(true);
+      setNotificationsError(null);
+      const response = await fetch("/api/notifications/me", {
+        credentials: "include",
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "Failed to fetch notifications");
+      }
+      const items = Array.isArray(result.data) ? result.data : [];
+      const getTime = (value: string) => {
+        const time = Date.parse(value);
+        return Number.isNaN(time) ? 0 : time;
+      };
+      items.sort(
+        (a: Notification, b: Notification) =>
+          getTime(b.created_at) - getTime(a.created_at)
+      );
+      setNotifications(items);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to fetch notifications";
+      setNotificationsError(message);
+    } finally {
+      setNotificationsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadNotifications();
+  }, [loadNotifications]);
+
+  useEffect(() => {
+    if (notifOpen) {
+      loadNotifications();
+    }
+  }, [notifOpen, loadNotifications]);
+
+  const markNotificationRead = useCallback(async (notificationId: number) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n))
+    );
+
+    try {
+      await fetch(`/api/notifications/${notificationId}/read`, {
+        method: "PATCH",
+        credentials: "include",
+      });
+    } catch (err) {
+      // Best-effort; data will refresh on next open.
+    }
+  }, []);
+
+  const markAllRead = useCallback(async () => {
+    const unread = notifications.filter((n) => !n.read);
+    if (unread.length === 0) {
+      return;
+    }
+
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+
+    await Promise.all(
+      unread.map((notification) =>
+        fetch(`/api/notifications/${notification.id}/read`, {
+          method: "PATCH",
+          credentials: "include",
+        })
+      )
+    );
+  }, [notifications]);
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
+
+  const formatNotificationTime = (createdAt: string) => {
+    try {
+      return formatDistanceToNow(new Date(createdAt), { addSuffix: true });
+    } catch {
+      return "";
+    }
+  };
 
   const toggleThemes = () => {
     // const next = !darkMode;
@@ -230,8 +294,10 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
                 >
                   <Bell size={18} />
                 </button>
-                {notifications.some((n) => !n.read) && (
-                  <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-red-500 text-white text-[10px] font-semibold rounded-full flex items-center justify-center">
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
                 )}
                 {notifOpen && (
                   <div className="absolute -left-2 mt-2 w-96  bg-(--card-bg) border border-(--card-border) rounded-2xl shadow-2xl p-3 z-40 backdrop-blur-md transform origin-top-left transition-all duration-150 ease-out">
@@ -239,11 +305,7 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
                       <h4 className="font-semibold">Notifications</h4>
                       <div className="flex items-center gap-2">
                         <button
-                          onClick={() =>
-                            setNotifications((prev) =>
-                              prev.map((n) => ({ ...n, read: true })),
-                            )
-                          }
+                          onClick={markAllRead}
                           className="text-xs text-slate-500 hover:text-slate-700"
                         >
                           Mark all read
@@ -258,64 +320,80 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
                     </div>
 
                     <div className="mt-3 max-h-64 overflow-auto">
-                      {notifications.length === 0 && (
+                      {notificationsLoading && (
                         <div className="px-3 py-4 text-sm text-slate-500">
-                          You're all caught up
+                          Loading notifications...
                         </div>
                       )}
 
-                      {notifications.map((n) => (
-                        <div
-                          key={n.id}
-                          onClick={() => {
-                            setNotifications((prev) =>
-                              prev.map((x) =>
-                                x.id === n.id ? { ...x, read: true } : x,
-                              ),
-                            );
-                            setNotifOpen(false);
-                          }}
-                          className={`group flex items-start gap-3 px-3 py-2 rounded-xl cursor-pointer transition hover:shadow-md hover:-translate-y-0.5 ${n.read ? "bg-transparent opacity-70" : "bg-linear-to-r from-indigo-50 to-white text-dark "}`}
-                        >
-                          <div className="relative">
-                            <img
-                              src={n.avatar}
-                              alt="a"
-                              width={44}
-                              height={44}
-                              className="rounded-full"
-                            />
-                            {!n.read && (
-                              <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-indigo-500 rounded-full ring-2 ring-white dark:ring-slate-900" />
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between">
-                              <p className="text-sm font-medium   truncate">
-                                {n.title}
-                              </p>
-                              <span className="text-xs text-slate-400 ml-2 whitespace-nowrap">
-                                {n.time}
-                              </span>
-                            </div>
-                            <p className="text-xs text-slate-500 mt-1 truncate">
-                              {n.body}
-                            </p>
-                          </div>
+                      {!notificationsLoading && notificationsError && (
+                        <div className="px-3 py-4 text-sm text-red-500">
+                          {notificationsError}
                         </div>
-                      ))}
+                      )}
+
+                      {!notificationsLoading &&
+                        !notificationsError &&
+                        notifications.length === 0 && (
+                          <div className="px-3 py-4 text-sm text-slate-500">
+                            You're all caught up
+                          </div>
+                        )}
+
+                      {!notificationsLoading &&
+                        !notificationsError &&
+                        notifications.map((n) => (
+                          <div
+                            key={n.id}
+                            onClick={() => {
+                              markNotificationRead(n.id);
+                              setNotifOpen(false);
+                            }}
+                            className={`group flex items-start gap-3 px-3 py-2 rounded-xl cursor-pointer transition hover:shadow-md hover:-translate-y-0.5 ${
+                              n.read
+                                ? "bg-transparent opacity-70"
+                                : "bg-linear-to-r from-indigo-50 to-white text-dark "
+                            }`}
+                          >
+                            <div className="relative">
+                              <img
+                                src="/images/blank-profile-picture.png"
+                                alt="Notification"
+                                width={44}
+                                height={44}
+                                className="rounded-full"
+                              />
+                              {!n.read && (
+                                <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-indigo-500 rounded-full ring-2 ring-white dark:ring-slate-900" />
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between">
+                                <p className="text-sm font-medium truncate">
+                                  {n.title}
+                                </p>
+                                <span className="text-xs text-slate-400 ml-2 whitespace-nowrap">
+                                  {formatNotificationTime(n.created_at)}
+                                </span>
+                              </div>
+                              <p className="text-xs text-slate-500 mt-1 truncate">
+                                {n.message}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
                     </div>
 
                     <div className="mt-3 border-t pt-2 flex items-center justify-between px-2">
                       <button
-                        onClick={() => setNotifications([])}
-                        className="text-xs text-red-500"
+                        onClick={loadNotifications}
+                        className="text-xs text-slate-500"
                       >
-                        Clear all
+                        Refresh
                       </button>
                       <button
                         onClick={() => {
-                          /* navigate to notifications page if exists */
+                          router.push("/dashboard/notifications");
                           setNotifOpen(false);
                         }}
                         className="text-xs text-slate-500"
@@ -341,8 +419,8 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
                   <p className="text-xs text-(--text-secondary)">اَدمن</p>
                 </div>
                 <img
-                  src={img}
-                  alt="user"
+                  src={avatarSrc}
+                  alt={adminName}
                   width={40}
                   height={40}
                   className="rounded-full"
@@ -352,8 +430,8 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
                   <div className="absolute left-0 top-full mt-2 w-48 bg-white/90 dark:bg-slate-900/80 border border-slate-100 dark:border-slate-800 rounded-2xl shadow-xl p-2 z-50 backdrop-blur-sm transform origin-top-left transition-all duration-150">
                     <div className="flex items-center gap-3 px-3 py-2">
                       <img
-                        src={img}
-                        alt="user"
+                        src={avatarSrc}
+                        alt={adminName}
                         width={40}
                         height={40}
                         className="rounded-full"
