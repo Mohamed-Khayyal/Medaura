@@ -3,12 +3,15 @@
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import DoctorCard from "@/components/home/doctorCard/doctorCard";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { t } from "@/i18n";
 import { motion } from "framer-motion";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/navigation";
 
-const BEST_DOCTORS_API_URL =
-  "http://127.0.0.1:3001/api/doctors/best?limit=3";
+const BEST_DOCTORS_API_URL = "http://127.0.0.1:3001/api/doctors/best";
 
 type BestDoctorApiItem = {
   provider_type?: "doctor" | "staff" | string;
@@ -75,7 +78,6 @@ export default function BestDoctors() {
   const [bestDoctorsData, setBestDoctorsData] = useState<BestDoctor[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
   useEffect(() => {
     function onLocale(event: Event) {
       setLocale((event as CustomEvent<string>).detail || "ar");
@@ -87,7 +89,6 @@ export default function BestDoctors() {
 
   useEffect(() => {
     const controller = new AbortController();
-
     async function fetchBestDoctors() {
       try {
         setLoading(true);
@@ -119,7 +120,9 @@ export default function BestDoctors() {
 
     return () => controller.abort();
   }, []);
-
+  
+  const prevRef = useRef(null);
+  const nextRef = useRef(null);
   return (
     <motion.section
       initial={{ opacity: 0, y: 60 }}
@@ -149,10 +152,16 @@ export default function BestDoctors() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.3 }}
         transition={{ duration: 0.7, delay: 0.1 }}
-        className={`mb-8 flex ${
-          locale === "ar" ? "justify-start" : "justify-end"
-        }`}
+        className={`mb-8 flex ${locale === "ar" ? "justify-between" : ""}`}
       >
+        <div className="flex items-center gap-4">
+          <div ref={nextRef}  className="flex items-center gap-4 rounded-full border border-[#d1ddff] px-3 py-2 text-sm font-semibold text-[#001a6e] transition hover:bg-[#f4f7ff] cursor-pointer">
+            <ChevronRight />
+          </div>
+          <div ref={prevRef}  className="flex items-center gap-4 rounded-full border border-[#d1ddff] px-3 py-2 text-sm font-semibold text-[#001a6e] transition hover:bg-[#f4f7ff] cursor-pointer">
+            <ChevronLeft />
+          </div>
+        </div>
         <Link
           href="/specialties"
           className="inline-flex items-center gap-2 rounded-full border border-[#d1ddff] px-4 py-2 text-sm font-semibold text-[#001a6e] transition hover:bg-[#f4f7ff]"
@@ -166,7 +175,7 @@ export default function BestDoctors() {
         </Link>
       </motion.div>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+      <div className=" w-full overflow-hidden">
         {loading &&
           Array.from({ length: 3 }).map((_, i) => (
             <div
@@ -180,35 +189,56 @@ export default function BestDoctors() {
             {error}
           </p>
         )}
-
-        {!loading &&
-          !error &&
-          bestDoctorsData.map((doc, i) => (
-            <motion.div
-              key={`${doc.providerType}-${doc.clinicId}-${doc.id}`}
-              initial={{ opacity: 0, y: 60 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.2 }}
-              transition={{
-                duration: 0.7,
-                delay: i * 0.12,
-                ease: "easeOut",
-              }}
-            >
-              <DoctorCard
-                id={doc.id}
-                clinicId={doc.clinicId}
-                name={doc.name}
-                specialty={doc.specialty}
-                rating={doc.rating}
-                price={doc.price}
-                experience={doc.experience}
-                imageSrc={doc.imageSrc}
-                isFromHome={true}
-                profileHref={getBestDoctorProfileHref(doc)}
-              />
-            </motion.div>
-          ))}
+        <div className="w-full overflow-hidden">
+          <Swiper
+            slidesPerView={3}
+            spaceBetween={20}
+            modules={[Navigation]}
+            navigation={{
+              prevEl: prevRef.current,
+              nextEl: nextRef.current,
+            }}
+            onBeforeInit={(swiper) => {
+              // @ts-ignore
+              swiper.params.navigation.prevEl = prevRef.current;
+              // @ts-ignore
+              swiper.params.navigation.nextEl = nextRef.current;
+            }}
+          >
+            {!loading &&
+              !error &&
+              bestDoctorsData.map((doc, i) => (
+                <SwiperSlide
+                  key={`${doc.providerType}-${doc.clinicId}-${doc.id}`}
+                >
+                  <motion.div
+                    key={`${doc.providerType}-${doc.clinicId}-${doc.id}`}
+                    initial={{ opacity: 0, y: 60 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, amount: 0.2 }}
+                    transition={{
+                      duration: 0.7,
+                      delay: i * 0.12,
+                      ease: "easeOut",
+                    }}
+                  >
+                    <DoctorCard
+                      id={doc.id}
+                      clinicId={doc.clinicId}
+                      name={doc.name}
+                      specialty={doc.specialty}
+                      rating={doc.rating}
+                      price={doc.price}
+                      experience={doc.experience}
+                      imageSrc={doc.imageSrc}
+                      isFromHome={true}
+                      profileHref={getBestDoctorProfileHref(doc)}
+                    />
+                  </motion.div>
+                </SwiperSlide>
+              ))}
+          </Swiper>
+        </div>
       </div>
     </motion.section>
   );

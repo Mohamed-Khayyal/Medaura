@@ -13,6 +13,7 @@
     "apexcharts": "^5.10.3",
     "axios": "^1.12.2",
     "date-fns": "^4.1.0",
+    "embla-carousel-react": "^8.6.0",
     "framer-motion": "^12.38.0",
     "i18next": "^25.8.13",
     "i18next-http-backend": "^3.0.2",
@@ -26,7 +27,8 @@
     "react-gauge-component": "^2.0.26",
     "react-i18next": "^16.5.4",
     "recharts": "^3.7.0",
-    "sweetalert2": "^11.26.24"
+    "sweetalert2": "^11.26.24",
+    "swiper": "^12.1.4"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
