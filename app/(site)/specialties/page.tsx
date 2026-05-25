@@ -19,7 +19,7 @@ import {
   X,
 } from "lucide-react";
 
-const API_BASE = "http://localhost:3001/api";
+const API_BASE = "/api";
 
 // ── Specialty definitions (match DB CHECK constraint exactly) ──────────────
 type SpecialtyDef = {

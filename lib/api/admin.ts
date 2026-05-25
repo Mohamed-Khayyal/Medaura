@@ -249,7 +249,24 @@ export const adminService = {
     return res.data;
   },
 
-  async listAuditLogs(token: string) {
+  async listAuditLogs(
+    token: string,
+    filters?: {
+      actor_role?: string;
+      method?: string;
+      location_contains?: string;
+      limit?: number;
+    }
+  ) {
+    const params = new URLSearchParams();
+    if (filters?.actor_role) params.set("actor_role", filters.actor_role);
+    if (filters?.method) params.set("method", filters.method);
+    if (filters?.location_contains) params.set("location_contains", filters.location_contains);
+    if (filters?.limit) params.set("limit", String(filters.limit));
+
+    const qs = params.toString();
+    const endpoint = qs ? `/api/admin/audit-logs?${qs}` : "/api/admin/audit-logs";
+
     const res = await apiClient.get<
       | ApiResponse<AuditLog[]>
       | AuditLog[]
@@ -258,7 +275,7 @@ export const adminService = {
           logs?: AuditLog[];
           data?: AuditLog[];
         }
-    >("/api/admin/audit-logs", { token });
+    >(endpoint, { token });
 
     if (Array.isArray(res)) {
       return res;

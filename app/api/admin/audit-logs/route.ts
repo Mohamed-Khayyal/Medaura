@@ -30,15 +30,24 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Forward supported filter params to the backend
+    const sp = request.nextUrl.searchParams;
+    const filters = {
+      actor_role: sp.get("actor_role") || undefined,
+      method: sp.get("method") || undefined,
+      location_contains: sp.get("location_contains") || undefined,
+      limit: sp.get("limit") ? Number(sp.get("limit")) : undefined,
+    };
+
     let logs;
     try {
-      logs = await adminService.listAuditLogs(auth.token);
+      logs = await adminService.listAuditLogs(auth.token, filters);
     } catch (error: unknown) {
       if (!isUnauthorized(error)) throw error;
 
       auth = await getServerAccessToken(request, { forceRefresh: true });
       if (!auth.token) throw error;
-      logs = await adminService.listAuditLogs(auth.token);
+      logs = await adminService.listAuditLogs(auth.token, filters);
     }
 
     return applyAuthCookies(

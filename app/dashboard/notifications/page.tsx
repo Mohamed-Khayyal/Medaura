@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { Bell, RefreshCw, CheckCircle2 } from "lucide-react";
 import type { Notification } from "@/lib/types/api";
+import { fetchNotificationsClient } from "@/lib/utils/fetchNotifications";
 
 const PAGE_SIZE = 10;
 
@@ -17,11 +18,8 @@ export default function AdminNotificationsPage() {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch("/api/notifications/me", {
-        credentials: "include",
-      });
-      const result = await response.json();
-      if (!response.ok || !result.success) {
+      const result = await fetchNotificationsClient();
+      if (!result.success) {
         throw new Error(result.error || "Failed to fetch notifications");
       }
       const items = Array.isArray(result.data) ? result.data : [];

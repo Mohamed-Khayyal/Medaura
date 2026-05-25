@@ -11,6 +11,10 @@ import type {
 } from "@/lib/types/api";
 
 export const clinicService = {
+  async list() {
+    return apiClient.get<ClinicProfile[]>("/api/clinic");
+  },
+
   async create(data: ClinicRequest, token: string) {
     return apiClient.post<ClinicProfile>("/clinic/create", data, { token });
   },

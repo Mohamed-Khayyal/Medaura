@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminService } from "@/lib/api/admin";
+import { getServerAccessToken } from "@/lib/api/server-auth";
 
 export async function POST(request: NextRequest) {
   try {
-    const authHeader = request.headers.get("authorization");
-    const token = authHeader?.replace("Bearer ", "");
+    const auth = await getServerAccessToken(request);
+    const token = auth.token;
 
     if (!token) {
       return NextResponse.json(

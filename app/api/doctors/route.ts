@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { doctorService } from "@/lib/api/doctors";
 
-// GET /api/doctors/list?specialist=عظام&clinic_id=1
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -22,7 +21,7 @@ export async function GET(request: NextRequest) {
       ...response,
     });
   } catch (error: any) {
-    console.error("List doctors error:", error);
+    console.error("GET /api/doctors error:", error);
     return NextResponse.json(
       {
         success: false,

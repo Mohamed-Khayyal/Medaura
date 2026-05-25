@@ -7,7 +7,7 @@ import Image from "next/image";
 import DoctorCard from "@/components/home/doctorCard/doctorCard";
 import { t } from "@/i18n";
 
-const API_BASE_URL = "http://127.0.0.1:3001/api";
+const API_BASE_URL = "/api";
 const RATINGS_PAGE_SIZE = 4;
 
 type ClinicDoctor = {
@@ -170,12 +170,12 @@ function normalizeClinic(
   const averageRating = toNumber(value.average_rating ?? value.rating, 0);
   const geoLocation =
     isRecord(value.geo_location) &&
-    typeof value.geo_location.latitude === "number" &&
-    typeof value.geo_location.longitude === "number"
+      typeof value.geo_location.latitude === "number" &&
+      typeof value.geo_location.longitude === "number"
       ? {
-          latitude: value.geo_location.latitude,
-          longitude: value.geo_location.longitude,
-        }
+        latitude: value.geo_location.latitude,
+        longitude: value.geo_location.longitude,
+      }
       : null;
 
   return {
@@ -262,11 +262,10 @@ function RatingStars({
       {[...Array(5)].map((_, index) => (
         <Star
           key={index}
-          className={`${className} ${
-            index < roundedRating
+          className={`${className} ${index < roundedRating
               ? "fill-[#f7b731] text-[#f7b731]"
               : "text-[#d7deef]"
-          }`}
+            }`}
         />
       ))}
     </div>
@@ -333,7 +332,7 @@ export default function ClinicDetailsPage() {
 
       try {
         const response = await fetch(
-          `${API_BASE_URL}/clinic/${clinicId}/profile`,
+          `${API_BASE_URL}/clinic/profile?id=${clinicId}`,
         );
         const data = await response.json();
 
@@ -443,8 +442,8 @@ export default function ClinicDetailsPage() {
   const mapSrc = clinic?.geo_location
     ? `https://maps.google.com/maps?q=${clinic.geo_location.latitude},${clinic.geo_location.longitude}&z=15&output=embed`
     : `https://maps.google.com/maps?q=${encodeURIComponent(
-        clinic?.location || "Cairo",
-      )}&z=12&output=embed`;
+      clinic?.location || "Cairo",
+    )}&z=12&output=embed`;
 
   const filteredDoctors = doctors.filter((doc) => {
     const matchesSpecialty =
@@ -550,9 +549,8 @@ export default function ClinicDetailsPage() {
       <div className="mx-auto max-w-6xl px-4 pb-16 pt-28 sm:px-6 lg:px-8">
         <div className="mb-16 overflow-hidden rounded-[32px] border border-[#dce5f6] bg-white shadow-[0_24px_70px_rgba(20,45,100,0.10)]">
           <div
-            className={`grid gap-0 lg:grid-cols-[1.05fr_0.95fr] ${
-              locale === "en" ? "lg:[direction:rtl]" : ""
-            }`}
+            className={`grid gap-0 lg:grid-cols-[1.05fr_0.95fr] ${locale === "en" ? "lg:[direction:rtl]" : ""
+              }`}
           >
             <div className="relative min-h-[340px] overflow-hidden bg-[#eaf0fb] lg:min-h-[520px]">
               <Image
@@ -801,11 +799,10 @@ export default function ClinicDetailsPage() {
                       {[...Array(5)].map((_, i) => (
                         <Star
                           key={i}
-                          className={`w-4 h-4 ${
-                            i < Math.round(review.rating)
+                          className={`w-4 h-4 ${i < Math.round(review.rating)
                               ? "text-yellow-400 fill-yellow-400"
                               : "text-gray-200"
-                          }`}
+                            }`}
                         />
                       ))}
                     </div>
@@ -883,11 +880,10 @@ export default function ClinicDetailsPage() {
                     className="transition-transform hover:scale-110"
                   >
                     <Star
-                      className={`h-6 w-6 ${
-                        value <= clinicRatingValue
+                      className={`h-6 w-6 ${value <= clinicRatingValue
                           ? "text-[#f7b731] fill-[#f7b731]"
                           : "text-[#d7deef]"
-                      }`}
+                        }`}
                     />
                   </button>
                 ))}

@@ -10,7 +10,7 @@ import ValidationModal from "@/components/booking/ValidationModal";
 import { t } from "@/i18n";
 
 const DOCTOR_FALLBACK_IMAGE = "/images/blank-profile-picture.png";
-const API_BASE_URL = "http://127.0.0.1:3001/api";
+const API_BASE_URL = "/api";
 const RATINGS_PAGE_SIZE = 4;
 
 type DoctorProfileData = {
@@ -244,11 +244,10 @@ function RatingStars({
       {[...Array(5)].map((_, index) => (
         <Star
           key={index}
-          className={`${className} ${
-            index < roundedRating
+          className={`${className} ${index < roundedRating
               ? "fill-[#f7b731] text-[#f7b731]"
               : "text-[#d7deef]"
-          }`}
+            }`}
         />
       ))}
     </div>
@@ -321,7 +320,7 @@ export default function DoctorProfilePage() {
 
       try {
         const response = await fetch(
-          `${API_BASE_URL}/doctors/${doctorId}/profile`,
+          `${API_BASE_URL}/doctors/profile?id=${doctorId}`,
           {
             credentials: "include",
           }
@@ -477,8 +476,8 @@ export default function DoctorProfilePage() {
   const mapSrc = mapLatitude && mapLongitude
     ? `https://maps.google.com/maps?q=${mapLatitude},${mapLongitude}&z=15&output=embed`
     : `https://maps.google.com/maps?q=${encodeURIComponent(
-        doctor?.location || "Cairo",
-      )}&z=12&output=embed`;
+      doctor?.location || "Cairo",
+    )}&z=12&output=embed`;
 
   const openTimePicker = () => {
     if (!selectedDate) {
@@ -717,11 +716,10 @@ export default function DoctorProfilePage() {
                     {[...Array(5)].map((_, i) => (
                       <Star
                         key={i}
-                        className={`w-4 h-4 ${
-                          i < Math.floor(rating)
+                        className={`w-4 h-4 ${i < Math.floor(rating)
                             ? "text-yellow-400 fill-yellow-400"
                             : "text-gray-300"
-                        }`}
+                          }`}
                       />
                     ))}
                   </div>
@@ -843,9 +841,9 @@ export default function DoctorProfilePage() {
               <p className="text-gray-400 text-sm">
                 {ratingCount > 0
                   ? t("clinics.fromVisitors", locale).replace(
-                      "{count}",
-                      String(ratingCount),
-                    )
+                    "{count}",
+                    String(ratingCount),
+                  )
                   : t("booking.fromVisitors", locale)}
               </p>
             </div>
@@ -875,11 +873,10 @@ export default function DoctorProfilePage() {
                       {[...Array(5)].map((_, i) => (
                         <Star
                           key={i}
-                          className={`w-4 h-4 ${
-                            i < Math.round(review.rating)
+                          className={`w-4 h-4 ${i < Math.round(review.rating)
                               ? "text-yellow-400 fill-yellow-400"
                               : "text-gray-200"
-                          }`}
+                            }`}
                         />
                       ))}
                     </div>
@@ -957,11 +954,10 @@ export default function DoctorProfilePage() {
                     className="transition-transform hover:scale-110"
                   >
                     <Star
-                      className={`h-6 w-6 ${
-                        value <= doctorRatingValue
+                      className={`h-6 w-6 ${value <= doctorRatingValue
                           ? "text-[#f7b731] fill-[#f7b731]"
                           : "text-[#d7deef]"
-                      }`}
+                        }`}
                     />
                   </button>
                 ))}

@@ -21,8 +21,8 @@ import {
 } from "lucide-react";
 import type { DoctorProfile } from "@/lib/types/api";
 
-const API_BASE_URL = "http://localhost:3001/api";
-const DOCTORS_API_URL = `${API_BASE_URL}/doctors`;
+const API_BASE_URL = "";
+const DOCTORS_API_URL = "/api/doctors";
 const DOCTOR_FALLBACK_IMAGE = "/images/blank-profile-picture.png";
 
 type DoctorWithClinic = DoctorProfile & {
@@ -77,12 +77,21 @@ function getDoctorImage(doctor: DoctorWithClinic) {
 async function getDoctors(): Promise<DoctorWithClinic[]> {
   try {
     const response = await fetch(DOCTORS_API_URL);
-    const data = (await response.json()) as { doctors?: DoctorWithClinic[] };
-    return (data.doctors || []).map((doctor) => ({
+    const payload = await response.json();
+    
+    // Extract doctors list safely supporting both array, bff success-wrapped format, and raw doctors field
+    const list = Array.isArray(payload) 
+      ? payload 
+      : Array.isArray(payload.data)
+        ? payload.data
+        : payload.data?.doctors || payload.doctors || [];
+
+    return list.map((doctor: any) => ({
       ...doctor,
-      id: (doctor as any).id ?? (doctor as any).doctor_id,
+      id: doctor.id ?? doctor.doctor_id,
     })) as DoctorWithClinic[];
-  } catch {
+  } catch (err) {
+    console.error("Error fetching doctors client side:", err);
     return [];
   }
 }

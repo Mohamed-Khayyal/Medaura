@@ -1,4 +1,5 @@
 import { apiClient } from "./client";
+import type { FetchOptions } from "./client";
 import type {
   SignupRequest,
   LoginRequest,
@@ -46,7 +47,7 @@ export const authService = {
     return apiClient.get("/api/user/me", token ? { token } : {});
   },
 
-  async updateProfile(token: string, body: any) {
-    return apiClient.patch("/api/user/me", body, { token });
+  async updateProfile(token: string, body: any, options?: FetchOptions) {
+    return apiClient.patch("/api/user/me", body, { token, ...options });
   },
 };

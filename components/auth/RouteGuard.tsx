@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { getDashboardPathByUserType } from "@/lib/utils/redirect";
+import { getDashboardPathByUserType, isUserPendingApproval } from "@/lib/utils/redirect";
 
 interface RouteGuardProps {
   /** Roles that ARE allowed to view this route */
@@ -17,6 +17,7 @@ interface RouteGuardProps {
  * Behaviour:
  * - While auth is loading  → shows a full-screen spinner (no flash)
  * - Not authenticated      → redirects to /login
+ * - Pending approval       → redirects to /pending
  * - Wrong role             → redirects to the user's own dashboard
  */
 export default function RouteGuard({ allowedRoles, children }: RouteGuardProps) {
@@ -26,6 +27,7 @@ export default function RouteGuard({ allowedRoles, children }: RouteGuardProps) 
   const userRole = user?.user_type?.toLowerCase() ?? "";
   const allowed = allowedRoles.map((r) => r.toLowerCase());
   const hasAccess = isAuthenticated && allowed.includes(userRole);
+  const isPending = isUserPendingApproval(user);
 
   useEffect(() => {
     if (loading) return;
@@ -36,11 +38,18 @@ export default function RouteGuard({ allowedRoles, children }: RouteGuardProps) 
       return;
     }
 
+    if (isPending) {
+      // Account awaiting approval → send to pending page
+      router.replace("/pending");
+      return;
+    }
+
     if (!hasAccess) {
       // Logged in but wrong role → send to their own dashboard
-      router.replace(getDashboardPathByUserType(user?.user_type));
+      const profile = user?.profile as Record<string, unknown> | undefined;
+      router.replace(getDashboardPathByUserType(user?.user_type, profile));
     }
-  }, [loading, isAuthenticated, hasAccess, user, router]);
+  }, [loading, isAuthenticated, isPending, hasAccess, user, router]);
 
   // ── Loading ──────────────────────────────────────────────────────────────
   if (loading) {
@@ -60,6 +69,18 @@ export default function RouteGuard({ allowedRoles, children }: RouteGuardProps) 
       <div className="flex min-h-screen items-center justify-center bg-[#f2f4f8]">
         <div className="flex flex-col items-center gap-4">
           <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#d9e3ff] border-t-[#001a6e]" />
+          <p className="text-sm font-medium text-[#5a6ea8]">جاري التوجيه...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Pending approval ─────────────────────────────────────────────────────
+  if (isPending) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#f2f4f8]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#d9e3ff] border-t-amber-500" />
           <p className="text-sm font-medium text-[#5a6ea8]">جاري التوجيه...</p>
         </div>
       </div>

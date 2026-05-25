@@ -8,7 +8,7 @@ import { t } from "@/i18n";
 import { motion } from "framer-motion";
 
 const BEST_DOCTORS_API_URL =
-  "http://127.0.0.1:3001/api/doctors/best?limit=3";
+  "/api/doctors/best?limit=3";
 
 type BestDoctorApiItem = {
   provider_type?: "doctor" | "staff" | string;
@@ -149,9 +149,8 @@ export default function BestDoctors() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.3 }}
         transition={{ duration: 0.7, delay: 0.1 }}
-        className={`mb-8 flex ${
-          locale === "en" ? "justify-start" : "justify-end"
-        }`}
+        className={`mb-8 flex ${locale === "en" ? "justify-start" : "justify-end"
+          }`}
       >
         <Link
           href="/specialties"

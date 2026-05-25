@@ -309,6 +309,16 @@ export interface AdminStaffList {
   verified: boolean;
 }
 
+export interface IpLocation {
+  city?: string;
+  region?: string;
+  country?: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  map_url?: string;
+  source?: string;
+}
+
 export interface AuditLog {
   id?: number;
   user_id?: number;
@@ -318,10 +328,13 @@ export interface AuditLog {
   timestamp?: string;
   actor_role?: string;
   actor_user_id?: number | null;
+  actor_name?: string | null;
+  actor_email?: string | null;
   body?: Record<string, unknown> | null;
   duration_ms?: number | null;
   event_type?: string;
   ip?: string;
+  ip_location?: IpLocation | null;
   level?: string;
   method?: string;
   path?: string;

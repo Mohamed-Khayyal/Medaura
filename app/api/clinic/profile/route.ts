@@ -17,9 +17,13 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const response = await clinicService.getProfile(parseInt(clinicId));
+    const numericId = parseInt(clinicId);
+    const response = await clinicService.getProfile(numericId);
 
-    return NextResponse.json({ success: true, data: response });
+    return NextResponse.json({
+      success: true,
+      ...response,
+    });
   } catch (error: any) {
     console.error("Get clinic profile error:", error);
     return NextResponse.json(

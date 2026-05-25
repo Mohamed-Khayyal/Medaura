@@ -57,7 +57,8 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
     if (loading) return; // wait until auth state is known
     if (!isAuthenticated) return; // not logged in, stay on auth page
 
-    const destination = getDashboardPathByUserType(user?.user_type);
+    const profile = user?.profile as Record<string, unknown> | undefined;
+    const destination = getDashboardPathByUserType(user?.user_type, profile);
     // Replace so the browser back button won't re-show the auth page
     router.replace(destination);
   }, [loading, isAuthenticated, user, router]);

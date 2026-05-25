@@ -106,9 +106,9 @@ export default function Page() {
 
         // Try the correct endpoint patterns
         const endpoints = [
-          "http://localhost:3001/api/clinics",
-          "http://localhost:3001/api/clinic/list",
-          "http://localhost:3001/api/clinic",
+          "/api/clinics",
+          "/api/clinic/list",
+          "/api/clinic",
         ];
 
         let data: unknown = null;
