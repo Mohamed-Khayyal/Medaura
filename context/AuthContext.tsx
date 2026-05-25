@@ -6,9 +6,9 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from "react";
+import { createAutoRefreshFetch, setInitialRefreshPromise } from "@/lib/api/auto-refresh-fetch";
 import type {
   AuthResponse,
   LoginRequest,
@@ -23,6 +23,7 @@ type BackendAuthUser = {
   email: string;
   role: string;
   profile?: Record<string, unknown>;
+  photo?: string | null;
 };
 
 type AuthResponseLike = AuthResponse & {
@@ -122,6 +123,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
+  useEffect(() => {
+    const originalFetch = window.fetch.bind(window);
+    // Wrap fetch to auto-refresh tokens on 401 responses for /api/* calls.
+    window.fetch = createAutoRefreshFetch(originalFetch, {
+      origin: window.location.origin,
+      waitForInitialRefresh: true,
+    });
+
+    return () => {
+      window.fetch = originalFetch;
+    };
+  }, []);
+
   const checkAuth = useCallback(async () => {
     try {
       const response = await fetch("/api/user/me", {
@@ -141,7 +155,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    checkAuth();
+    let cancelled = false;
+
+    const refreshPromise = fetch("/api/auth/refresh", {
+      method: "POST",
+      credentials: "include",
+    })
+      .then(() => undefined)
+      .catch(() => undefined);
+
+    setInitialRefreshPromise(refreshPromise);
+
+    refreshPromise.finally(() => {
+      if (!cancelled) {
+        checkAuth();
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [checkAuth]);
 
   const saveAuth = useCallback((authData: AuthResponse) => {

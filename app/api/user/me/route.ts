@@ -65,6 +65,7 @@ export async function GET(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const authHeader = request.headers.get("authorization");
+
     let auth = await getServerAccessToken(request);
     const token = auth.token || authHeader?.replace("Bearer ", "");
 
@@ -79,33 +80,71 @@ export async function PATCH(request: NextRequest) {
     }
 
     const contentType = request.headers.get("content-type") || "";
-    const body = contentType.includes("multipart/form-data")
-      ? await request.formData()
-      : await request.json();
+    let body: any;
+    const customHeaders: Record<string, string> = {};
+
+    try {
+      if (contentType.includes("multipart/form-data")) {
+        body = new Blob([await request.arrayBuffer()]);
+        customHeaders["content-type"] = contentType;
+      } else if (contentType.includes("application/json")) {
+        body = await request.json();
+      } else {
+        try {
+          body = await request.json();
+        } catch {
+          body = {};
+        }
+      }
+    } catch {
+      body = {};
+    }
 
     let response;
+
     try {
-      response = await authService.updateProfile(token, body);
+      response = await authService.updateProfile(token, body, {
+        headers: customHeaders,
+      });
     } catch (error: unknown) {
       if (!isUnauthorized(error)) throw error;
 
-      auth = await getServerAccessToken(request, { forceRefresh: true });
+      auth = await getServerAccessToken(request, {
+        forceRefresh: true,
+      });
+
       if (!auth.token) throw error;
-      response = await authService.updateProfile(auth.token, body);
+
+      response = await authService.updateProfile(
+        auth.token,
+        body,
+        {
+          headers: customHeaders,
+        }
+      );
     }
 
     return applyAuthCookies(
-      NextResponse.json({ success: true, data: response }),
+      NextResponse.json({
+        success: true,
+        data: response,
+      }),
       auth
     );
   } catch (error: unknown) {
     console.error("Update profile error:", error);
+
     return NextResponse.json(
       {
         success: false,
-        error: getErrorMessage(error, "Failed to update profile"),
+        error: getErrorMessage(
+          error,
+          "Failed to update profile"
+        ),
       },
-      { status: getErrorStatus(error) }
+      {
+        status: getErrorStatus(error),
+      }
     );
   }
 }

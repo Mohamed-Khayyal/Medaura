@@ -103,13 +103,33 @@ export default function Page() {
       try {
         setLoading(true);
         setError(null);
-        const response = await fetch("http://localhost:3001/api/clinic");
-        
-        if (!response.ok) {
-          throw new Error("Failed to fetch clinics");
+
+        // Try the correct endpoint patterns
+        const endpoints = [
+          "/api/clinics",
+          "/api/clinic/list",
+          "/api/clinic",
+        ];
+
+        let data: unknown = null;
+        let lastError = "";
+
+        for (const endpoint of endpoints) {
+          try {
+            const response = await fetch(endpoint);
+            if (response.ok) {
+              data = await response.json();
+              break;
+            }
+          } catch {
+            lastError = `Cannot connect to ${endpoint}`;
+          }
         }
 
-        const data = await response.json();
+        if (!data) {
+          throw new Error(lastError || "فشل في جلب العيادات");
+        }
+
         const list = extractClinics(data);
         const normalized = list
           .map((clinic, index) => normalizeClinic(clinic, index))
@@ -117,7 +137,7 @@ export default function Page() {
 
         setClinics(normalized);
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : "An error occurred";
+        const errorMessage = err instanceof Error ? err.message : "حدث خطأ في تحميل العيادات";
         setError(errorMessage);
         console.error("Error fetching clinics:", err);
       } finally {

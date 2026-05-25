@@ -28,9 +28,36 @@ export class ApiClient {
     const { timeout = 30000, token, ...fetchOptions } = options;
 
     const headers = new Headers(fetchOptions.headers);
-    const body = fetchOptions.body;
+    
+    // Forward incoming client GPS/location headers from the browser's request
+    if (typeof window === "undefined") {
+      try {
+        const { headers: nextHeadersFn } = require("next/headers");
+        const nextHeaders = await nextHeadersFn();
+        const lat = nextHeaders.get("x-client-latitude");
+        const lon = nextHeaders.get("x-client-longitude");
+        const city = nextHeaders.get("x-client-city");
+        const region = nextHeaders.get("x-client-region");
+        const country = nextHeaders.get("x-client-country");
 
-    if (!(body instanceof FormData) && !headers.has("Content-Type")) {
+        if (lat) headers.set("x-client-latitude", lat);
+        if (lon) headers.set("x-client-longitude", lon);
+        if (city) headers.set("x-client-city", city);
+        if (region) headers.set("x-client-region", region);
+        if (country) headers.set("x-client-country", country);
+      } catch (err) {
+        // Silently catch if require("next/headers") or nextHeadersFn() is called outside request context
+      }
+    }
+
+    const body = fetchOptions.body;
+    const isFormData = body && (
+      body instanceof FormData ||
+      body.constructor?.name === "FormData" ||
+      typeof (body as any).append === "function"
+    );
+
+    if (!isFormData && !headers.has("Content-Type")) {
       headers.set("Content-Type", "application/json");
     }
 
@@ -67,7 +94,14 @@ export class ApiClient {
   }
 
   private serializeBody(body: any) {
-    if (body instanceof FormData) {
+    if (body && (
+      body instanceof FormData ||
+      body.constructor?.name === "FormData" ||
+      typeof body.append === "function" ||
+      body instanceof Blob ||
+      body.constructor?.name === "Blob" ||
+      typeof body.arrayBuffer === "function"
+    )) {
       return body;
     }
 

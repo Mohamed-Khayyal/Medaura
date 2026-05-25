@@ -54,7 +54,11 @@ function normalizeDoctors(list: Doctor[]) {
   return list.map(normalizeDoctor);
 }
 
-export default function DoctorsList({ doctors: doctorsProp }: { doctors?: Doctor[] }) {
+export default function DoctorsList({
+  doctors: doctorsProp,
+}: {
+  doctors?: Doctor[];
+}) {
   const router = useRouter();
   const [doctors, setDoctors] = useState<Doctor[]>(() =>
     normalizeDoctors(doctorsProp || []),
@@ -133,8 +137,10 @@ export default function DoctorsList({ doctors: doctorsProp }: { doctors?: Doctor
       if (result.success) {
         setDoctors((prev) =>
           prev.map((doctor) =>
-            getDoctorId(doctor) === id ? { ...doctor, verified: verify } : doctor,
-          )
+            getDoctorId(doctor) === id
+              ? { ...doctor, verified: verify }
+              : doctor,
+          ),
         );
         if (typeof window !== "undefined") {
           window.dispatchEvent(new Event("admin:doctors-updated"));
@@ -152,20 +158,16 @@ export default function DoctorsList({ doctors: doctorsProp }: { doctors?: Doctor
 
   return (
     <div className=" bg-(--card-bg) border border-(--card-border) h-max rounded-xl shadow-sm">
-
       {/* header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b-2 border-(--card-border) mb-6 p-6">
-        
         <button
-          onClick={() => router.push("/dashboard/pages/doctors")}
+          onClick={() => router.push("/dashboard/pages/doctors/requests")}
           className="w-full sm:w-auto border-2 border-(--card-border) px-3 py-2 rounded-[5px] text-sm text-(--text-primary) font-normal cursor-pointer hover:text-white hover:bg-[#1F2B6C] transition-colors duration-500"
         >
           عرض الكل
         </button>
 
-        <h1 className="text-2xl font-bold text-(--text-primary)">
-          الأطباء
-        </h1>
+        <h1 className="text-2xl font-bold text-(--text-primary)">الأطباء</h1>
       </div>
 
       {/* Doctors */}
@@ -187,12 +189,14 @@ export default function DoctorsList({ doctors: doctorsProp }: { doctors?: Doctor
             key={`${getDoctorId(doctor) || "doctor"}-${index}`}
             className="flex items-center justify-between p-3 sm:p-4 bg-(--semi-card-bg) rounded-lg hover:bg-(--hover-bg) transition-colors"
           >
-            
             {/* Doctor Info */}
             <div className="flex items-center gap-3 flex-1 min-w-0">
-              
               <img
-                src={doctor.photo?.trim() || doctor.image?.trim() || DOCTOR_FALLBACK_IMAGE}
+                src={
+                  doctor.photo?.trim() ||
+                  doctor.image?.trim() ||
+                  DOCTOR_FALLBACK_IMAGE
+                }
                 className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover shrink-0"
                 alt={doctor.name || doctor.full_name}
               />
@@ -222,7 +226,9 @@ export default function DoctorsList({ doctors: doctorsProp }: { doctors?: Doctor
 
               <button
                 onClick={() => handleVerify(doctor, !doctor.verified)}
-                disabled={loadingId === getDoctorId(doctor) || !getDoctorId(doctor)}
+                disabled={
+                  loadingId === getDoctorId(doctor) || !getDoctorId(doctor)
+                }
                 className={`p-1.5 rounded-lg transition-colors ${
                   doctor.verified
                     ? "bg-red-50 text-red-600 hover:bg-red-100"
@@ -233,7 +239,6 @@ export default function DoctorsList({ doctors: doctorsProp }: { doctors?: Doctor
                 {doctor.verified ? <X size={16} /> : <Check size={16} />}
               </button>
             </div>
-
           </div>
         ))}
       </div>

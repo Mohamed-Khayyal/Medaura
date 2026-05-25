@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { apiClient } from "@/lib/api/client";
-import type { RefreshTokenRequest } from "@/lib/types/api";
 
 // POST /api/auth/refresh
 export async function POST(request: NextRequest) {
@@ -21,7 +20,12 @@ export async function POST(request: NextRequest) {
     const backendResponse = await apiClient.getRawResponse(
       "/api/auth/refresh",
       "POST",
-      { refresh_token: refreshToken }
+      { refresh_token: refreshToken },
+      {
+        headers: {
+          Cookie: `refresh_token=${refreshToken}`,
+        },
+      }
     );
 
     // Parse response data
@@ -42,12 +46,12 @@ export async function POST(request: NextRequest) {
 
     // Extract Set-Cookie headers from backend response and forward them
     const setCookieHeader = backendResponse.headers.get("set-cookie");
-    if (setCookieHeader) {
-      const cookies = backendResponse.headers.getSetCookie?.() || [];
-      cookies.forEach((cookie) => {
-        res.headers.append("set-cookie", cookie);
-      });
-    }
+    const backendCookies =
+      backendResponse.headers.getSetCookie?.() ||
+      (setCookieHeader ? [setCookieHeader] : []);
+    backendCookies.forEach((cookie) => {
+      res.headers.append("set-cookie", cookie);
+    });
 
     // Also set cookies from response data as fallback
     if (responseData.access_token || responseData.token) {
@@ -57,7 +61,7 @@ export async function POST(request: NextRequest) {
           httpOnly: true,
           secure: process.env.NODE_ENV === "production",
           sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-          maxAge: 7 * 24 * 60 * 60 * 1000,
+          maxAge: 7 * 24 * 60 * 60,
           path: "/",
         });
       }
@@ -70,7 +74,7 @@ export async function POST(request: NextRequest) {
           httpOnly: true,
           secure: process.env.NODE_ENV === "production",
           sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-          maxAge: 30 * 24 * 60 * 60 * 1000,
+          maxAge: 30 * 24 * 60 * 60,
           path: "/",
         });
       }

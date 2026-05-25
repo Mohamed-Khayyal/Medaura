@@ -76,6 +76,21 @@ export interface RefreshTokenRequest {
   refreshToken?: string;
 }
 
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface VerifyResetOtpRequest {
+  email: string;
+  otp: string;
+}
+
+export interface ResetPasswordRequest {
+  password: string;
+  confirmPassword?: string;
+  passwordConfirm?: string;
+}
+
 // User Types
 export interface UserProfile {
   id: number;
@@ -112,6 +127,20 @@ export interface ClinicStats {
   total_staff: number;
   total_bookings: number;
   pending_staff: number;
+}
+
+export interface ClinicMyStats {
+  clinic_name?: string;
+  total_staff: number;
+  pending_staff: number;
+  total_bookings: number;
+  total_doctors?: number;
+  confirmed_bookings?: number;
+  cancelled_bookings?: number;
+  pending_bookings?: number;
+  monthly_bookings?: { month: string; count: number }[];
+  weekly_bookings?: { day: string; count: number }[];
+  staff_by_specialty?: { specialty: string; count: number }[];
 }
 
 export interface ClinicBooking {
@@ -280,13 +309,49 @@ export interface AdminStaffList {
   verified: boolean;
 }
 
+export interface IpLocation {
+  city?: string;
+  region?: string;
+  country?: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  map_url?: string;
+  source?: string;
+}
+
 export interface AuditLog {
-  id: number;
-  user_id: number;
-  action: string;
-  resource_type: string;
-  resource_id: number;
-  timestamp: string;
+  id?: number;
+  user_id?: number;
+  action?: string;
+  resource_type?: string;
+  resource_id?: number;
+  timestamp?: string;
+  actor_role?: string;
+  actor_user_id?: number | null;
+  actor_name?: string | null;
+  actor_email?: string | null;
+  body?: Record<string, unknown> | null;
+  duration_ms?: number | null;
+  event_type?: string;
+  ip?: string;
+  ip_location?: IpLocation | null;
+  level?: string;
+  method?: string;
+  path?: string;
+  query?: Record<string, unknown> | null;
+  status_code?: number | null;
+  user_agent?: string;
+  error_code?: string | null;
+  error_message?: string | null;
+  error_details?: unknown;
+}
+
+export interface AuditStats {
+  total_logs?: number;
+  total_info_logs?: number;
+  total_error_logs?: number;
+  total_success_logs?: number;
+  total_failed_logs?: number;
 }
 
 export interface AdminCreateRequest {

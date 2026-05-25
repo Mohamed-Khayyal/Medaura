@@ -110,7 +110,7 @@ export default function DoctorCard({
             {t("doctorCard.sessionFee", locale)}
           </p>
           <p className="font-bold">
-            {price} {locale === "ar" ? "ج.م" : "EGP"}
+            {price} {locale === "en" ? "ج.م" : "EGP"}
           </p>
         </div>
         <div>

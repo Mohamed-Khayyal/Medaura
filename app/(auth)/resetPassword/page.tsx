@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   validatePassword,
   validateConfirmPassword,
-  simulateApiCall,
 } from "../validators";
 import { ErrorAlert, PasswordInput } from "../components";
 
@@ -17,9 +17,15 @@ export default function ResetPasswordPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const searchParams = useSearchParams();
+  const token = searchParams.get("token") || "";
+  const isTokenMissing = !token;
 
   function validate() {
     const e: Record<string, string> = {};
+    if (!token) {
+      e.form = "رابط إعادة التعيين غير صالح، يرجى طلب رمز جديد";
+    }
     const passwordError = validatePassword(password);
     const confirmError = validateConfirmPassword(password, confirm);
     if (passwordError) e.password = passwordError;
@@ -33,8 +39,29 @@ export default function ResetPasswordPage() {
     if (!validate()) return;
     setLoading(true);
     try {
-      await simulateApiCall();
+      const response = await fetch(
+        `/api/auth/reset-password/${encodeURIComponent(token)}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password, confirmPassword: confirm }),
+          credentials: "include",
+        }
+      );
+
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "تعذر إعادة تعيين كلمة المرور");
+      }
+
       setSubmitted(true);
+    } catch (error) {
+      setErrors({
+        form:
+          error instanceof Error
+            ? error.message
+            : "تعذر إعادة تعيين كلمة المرور",
+      });
     } finally {
       setLoading(false);
     }
@@ -84,6 +111,18 @@ export default function ResetPasswordPage() {
         سابقاً
       </p>
 
+      {isTokenMissing && (
+        <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+          رابط إعادة التعيين غير صالح أو منتهي الصلاحية.
+          <Link
+            href="/forgot-password"
+            className="ml-1 text-indigo-700 hover:text-indigo-900 transition"
+          >
+            طلب رمز جديد
+          </Link>
+        </div>
+      )}
+
       <ErrorAlert errors={errors} />
 
       <PasswordInput
@@ -111,7 +150,7 @@ export default function ResetPasswordPage() {
       <button
         type="submit"
         className="w-full bg-indigo-900 text-white py-2 sm:py-2.5 rounded-md text-sm sm:text-base transition-all duration-300 hover:bg-indigo-800 hover:shadow-lg active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
-        disabled={loading}
+        disabled={loading || isTokenMissing}
         aria-busy={loading}
       >
         {loading ? "جاري الإرسال..." : "إرسال"}

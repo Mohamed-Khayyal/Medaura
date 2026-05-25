@@ -17,7 +17,10 @@ export async function GET(request: NextRequest) {
 
     const response = await doctorService.list(query);
 
-    return NextResponse.json({ success: true, data: response });
+    return NextResponse.json({
+      success: true,
+      ...response,
+    });
   } catch (error: any) {
     console.error("List doctors error:", error);
     return NextResponse.json(

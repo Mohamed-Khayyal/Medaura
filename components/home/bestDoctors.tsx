@@ -11,7 +11,12 @@ import { Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 
+<<<<<<< HEAD
 const BEST_DOCTORS_API_URL = "http://127.0.0.1:3001/api/doctors/best";
+=======
+const BEST_DOCTORS_API_URL =
+  "/api/doctors/best?limit=3";
+>>>>>>> ed6a02869fe12417d37dd405d23372341c906063
 
 type BestDoctorApiItem = {
   provider_type?: "doctor" | "staff" | string;
@@ -152,7 +157,12 @@ export default function BestDoctors() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.3 }}
         transition={{ duration: 0.7, delay: 0.1 }}
+<<<<<<< HEAD
         className={`mb-8 flex ${locale === "ar" ? "justify-between" : ""}`}
+=======
+        className={`mb-8 flex ${locale === "en" ? "justify-start" : "justify-end"
+          }`}
+>>>>>>> ed6a02869fe12417d37dd405d23372341c906063
       >
         <div className="flex items-center gap-4">
           <div ref={nextRef}  className="flex items-center gap-4 rounded-full border border-[#d1ddff] px-3 py-2 text-sm font-semibold text-[#001a6e] transition hover:bg-[#f4f7ff] cursor-pointer">
@@ -167,7 +177,7 @@ export default function BestDoctors() {
           className="inline-flex items-center gap-2 rounded-full border border-[#d1ddff] px-4 py-2 text-sm font-semibold text-[#001a6e] transition hover:bg-[#f4f7ff]"
         >
           {t("bestDoctors.viewAll", locale)}
-          {locale === "ar" ? (
+          {locale === "en" ? (
             <ChevronLeft size={18} />
           ) : (
             <ChevronRight size={18} />

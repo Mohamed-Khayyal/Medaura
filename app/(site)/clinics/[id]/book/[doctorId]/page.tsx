@@ -18,6 +18,8 @@ import TimePicker from "@/components/booking/TimePicker";
 import ValidationModal from "@/components/booking/ValidationModal";
 import { t } from "@/i18n";
 
+const RATINGS_PAGE_SIZE = 4;
+
 type ApiStaffProfile = {
   id?: number;
   staff_id?: number;
@@ -30,17 +32,18 @@ type ApiStaffProfile = {
   work_from?: string;
   work_to?: string;
   consultation_price?: number;
-  rating?: number;
-  average_rating?: number;
-  total_ratings?: number;
+  rating?: number | string;
+  average_rating?: number | string;
+  total_ratings?: number | string;
   photo?: string | null;
-  about?: string;
+  bio?: string;
   verified?: boolean;
   clinic_name?: string;
   clinic_location?: string;
   clinic_phone?: string;
-  clinic_average_rating?: number;
-  clinic_total_ratings?: number;
+  clinic_average_rating?: number | string;
+  clinic_rating?: number | string;
+  clinic_total_ratings?: number | string;
   total_patients?: number;
   total_bookings?: number;
   can_be_booked?: number | boolean;
@@ -55,8 +58,10 @@ type ApiClinicProfile = {
   opening_hours?: string;
   image?: string;
   photo?: string;
-  average_rating?: number;
-  total_ratings?: number;
+  average_rating?: number | string;
+  rating?: number | string;
+  total_ratings?: number | string;
+  ratings_count?: number | string;
 };
 
 type BookingSlot = {
@@ -66,6 +71,26 @@ type BookingSlot = {
 };
 
 type ApiRecord = Record<string, unknown>;
+
+type RatingsSummary = {
+  total_ratings: number;
+  average_rating: number;
+};
+
+type RatingsPagination = {
+  page: number;
+  limit: number;
+  total_pages: number;
+};
+
+type RatingItem = {
+  rating_id: number;
+  rating: number;
+  comment: string;
+  patient_name: string;
+  patient_photo: string;
+  created_at: string;
+};
 
 function isRecord(value: unknown): value is ApiRecord {
   return typeof value === "object" && value !== null;
@@ -117,6 +142,69 @@ function getErrorMessage(error: unknown, fallback: string) {
   return error instanceof Error ? error.message : fallback;
 }
 
+function getPayloadMessage(payload: unknown, fallback: string) {
+  if (!isRecord(payload)) return fallback;
+  const message = payload.message ?? payload.error;
+  return typeof message === "string" && message.trim() ? message : fallback;
+}
+
+function normalizeRatingItem(entry: unknown, index: number): RatingItem {
+  if (!isRecord(entry)) {
+    return {
+      rating_id: index + 1,
+      rating: 0,
+      comment: "",
+      patient_name: "",
+      patient_photo: "",
+      created_at: "",
+    };
+  }
+
+  return {
+    rating_id: Number(entry.rating_id ?? entry.id ?? index + 1),
+    rating: Number(entry.rating ?? 0),
+    comment: typeof entry.comment === "string" ? entry.comment : "",
+    patient_name:
+      typeof entry.patient_name === "string" ? entry.patient_name : "",
+    patient_photo:
+      typeof entry.patient_photo === "string" ? entry.patient_photo : "",
+    created_at: typeof entry.created_at === "string" ? entry.created_at : "",
+  };
+}
+
+function normalizeRatingsPayload(payload: unknown) {
+  const source =
+    isRecord(payload) && payload.data !== undefined ? payload.data : payload;
+  if (!isRecord(source)) return null;
+
+  const summarySource = isRecord(source.summary) ? source.summary : {};
+  const paginationSource = isRecord(source.pagination) ? source.pagination : {};
+  const ratingsSource = Array.isArray(source.ratings) ? source.ratings : [];
+
+  const summary: RatingsSummary = {
+    total_ratings: Number(
+      summarySource.total_ratings ?? summarySource.count ?? source.results ?? 0,
+    ),
+    average_rating: Number(
+      summarySource.average_rating ?? summarySource.avg_rating ?? 0,
+    ),
+  };
+
+  const pagination: RatingsPagination = {
+    page: Number(paginationSource.page ?? 1),
+    limit: Number(paginationSource.limit ?? RATINGS_PAGE_SIZE),
+    total_pages: Number(
+      paginationSource.total_pages ?? paginationSource.pages ?? 1,
+    ),
+  };
+
+  const ratings = ratingsSource.map((entry, index) =>
+    normalizeRatingItem(entry, index),
+  );
+
+  return { summary, pagination, ratings };
+}
+
 function getSafeRating(value: unknown) {
   const rating = Number(value);
   return Number.isFinite(rating) ? rating : 0;
@@ -149,7 +237,7 @@ function RatingStars({
 
 function formatDisplayDate(date: string, locale: string) {
   if (!date) return "";
-  return new Intl.DateTimeFormat(locale === "ar" ? "ar-EG" : "en-US", {
+  return new Intl.DateTimeFormat(locale === "en" ? "ar-EG" : "en-US", {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -159,7 +247,7 @@ function formatDisplayDate(date: string, locale: string) {
 function formatWorkingDays(value: string, locale: string) {
   if (!value) return "";
   const dayMap =
-    locale === "ar"
+    locale === "en"
       ? {
           sun: "الاحد",
           mon: "الاثنين",
@@ -208,7 +296,7 @@ function formatWorkingDays(value: string, locale: string) {
     })
     .filter(Boolean);
 
-  const separator = locale === "ar" ? "، " : ", ";
+  const separator = locale === "en" ? "، " : ", ";
   return parts.join(separator);
 }
 
@@ -226,11 +314,8 @@ export default function BookingPage() {
   const [selectedTime, setSelectedTime] = useState("");
   const [isBooking, setIsBooking] = useState(false);
   const [showValidationModal, setShowValidationModal] = useState(false);
-  const [locale, setLocale] = useState(() =>
-    typeof window === "undefined"
-      ? "en"
-      : localStorage.getItem("locale") || "en",
-  );
+  const [locale, setLocale] = useState<"ar" | "en">("en");
+  const [mounted, setMounted] = useState(false);
   const [staff, setStaff] = useState<ApiStaffProfile | null>(null);
   const [clinicProfile, setClinicProfile] = useState<ApiClinicProfile | null>(
     null,
@@ -240,6 +325,19 @@ export default function BookingPage() {
   const [slots, setSlots] = useState<BookingSlot[]>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [slotsError, setSlotsError] = useState("");
+  const [staffRatings, setStaffRatings] = useState<RatingItem[]>([]);
+  const [staffRatingsSummary, setStaffRatingsSummary] =
+    useState<RatingsSummary | null>(null);
+  const [staffRatingsPage, setStaffRatingsPage] = useState(1);
+  const [staffRatingsTotalPages, setStaffRatingsTotalPages] = useState(1);
+  const [staffRatingsLoading, setStaffRatingsLoading] = useState(false);
+  const [staffRatingsError, setStaffRatingsError] = useState("");
+  const [staffRatingValue, setStaffRatingValue] = useState(0);
+  const [staffRatingComment, setStaffRatingComment] = useState("");
+  const [staffRatingSubmitting, setStaffRatingSubmitting] = useState(false);
+  const [staffRatingSubmitError, setStaffRatingSubmitError] = useState("");
+  const [staffRatingSubmitSuccess, setStaffRatingSubmitSuccess] = useState("");
+  const [staffRatingsRefreshKey, setStaffRatingsRefreshKey] = useState(0);
   const [validationModalData, setValidationModalData] = useState<{
     type: "success" | "warning";
     title: string;
@@ -247,12 +345,27 @@ export default function BookingPage() {
   } | null>(null);
 
   useEffect(() => {
-    const handleLocaleChange: EventListener = (event) => {
-      setLocale((event as CustomEvent<string>).detail);
+    setMounted(true);
+
+    const savedLocale = localStorage.getItem("locale") as "ar" | "en" | null;
+
+    if (savedLocale) {
+      setLocale(savedLocale);
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleLocaleChange = (event: Event) => {
+      const newLocale = (event as CustomEvent).detail as "ar" | "en";
+      setLocale(newLocale);
     };
     window.addEventListener("localeChange", handleLocaleChange);
     return () => window.removeEventListener("localeChange", handleLocaleChange);
   }, []);
+
+  useEffect(() => {
+    setStaffRatingsPage(1);
+  }, [staffId]);
 
   useEffect(() => {
     async function loadProfile() {
@@ -297,7 +410,7 @@ export default function BookingPage() {
         setProfileError(
           getErrorMessage(
             error,
-            locale === "ar"
+            locale === "en"
               ? "تعذر تحميل بيانات الطبيب."
               : "Failed to load staff profile.",
           ),
@@ -345,7 +458,7 @@ export default function BookingPage() {
         setSlotsError(
           getErrorMessage(
             error,
-            locale === "ar"
+            locale === "en"
               ? "تعذر تحميل المواعيد المتاحة."
               : "Failed to load available times.",
           ),
@@ -358,22 +471,91 @@ export default function BookingPage() {
     loadSlots();
   }, [locale, selectedDate, staffId]);
 
+  useEffect(() => {
+    if (!staffId) return;
+    let active = true;
+
+    async function loadStaffRatings() {
+      setStaffRatingsLoading(true);
+      setStaffRatingsError("");
+
+      try {
+        const params = new URLSearchParams({
+          id: String(staffId),
+          page: String(staffRatingsPage),
+          limit: String(RATINGS_PAGE_SIZE),
+        });
+
+        const response = await fetch(
+          `/api/ratings/staff?${params.toString()}`,
+          { credentials: "include" },
+        );
+        const payload = await response.json();
+
+        if (
+          !response.ok ||
+          (isRecord(payload) &&
+            typeof payload.status === "string" &&
+            payload.status !== "success") ||
+          (isRecord(payload) && payload.success === false)
+        ) {
+          throw new Error(
+            getPayloadMessage(payload, "Failed to load staff ratings"),
+          );
+        }
+
+        const normalized = normalizeRatingsPayload(payload);
+        if (!active || !normalized) return;
+
+        setStaffRatings(normalized.ratings);
+        setStaffRatingsSummary(normalized.summary);
+        setStaffRatingsTotalPages(normalized.pagination.total_pages || 1);
+      } catch (error: unknown) {
+        if (!active) return;
+        setStaffRatingsError(
+          getErrorMessage(error, "Failed to load staff ratings"),
+        );
+      } finally {
+        if (active) setStaffRatingsLoading(false);
+      }
+    }
+
+    loadStaffRatings();
+
+    return () => {
+      active = false;
+    };
+  }, [staffId, staffRatingsPage, staffRatingsRefreshKey]);
+
   const doctorName = staff?.full_name || staff?.name || "";
   const doctorSpecialty = staff?.specialist || staff?.role_title || "";
   const clinicRating = getSafeRating(
-    clinicProfile?.average_rating ?? staff?.clinic_average_rating ?? 0,
+    clinicProfile?.average_rating ??
+      clinicProfile?.rating ??
+      staff?.clinic_average_rating ??
+      staff?.clinic_rating ??
+      0,
   );
 
   const clinicRatingCount = Number(
-    clinicProfile?.total_ratings ?? staff?.clinic_total_ratings ?? 0,
+    clinicProfile?.total_ratings ??
+      clinicProfile?.ratings_count ??
+      staff?.clinic_total_ratings ??
+      0,
   );
 
   // doctor(staff) rating
-  const doctorRating = getSafeRating(
-    staff?.average_rating ?? staff?.rating ?? 0,
+  const staffSummaryCount = staffRatingsSummary?.total_ratings ?? 0;
+  const staffSummaryAverage = getSafeRating(
+    staffRatingsSummary?.average_rating,
   );
-
-  const doctorRatingCount = Number(staff?.total_ratings ?? 0);
+  const hasStaffSummary = staffRatingsSummary !== null;
+  const doctorRating = hasStaffSummary
+    ? staffSummaryAverage
+    : getSafeRating(staff?.average_rating ?? staff?.rating ?? 0);
+  const doctorRatingCount = hasStaffSummary
+    ? staffSummaryCount
+    : Number(staff?.total_ratings ?? 0);
   const canBeBooked =
     staff?.can_be_booked !== false && staff?.can_be_booked !== 0;
   const clinicName =
@@ -424,13 +606,76 @@ export default function BookingPage() {
     setShowTimePicker(true);
   };
 
+  const handleStaffRatingSubmit = async () => {
+    if (!staffId || staffRatingSubmitting) return;
+
+    setStaffRatingSubmitError("");
+    setStaffRatingSubmitSuccess("");
+
+    if (staffRatingValue < 1 || staffRatingValue > 5) {
+      setStaffRatingSubmitError(
+        locale === "en"
+          ? "برجاء اختيار تقييم من ١ إلى ٥."
+          : "Please select a rating from 1 to 5.",
+      );
+      return;
+    }
+
+    setStaffRatingSubmitting(true);
+
+    try {
+      const response = await fetch(`/api/ratings/staff?id=${staffId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          rating: staffRatingValue,
+          comment: staffRatingComment.trim() || undefined,
+        }),
+      });
+
+      const payload = await response.json();
+
+      if (
+        !response.ok ||
+        (isRecord(payload) &&
+          typeof payload.status === "string" &&
+          payload.status !== "success") ||
+        (isRecord(payload) && payload.success === false)
+      ) {
+        throw new Error(
+          getPayloadMessage(payload, "Failed to submit staff rating"),
+        );
+      }
+
+      setStaffRatingSubmitSuccess(
+        locale === "en"
+          ? "تم إرسال التقييم بنجاح."
+          : "Rating submitted successfully.",
+      );
+      setStaffRatingComment("");
+      setStaffRatingValue(0);
+      setStaffRatingsPage(1);
+      setStaffRatingsRefreshKey((prev) => prev + 1);
+    } catch (error: unknown) {
+      setStaffRatingSubmitError(
+        getErrorMessage(
+          error,
+          locale === "en" ? "تعذر إرسال التقييم." : "Failed to submit rating.",
+        ),
+      );
+    } finally {
+      setStaffRatingSubmitting(false);
+    }
+  };
+
   const handleBookingClick = async () => {
     if (!canBeBooked) {
       setValidationModalData({
         type: "warning",
         title: t("booking.validation.alreadyBooked.title", locale),
         message:
-          locale === "ar"
+          locale === "en"
             ? "هذا الطبيب غير متاح للحجز حاليا."
             : "This staff member is not available for booking right now.",
       });
@@ -507,10 +752,10 @@ export default function BookingPage() {
       setValidationModalData({
         type: "warning",
         title:
-          locale === "ar" ? "تعذر إتمام الحجز" : "Could not complete booking",
+          locale === "en" ? "تعذر إتمام الحجز" : "Could not complete booking",
         message: getErrorMessage(
           error,
-          locale === "ar"
+          locale === "en"
             ? "حدث خطأ أثناء إنشاء الحجز."
             : "Something went wrong while creating the booking.",
         ),
@@ -525,7 +770,7 @@ export default function BookingPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p className="font-semibold text-[#001A6E]">
-          {locale === "ar" ? "جاري تحميل الملف..." : "Loading profile..."}
+          {locale === "en" ? "جاري تحميل الملف..." : "Loading profile..."}
         </p>
       </div>
     );
@@ -549,14 +794,14 @@ export default function BookingPage() {
           className="mb-8 flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-bold text-[#001A6E] shadow-sm transition hover:bg-[#eef3ff]"
         >
           <ArrowRight
-            className={`w-5 h-5 ${locale === "ar" ? "" : "rotate-180"}`}
+            className={`w-5 h-5 ${locale === "en" ? "" : "rotate-180"}`}
           />
           {t("booking.back", locale)}
         </button>
 
         <div className="flex flex-col gap-8 lg:flex-row">
           <div
-            className={`flex-1 space-y-8 ${locale === "ar" ? "order-1 lg:order-1" : "order-1"}`}
+            className={`flex-1 space-y-8 ${locale === "en" ? "order-1 lg:order-1" : "order-1"}`}
           >
             <div className="rounded-[28px] border border-[#dce5f6] bg-white p-5 shadow-[0_18px_55px_rgba(20,45,100,0.08)] sm:p-7">
               <div className="flex flex-col items-start gap-8 md:flex-row">
@@ -581,14 +826,14 @@ export default function BookingPage() {
                       </h1>
                       {formattedWorkingDays && (
                         <span className="text-xs font-semibold text-[#001A6E] bg-blue-50 px-3 py-1 rounded-full">
-                          {locale === "ar"
+                          {locale === "en"
                             ? `ايام العمل: ${formattedWorkingDays}`
                             : `Working days: ${formattedWorkingDays}`}
                         </span>
                       )}
                     </div>
                     <p className="text-gray-500 font-medium">
-                      {t("specialties.doctors", locale)} {doctorSpecialty}
+                      {doctorSpecialty}
                     </p>
                     <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-[#fff7e3] px-4 py-2">
                       <RatingStars rating={doctorRating} />
@@ -610,7 +855,7 @@ export default function BookingPage() {
                       </p>
                       <p className="font-bold text-[#001A6E]">
                         {staff.consultation_price ?? "-"}{" "}
-                        {locale === "ar" ? "ج.م" : "EGP"}
+                        {locale === "en" ? "ج.م" : "EGP"}
                       </p>
                     </div>
                     <div className="rounded-2xl bg-[#f4f7ff] p-4">
@@ -645,7 +890,7 @@ export default function BookingPage() {
                       className="flex-1 rounded-2xl bg-[#001A6E] py-4 font-bold text-white shadow-lg shadow-blue-900/10 transition-colors hover:bg-[#162f80] disabled:cursor-not-allowed disabled:opacity-70"
                     >
                       {isBooking
-                        ? locale === "ar"
+                        ? locale === "en"
                           ? "جاري الحجز..."
                           : "Booking..."
                         : t("booking.bookNow", locale)}
@@ -664,8 +909,8 @@ export default function BookingPage() {
                 {t("booking.aboutDoctor", locale)}
               </h2>
               <p className="text-gray-500 leading-relaxed text-sm">
-                {staff.about ||
-                  (locale === "ar"
+                {staff.bio ||
+                  (locale === "en"
                     ? "استشاري متخصص بخبرة واسعة في مجاله، يحرص على تقديم أفضل رعاية طبية للمرضى."
                     : "Specialized consultant with extensive experience, focused on providing high quality medical care.")}
               </p>
@@ -673,7 +918,7 @@ export default function BookingPage() {
           </div>
 
           <div
-            className={`lg:w-80 shrink-0 ${locale === "ar" ? "order-2 lg:order-2" : "order-2"}`}
+            className={`lg:w-80 shrink-0 ${locale === "en" ? "order-2 lg:order-2" : "order-2"}`}
           >
             <div className="sticky top-28 rounded-[28px] border border-[#dce5f6] bg-white p-6 shadow-[0_18px_55px_rgba(20,45,100,0.08)]">
               <h2 className="text-xl font-bold text-[#001A6E] mb-6">
@@ -712,16 +957,6 @@ export default function BookingPage() {
                   <Phone className="w-4 h-4 shrink-0" />
                   <span dir="ltr">{clinicPhone}</span>
                 </div>
-
-                <div>
-                  <h3 className="font-bold text-gray-800 mb-3">
-                    {t("booking.workingHours", locale)}
-                  </h3>
-                  <p className="text-gray-400 text-sm leading-relaxed">
-                    {clinicHours ||
-                      `${staff.work_from || ""} - ${staff.work_to || ""}`}
-                  </p>
-                </div>
               </div>
             </div>
           </div>
@@ -753,32 +988,154 @@ export default function BookingPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
-            {(fallbackClinic?.reviews || []).slice(0, 4).map((review) => (
-              <div
-                key={review.id}
-                className="bg-linear-to-br from-blue-50 to-white border border-blue-100 p-6 rounded-3xl shadow-sm hover:shadow-md transition-shadow"
-              >
-                <div className="flex gap-0.5 mb-3">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className="w-4 h-4 text-yellow-400 fill-yellow-400"
-                    />
-                  ))}
-                </div>
-                <p className="font-bold text-sm text-gray-800 mb-2">
-                  {t("booking.overallRating", locale)}
-                </p>
-                <p className="text-gray-600 text-xs font-medium mb-1">
-                  {review.name}
-                </p>
-                <p className="text-gray-400 text-[11px] mb-3">{review.date}</p>
-                <p className="text-gray-600 text-sm leading-relaxed">
-                  &quot;{review.comment}&quot;
-                </p>
+          <div className="mt-6">
+            {staffRatingsLoading ? (
+              <p className="text-center text-[#001A6E]">
+                {locale === "en"
+                  ? "جاري تحميل التقييمات..."
+                  : "Loading ratings..."}
+              </p>
+            ) : staffRatingsError ? (
+              <p className="text-center text-red-600">{staffRatingsError}</p>
+            ) : staffRatings.length === 0 ? (
+              <p className="text-center text-gray-400">
+                {locale === "en" ? "لا توجد تقييمات بعد." : "No reviews yet."}
+              </p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+                {staffRatings.map((review) => (
+                  <div
+                    key={review.rating_id}
+                    className="bg-linear-to-br from-blue-50 to-white border border-blue-100 p-6 rounded-3xl shadow-sm hover:shadow-md transition-shadow text-left"
+                  >
+                    <div className="flex gap-0.5 mb-3">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`w-4 h-4 ${
+                            i < Math.round(review.rating)
+                              ? "text-yellow-400 fill-yellow-400"
+                              : "text-gray-200"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <div className="mb-3 flex items-center gap-3">
+                      <div className="h-10 w-10 overflow-hidden rounded-full bg-[#eaf0fb]">
+                        {review.patient_photo ? (
+                          <img
+                            src={review.patient_photo}
+                            alt={review.patient_name || "Patient"}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : null}
+                      </div>
+                      <p className="text-xs font-semibold text-gray-500">
+                        {review.patient_name ||
+                          (locale === "en" ? "مريض" : "Patient")}
+                      </p>
+                    </div>
+                    {review.comment ? (
+                      <p className="text-gray-600 text-sm leading-relaxed">
+                        &quot;{review.comment}&quot;
+                      </p>
+                    ) : (
+                      <p className="text-gray-400 text-sm">
+                        {locale === "en" ? "بدون تعليق" : "No comment"}
+                      </p>
+                    )}
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
+          </div>
+
+          {staffRatingsTotalPages > 1 && (
+            <div className="mt-8 flex items-center justify-center gap-4">
+              <button
+                onClick={() =>
+                  setStaffRatingsPage((prev) => Math.max(1, prev - 1))
+                }
+                disabled={staffRatingsPage <= 1}
+                className="rounded-full border border-[#dce5f6] px-4 py-2 text-sm font-semibold text-[#001A6E] disabled:opacity-50"
+              >
+                {locale === "en" ? "السابق" : "Previous"}
+              </button>
+              <span className="text-sm text-gray-500">
+                {locale === "en"
+                  ? `صفحة ${staffRatingsPage} من ${staffRatingsTotalPages}`
+                  : `Page ${staffRatingsPage} of ${staffRatingsTotalPages}`}
+              </span>
+              <button
+                onClick={() =>
+                  setStaffRatingsPage((prev) =>
+                    Math.min(staffRatingsTotalPages, prev + 1),
+                  )
+                }
+                disabled={staffRatingsPage >= staffRatingsTotalPages}
+                className="rounded-full border border-[#dce5f6] px-4 py-2 text-sm font-semibold text-[#001A6E] disabled:opacity-50"
+              >
+                {locale === "en" ? "التالي" : "Next"}
+              </button>
+            </div>
+          )}
+
+          <div className="mt-10 border-t border-[#e6ecf6] pt-8 text-center">
+            <h3 className="text-lg font-bold text-[#001A6E] mb-4">
+              {locale === "en" ? "قيّم هذا الطبيب" : "Rate this doctor"}
+            </h3>
+            <div className="mx-auto flex max-w-xl flex-col items-center gap-4">
+              <div className="flex items-center gap-1">
+                {[1, 2, 3, 4, 5].map((value) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setStaffRatingValue(value)}
+                    className="transition-transform hover:scale-110"
+                  >
+                    <Star
+                      className={`h-6 w-6 ${
+                        value <= staffRatingValue
+                          ? "text-[#f7b731] fill-[#f7b731]"
+                          : "text-[#d7deef]"
+                      }`}
+                    />
+                  </button>
+                ))}
+              </div>
+              <textarea
+                value={staffRatingComment}
+                onChange={(event) => setStaffRatingComment(event.target.value)}
+                placeholder={
+                  locale === "en"
+                    ? "اكتب تعليقك هنا (اختياري)"
+                    : "Write your comment (optional)"
+                }
+                rows={3}
+                className="w-full rounded-2xl border border-[#dce5f6] px-4 py-3 text-sm text-gray-600 outline-none focus:border-[#001A6E]"
+              />
+              {staffRatingSubmitError ? (
+                <p className="text-sm text-red-600">{staffRatingSubmitError}</p>
+              ) : null}
+              {staffRatingSubmitSuccess ? (
+                <p className="text-sm text-green-600">
+                  {staffRatingSubmitSuccess}
+                </p>
+              ) : null}
+              <button
+                onClick={handleStaffRatingSubmit}
+                disabled={staffRatingSubmitting}
+                className="rounded-2xl bg-[#001A6E] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-blue-900/10 transition-colors hover:bg-[#162f80] disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {staffRatingSubmitting
+                  ? locale === "en"
+                    ? "جاري الإرسال..."
+                    : "Submitting..."
+                  : locale === "en"
+                    ? "إرسال التقييم"
+                    : "Submit rating"}
+              </button>
+            </div>
           </div>
         </div>
 

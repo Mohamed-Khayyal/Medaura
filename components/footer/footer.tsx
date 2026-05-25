@@ -6,7 +6,7 @@ import { t } from "@/i18n";
 
 const quickLinks = [
   { key: "nav.home", href: "/" },
-  { key: "nav.specialties", href: "/site/specialties" },
+  { key: "nav.specialties", href: "/specialties" },
   { key: "nav.doctors", href: "/doctors" },
   { key: "nav.clinics", href: "/clinics" },
 ];
@@ -27,7 +27,7 @@ export default function Footer() {
     <footer className="bg-[#071022] px-6 py-8 text-white">
       <div
         className={`max-w-7xl mx-auto grid gap-8 sm:grid-cols-2 md:grid-cols-6 items-start lg:gap-6 ${
-          locale === "ar" ? "text-right" : "text-left"
+          locale === "en" ? "text-right" : "text-left"
         }`}
       >
         {/* Brand / description */}
@@ -96,7 +96,7 @@ export default function Footer() {
               </Link>
             </li>
             <li>
-              <Link href="/site/specialties" className="hover:text-white">
+              <Link href="/specialties" className="hover:text-white">
                 {t("nav.specialties", locale)}
               </Link>
             </li>

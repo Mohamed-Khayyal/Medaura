@@ -17,6 +17,26 @@ type AuthData = {
   refreshToken?: string;
 };
 
+function getCookieValue(setCookies: string[], names: string[]) {
+  for (const cookie of setCookies) {
+    const [pair] = cookie.split(";");
+    const separatorIndex = pair.indexOf("=");
+
+    if (separatorIndex === -1) {
+      continue;
+    }
+
+    const name = pair.slice(0, separatorIndex).trim();
+    const value = pair.slice(separatorIndex + 1).trim();
+
+    if (names.includes(name) && value) {
+      return decodeURIComponent(value);
+    }
+  }
+
+  return undefined;
+}
+
 function unwrapAuthData(data: AuthData): AuthData {
   if (data?.data && typeof data.data === "object") {
     return unwrapAuthData(data.data);
@@ -46,8 +66,13 @@ export async function getServerAccessToken(
   options: { forceRefresh?: boolean } = {}
 ): Promise<TokenPayload> {
   const authHeader = request.headers.get("authorization");
-  const accessToken =
-    request.cookies.get("jwt")?.value || authHeader?.replace("Bearer ", "");
+  const cookieToken =
+    request.cookies.get("jwt")?.value ||
+    request.cookies.get("access_token")?.value ||
+    request.cookies.get("access")?.value ||
+    request.cookies.get("accessToken")?.value ||
+    request.cookies.get("token")?.value;
+  const accessToken = cookieToken || authHeader?.replace("Bearer ", "");
 
   if (accessToken && !options.forceRefresh) {
     return { token: accessToken, setCookies: [] };
@@ -62,7 +87,12 @@ export async function getServerAccessToken(
   const backendResponse = await apiClient.getRawResponse(
     "/api/auth/refresh",
     "POST",
-    { refresh_token: refreshToken }
+    { refresh_token: refreshToken },
+    {
+      headers: {
+        Cookie: `refresh_token=${refreshToken}`,
+      },
+    }
   );
   const responseData = await backendResponse.json();
 
@@ -70,11 +100,25 @@ export async function getServerAccessToken(
     return { token: null, setCookies: [] };
   }
 
-  const setCookies = backendResponse.headers.getSetCookie?.() || [];
+  const setCookieHeader = backendResponse.headers.get("set-cookie");
+  const setCookies =
+    backendResponse.headers.getSetCookie?.() ||
+    (setCookieHeader ? [setCookieHeader] : []);
+  const tokenFromCookies = getCookieValue(setCookies, [
+    "jwt",
+    "access",
+    "access_token",
+    "accessToken",
+    "token",
+  ]);
+  const refreshFromCookies = getCookieValue(setCookies, [
+    "refresh_token",
+    "refreshToken",
+  ]);
 
   return {
-    token: getAccessToken(responseData),
-    refreshToken: getRefreshToken(responseData),
+    token: getAccessToken(responseData) || tokenFromCookies || null,
+    refreshToken: getRefreshToken(responseData) || refreshFromCookies,
     setCookies,
   };
 }

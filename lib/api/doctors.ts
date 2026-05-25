@@ -7,7 +7,7 @@ import type {
 
 export const doctorService = {
   async list(query?: DoctorQuery) {
-    let endpoint = "/api/doctors/list";
+    let endpoint = "/api/doctors";
     const params = new URLSearchParams();
 
     if (query?.specialist) {
@@ -28,7 +28,7 @@ export const doctorService = {
   },
 
   async getProfile(doctorId: number) {
-    return apiClient.get<DoctorProfile>(`/api/doctors/profile?id=${doctorId}`);
+    return apiClient.get<DoctorProfile>(`/api/doctors/${doctorId}/profile`);
   },
 
   async getBest() {

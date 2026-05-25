@@ -3,7 +3,15 @@
 import { useState, useMemo } from "react";
 import { Clock } from "lucide-react";
 
-const appointments = [
+type TodayAppointment = {
+  id?: number;
+  name: string;
+  type: string;
+  date: string;
+  time: string;
+};
+
+const appointments: TodayAppointment[] = [
   {
     name: "محمد خالد",
     type: "زيارة",
@@ -54,13 +62,6 @@ const appointments = [
   },
 ];
 
-type TodayAppointment = {
-  id?: number;
-  name: string;
-  type: string;
-  date: string;
-  time: string;
-};
 
 export default function TodayAppointments({
   appointments: appointmentsProp,
