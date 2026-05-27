@@ -218,29 +218,37 @@ export default function AdminSettingsPage() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 text-[#5e6b85]">
-        <div className="w-10 h-10 border-3 border-[#e6eaf0] border-t-[#1f6feb] rounded-full animate-spin" />
+        <div className="w-10 h-10 border-3 border-[#e6eaf0] border-t-[#1F2B6C] rounded-full animate-spin" />
         <p className="text-sm font-medium">جاري تحميل الإعدادات...</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto" dir="rtl">
+    <div className="space-y-6 max-w-6xl mx-auto p-1" dir="rtl">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-[#0f1b3d] font-sans">الإعدادات</h1>
-        <p className="text-sm text-[#5e6b85] mt-1">إدارة حسابك الشخصي وإضافة مسؤولين جدد للمنصة</p>
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between border-b border-(--card-border) pb-4 mb-6">
+        <div>
+          <p className="mb-2 inline-flex items-center gap-2 rounded-full bg-[#EBF2F9] px-3 py-1 text-xs font-semibold text-[#1F2B6C]">
+            <Shield size={14} />
+            إدارة الحساب والصلاحيات
+          </p>
+          <h1 className="text-3xl font-bold text-(--text-primary)">الإعدادات</h1>
+          <p className="mt-1 text-sm text-(--text-secondary)">
+            إدارة ملفك الشخصي وإنشاء حسابات مشرفين جديدة للمنصة.
+          </p>
+        </div>
       </div>
 
       {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left Column: Admin Profile Card */}
-        <div className="lg:col-span-5 bg-white rounded-2xl border border-[#e6eaf0] shadow-sm overflow-hidden transition-all hover:shadow-md">
+        <div className="lg:col-span-5 bg-(--card-bg) rounded-2xl border border-(--card-border) shadow-[var(--shadow-soft)] overflow-hidden transition-all duration-300 hover:shadow-md">
           {/* Cover Header Graphic */}
-          <div className="h-28 bg-gradient-to-r from-[#1f6feb] to-[#10b981] relative">
+          <div className="h-28 bg-gradient-to-r from-[#1F2B6C] to-[#005fb8] relative">
             <div className="absolute -bottom-10 right-6">
               <div className="relative group">
-                <div className="w-20 h-20 rounded-2xl bg-[#1f6feb] text-white flex items-center justify-center text-2xl font-bold border-4 border-white shadow-md font-sans overflow-hidden">
+                <div className="w-20 h-20 rounded-2xl bg-[#1F2B6C] text-white flex items-center justify-center text-2xl font-bold border-4 border-white shadow-md font-sans overflow-hidden">
                   {photoPreview ? (
                     <img src={photoPreview} alt={currentName} className="w-full h-full object-cover" />
                   ) : (
@@ -257,19 +265,19 @@ export default function AdminSettingsPage() {
 
           <div className="pt-14 p-6 space-y-6">
             <div>
-              <h2 className="text-lg font-bold text-[#0f1b3d]">{currentName}</h2>
-              <div className="flex items-center gap-1.5 mt-1 text-[#5e6b85]">
-                <Shield size={14} className="text-[#1f6feb]" />
+              <h2 className="text-lg font-bold text-(--text-primary)">{currentName}</h2>
+              <div className="flex items-center gap-1.5 mt-1 text-(--text-secondary)">
+                <Shield size={14} className="text-[#1F2B6C]" />
                 <span className="text-xs font-semibold uppercase tracking-wider">مدير النظام (Admin)</span>
               </div>
             </div>
 
-            <hr className="border-[#f1f4f9]" />
+            <hr className="border-(--card-border)" />
 
             {/* Profile Update Form */}
             <form onSubmit={handleUpdateProfile} className="space-y-4">
-              <div className="flex items-center gap-2 text-sm font-bold text-[#0f1b3d]">
-                <div className="w-6 h-6 rounded-lg bg-[#e7edf3] flex items-center justify-center text-[#1f6feb]">
+              <div className="flex items-center gap-2 text-sm font-bold text-(--text-primary)">
+                <div className="w-6 h-6 rounded-lg bg-[#EBF2F9] flex items-center justify-center text-[#1F2B6C]">
                   <User size={13} />
                 </div>
                 <span>الاسم الكامل</span>
@@ -281,7 +289,7 @@ export default function AdminSettingsPage() {
                   value={profileName}
                   onChange={(e) => setProfileName(e.target.value)}
                   placeholder="أدخل اسمك الكامل..."
-                  className="w-full px-4 py-2.5 rounded-xl border border-[#e6eaf0] bg-[#f6f8fb] text-sm text-[#0f1b3d] placeholder-[#a0aab8] focus:outline-none focus:ring-2 focus:ring-[#1f6feb]/30 focus:border-[#1f6feb] transition-all"
+                  className="w-full px-4 py-2.5 rounded-xl border border-(--input-border) bg-(--input2-bg) text-sm text-(--text-primary) placeholder-[#a0aab8] focus:outline-none focus:ring-2 focus:ring-[#1F2B6C]/20 focus:border-[#1F2B6C] transition-all"
                   required
                 />
               </div>
@@ -289,7 +297,7 @@ export default function AdminSettingsPage() {
               <button
                 type="submit"
                 disabled={profileUpdating}
-                className="w-full py-2.5 px-4 bg-[#1f6feb] hover:bg-[#1b5bd7] text-white text-sm font-semibold rounded-xl transition-all shadow-sm hover:shadow flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-2.5 px-4 bg-[#1F2B6C] hover:bg-[#151F52] text-white text-sm font-semibold rounded-xl transition-all shadow-sm hover:shadow flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {profileUpdating ? (
                   <>
@@ -305,7 +313,7 @@ export default function AdminSettingsPage() {
         </div>
 
         {/* Right Column: Add Admin Form */}
-        <div className="lg:col-span-7 bg-white rounded-2xl border border-[#e6eaf0] shadow-sm p-6 space-y-6 transition-all hover:shadow-md">
+        <div className="lg:col-span-7 bg-(--card-bg) rounded-2xl border border-(--card-border) shadow-[var(--shadow-soft)] p-6 space-y-6 transition-all duration-300 hover:shadow-md">
           {/* Card Title Section */}
           <div className="flex items-start justify-between gap-4">
             <div className="space-y-1">
@@ -313,21 +321,21 @@ export default function AdminSettingsPage() {
                 <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100">
                   <UserPlus size={16} />
                 </div>
-                <h2 className="text-lg font-bold text-[#0f1b3d]">إضافة مدير جديد</h2>
+                <h2 className="text-lg font-bold text-(--text-primary)">إضافة مدير جديد</h2>
               </div>
-              <p className="text-xs text-[#5e6b85] pr-10">إنشاء حساب مدير مسؤول آخر يتمتع بكافة صلاحيات الإشراف على المنصة</p>
+              <p className="text-xs text-(--text-secondary) pr-10">إنشاء حساب مدير مسؤول آخر يتمتع بكافة صلاحيات الإشراف على المنصة</p>
             </div>
           </div>
 
-          <hr className="border-[#f1f4f9]" />
+          <hr className="border-(--card-border)" />
 
           {/* Add Admin Form */}
           <form onSubmit={handleCreateAdmin} className="space-y-4">
             {/* Full Name */}
             <div className="space-y-2">
-              <label className="text-sm font-bold text-[#0f1b3d] block">الاسم الكامل</label>
+              <label className="text-sm font-bold text-(--text-primary) block">الاسم الكامل</label>
               <div className="relative">
-                <div className="absolute inset-y-0 right-3.5 flex items-center pointer-events-none text-[#5e6b85]">
+                <div className="absolute inset-y-0 right-3.5 flex items-center pointer-events-none text-(--text-secondary)">
                   <User size={16} />
                 </div>
                 <input
@@ -335,7 +343,7 @@ export default function AdminSettingsPage() {
                   value={newAdminName}
                   onChange={(e) => setNewAdminName(e.target.value)}
                   placeholder="أدخل الاسم الكامل للمدير الجديد..."
-                  className="w-full pr-10 pl-4 py-2.5 rounded-xl border border-[#e6eaf0] bg-[#f6f8fb] text-sm text-[#0f1b3d] placeholder-[#a0aab8] focus:outline-none focus:ring-2 focus:ring-[#1f6feb]/30 focus:border-[#1f6feb] transition-all"
+                  className="w-full pr-10 pl-4 py-2.5 rounded-xl border border-(--input-border) bg-(--input2-bg) text-sm text-(--text-primary) placeholder-[#a0aab8] focus:outline-none focus:ring-2 focus:ring-[#1F2B6C]/20 focus:border-[#1F2B6C] transition-all"
                   required
                 />
               </div>
@@ -343,9 +351,9 @@ export default function AdminSettingsPage() {
 
             {/* Email Address */}
             <div className="space-y-2">
-              <label className="text-sm font-bold text-[#0f1b3d] block">البريد الإلكتروني</label>
+              <label className="text-sm font-bold text-(--text-primary) block">البريد الإلكتروني</label>
               <div className="relative">
-                <div className="absolute inset-y-0 right-3.5 flex items-center pointer-events-none text-[#5e6b85]">
+                <div className="absolute inset-y-0 right-3.5 flex items-center pointer-events-none text-(--text-secondary)">
                   <Mail size={16} />
                 </div>
                 <input
@@ -353,7 +361,7 @@ export default function AdminSettingsPage() {
                   value={newAdminEmail}
                   onChange={(e) => setNewAdminEmail(e.target.value)}
                   placeholder="example@medaura.com"
-                  className="w-full pr-10 pl-4 py-2.5 rounded-xl border border-[#e6eaf0] bg-[#f6f8fb] text-sm text-[#0f1b3d] placeholder-[#a0aab8] focus:outline-none focus:ring-2 focus:ring-[#1f6feb]/30 focus:border-[#1f6feb] transition-all font-mono"
+                  className="w-full pr-10 pl-4 py-2.5 rounded-xl border border-(--input-border) bg-(--input2-bg) text-sm text-(--text-primary) placeholder-[#a0aab8] focus:outline-none focus:ring-2 focus:ring-[#1F2B6C]/20 focus:border-[#1F2B6C] transition-all font-mono"
                   required
                 />
               </div>
@@ -361,9 +369,9 @@ export default function AdminSettingsPage() {
 
             {/* Password */}
             <div className="space-y-2">
-              <label className="text-sm font-bold text-[#0f1b3d] block">كلمة المرور</label>
+              <label className="text-sm font-bold text-(--text-primary) block">كلمة المرور</label>
               <div className="relative">
-                <div className="absolute inset-y-0 right-3.5 flex items-center pointer-events-none text-[#5e6b85]">
+                <div className="absolute inset-y-0 right-3.5 flex items-center pointer-events-none text-(--text-secondary)">
                   <Lock size={16} />
                 </div>
                 <input
@@ -371,13 +379,13 @@ export default function AdminSettingsPage() {
                   value={newAdminPassword}
                   onChange={(e) => setNewAdminPassword(e.target.value)}
                   placeholder="أدخل كلمة مرور قوية (٨ أحرف على الأقل)..."
-                  className="w-full pr-10 pl-10 py-2.5 rounded-xl border border-[#e6eaf0] bg-[#f6f8fb] text-sm text-[#0f1b3d] placeholder-[#a0aab8] focus:outline-none focus:ring-2 focus:ring-[#1f6feb]/30 focus:border-[#1f6feb] transition-all font-mono"
+                  className="w-full pr-10 pl-10 py-2.5 rounded-xl border border-(--input-border) bg-(--input2-bg) text-sm text-(--text-primary) placeholder-[#a0aab8] focus:outline-none focus:ring-2 focus:ring-[#1F2B6C]/20 focus:border-[#1F2B6C] transition-all font-mono"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword((p) => !p)}
-                  className="absolute inset-y-0 left-3 flex items-center text-[#5e6b85] hover:text-[#0f1b3d] transition-colors"
+                  className="absolute inset-y-0 left-3 flex items-center text-(--text-secondary) hover:text-(--text-primary) transition-colors"
                 >
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>

@@ -11,7 +11,7 @@ import { Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 
-const BEST_DOCTORS_API_URL = "http://127.0.0.1:3001/api/doctors/best";
+const BEST_DOCTORS_API_URL = "/api/doctors/best?limit=5";
 
 type BestDoctorApiItem = {
   provider_type?: "doctor" | "staff" | string;
@@ -106,7 +106,9 @@ export default function BestDoctors() {
           doctors?: BestDoctorApiItem[];
         };
 
-        setBestDoctorsData((data.doctors || []).map(mapBestDoctor));
+        setBestDoctorsData(
+          (data.doctors || []).slice(0, 5).map(mapBestDoctor)
+        );
       } catch (error) {
         if ((error as Error).name === "AbortError") return;
         console.error("Best doctors fetch error:", error);

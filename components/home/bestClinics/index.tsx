@@ -11,7 +11,7 @@ import { Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 
-const BEST_CLINICS_API_URL = "http://127.0.0.1:3001/api/clinic/best";
+const BEST_CLINICS_API_URL = "/api/clinic/best?limit=5";
 
 type BestClinicApiItem = {
   clinic_id?: number;
@@ -95,7 +95,9 @@ export default function BestClinics() {
           clinics?: BestClinicApiItem[];
         };
 
-        setBestClinicData((data.clinics || []).map(mapBestClinic));
+        setBestClinicData(
+          (data.clinics || []).slice(0, 5).map(mapBestClinic)
+        );
       } catch (error) {
         if ((error as Error).name === "AbortError") return;
         console.error("Best clinics fetch error:", error);

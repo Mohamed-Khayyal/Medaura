@@ -23,6 +23,10 @@ export const clinicService = {
     return apiClient.get<ClinicProfile>(`/api/clinic/${clinicId}/profile`);
   },
 
+  async getBest() {
+    return apiClient.get<ClinicProfile[]>("/api/clinic/best");
+  },
+
   async updateProfile(clinicId: number, data: Partial<ClinicRequest>, token: string) {
     return apiClient.put<ClinicProfile>(
       `/clinic/${clinicId}`,

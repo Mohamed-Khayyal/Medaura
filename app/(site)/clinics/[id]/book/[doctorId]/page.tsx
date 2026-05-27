@@ -9,6 +9,7 @@ import {
   ArrowRight,
   Calendar,
   Clock,
+  MessageSquare,
 } from "lucide-react";
 import { allClinics } from "@/constants/clinics";
 import Image from "next/image";
@@ -17,8 +18,34 @@ import DatePicker from "@/components/booking/DatePicker";
 import TimePicker from "@/components/booking/TimePicker";
 import ValidationModal from "@/components/booking/ValidationModal";
 import { t } from "@/i18n";
+import Swal from "sweetalert2";
 
 const RATINGS_PAGE_SIZE = 4;
+
+function getWhatsAppUrl(phone: string): string {
+  let cleaned = phone.replace(/[^\d+]/g, "");
+  if (!cleaned) return "#";
+  if (cleaned.startsWith("+20")) {
+    cleaned = cleaned.substring(1);
+  } else if (cleaned.startsWith("20")) {
+    // already prefix
+  } else {
+    if (cleaned.startsWith("0")) {
+      cleaned = "20" + cleaned.substring(1);
+    } else {
+      cleaned = "20" + cleaned;
+    }
+  }
+  return `https://wa.me/${cleaned}`;
+}
+
+function parseWorkDays(workDaysString?: string): string[] | undefined {
+  if (!workDaysString) return undefined;
+  return workDaysString
+    .split(/[,/|]/)
+    .map((day) => day.trim().toLowerCase())
+    .filter(Boolean);
+}
 
 type ApiStaffProfile = {
   id?: number;
@@ -47,6 +74,7 @@ type ApiStaffProfile = {
   total_patients?: number;
   total_bookings?: number;
   can_be_booked?: number | boolean;
+  phone?: string | null;
 };
 
 type ApiClinicProfile = {
@@ -104,7 +132,17 @@ function unwrapData(data: unknown): unknown {
 function normalizeStaff(data: unknown): ApiStaffProfile | null {
   const unwrapped = unwrapData(data);
   if (!isRecord(unwrapped)) return null;
-  return (unwrapped.staff || unwrapped.profile || unwrapped) as ApiStaffProfile;
+  const staffObj = (unwrapped.staff || unwrapped.profile || unwrapped) as ApiRecord;
+  const phone = (staffObj.phone ?? 
+                 (isRecord(staffObj.profile) ? staffObj.profile.phone : null) ?? 
+                 (isRecord(unwrapped.profile) ? unwrapped.profile.phone : null) ??
+                 (isRecord(unwrapped.staff) ? unwrapped.staff.phone : null) ??
+                 unwrapped.phone ?? 
+                 null) as string | null;
+  return {
+    ...staffObj,
+    phone,
+  } as ApiStaffProfile;
 }
 
 function normalizeClinic(data: unknown): ApiClinicProfile | null {
@@ -343,6 +381,7 @@ export default function BookingPage() {
     title: string;
     message: string;
   } | null>(null);
+  const [fullyBookedDates, setFullyBookedDates] = useState<string[]>([]);
 
   useEffect(() => {
     setMounted(true);
@@ -451,7 +490,20 @@ export default function BookingPage() {
           );
         }
 
-        setSlots(normalizeSlots(payload));
+        const fetchedSlots = normalizeSlots(payload);
+        setSlots(fetchedSlots);
+        if (fetchedSlots.length > 0 && fetchedSlots.every(slot => !slot.available)) {
+          setFullyBookedDates((prev) => [...new Set([...prev, selectedDate])]);
+          setSelectedTime("");
+          Swal.fire({
+            icon: "warning",
+            title: locale === "en" ? "اليوم محجوز بالكامل" : "Fully Booked Day",
+            text: locale === "en" 
+              ? "عذراً، جميع المواعيد في هذا اليوم محجوزة بالكامل. يرجى اختيار يوم آخر."
+              : "Sorry, all booking times on this day are fully booked. Please choose another date.",
+            confirmButtonText: locale === "en" ? "موافق" : "OK",
+          });
+        }
       } catch (error: unknown) {
         console.error("Booking slots fetch error:", error);
         setSlots([]);
@@ -895,10 +947,15 @@ export default function BookingPage() {
                           : "Booking..."
                         : t("booking.bookNow", locale)}
                     </button>
-                    <button className="flex items-center justify-center gap-2 rounded-2xl border border-[#dce5f6] px-8 py-4 font-bold text-gray-600 transition-colors hover:bg-[#f4f7ff]">
-                      <Mail className="w-5 h-5" />
-                      {t("booking.sendMessage", locale)}
-                    </button>
+                    <a
+                      href={getWhatsAppUrl(staff?.phone || clinicProfile?.phone || "")}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 hover:bg-emerald-700 px-8 py-4 font-bold text-white transition-colors shadow-lg shadow-emerald-900/10 cursor-pointer text-center"
+                    >
+                      <MessageSquare className="w-5 h-5" />
+                      <span>{locale === "en" ? "ارسال رساله" : "Send Message"}</span>
+                    </a>
                   </div>
                 </div>
               </div>
@@ -1142,6 +1199,8 @@ export default function BookingPage() {
         {showDatePicker && (
           <DatePicker
             selectedDate={selectedDate}
+            allowedDays={parseWorkDays(staff?.work_days)}
+            disabledDates={fullyBookedDates}
             onSelect={(date) => {
               setSelectedDate(date);
               setSelectedTime("");

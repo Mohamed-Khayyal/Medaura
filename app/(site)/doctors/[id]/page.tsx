@@ -3,15 +3,41 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
-import { ArrowRight, Calendar, Clock, Star } from "lucide-react";
+import { ArrowRight, Calendar, Clock, Star, MessageSquare, Phone } from "lucide-react";
 import DatePicker from "@/components/booking/DatePicker";
 import TimePicker from "@/components/booking/TimePicker";
 import ValidationModal from "@/components/booking/ValidationModal";
 import { t } from "@/i18n";
+import Swal from "sweetalert2";
 
 const DOCTOR_FALLBACK_IMAGE = "/images/blank-profile-picture.png";
 const API_BASE_URL = "/api";
 const RATINGS_PAGE_SIZE = 4;
+
+function getWhatsAppUrl(phone: string): string {
+  let cleaned = phone.replace(/[^\d+]/g, "");
+  if (!cleaned) return "#";
+  if (cleaned.startsWith("+20")) {
+    cleaned = cleaned.substring(1);
+  } else if (cleaned.startsWith("20")) {
+    // already prefix
+  } else {
+    if (cleaned.startsWith("0")) {
+      cleaned = "20" + cleaned.substring(1);
+    } else {
+      cleaned = "20" + cleaned;
+    }
+  }
+  return `https://wa.me/${cleaned}`;
+}
+
+function parseWorkDays(workDaysString?: string): string[] | undefined {
+  if (!workDaysString) return undefined;
+  return workDaysString
+    .split(/[,/|]/)
+    .map((day) => day.trim().toLowerCase())
+    .filter(Boolean);
+}
 
 type DoctorProfileData = {
   id?: number;
@@ -35,6 +61,8 @@ type DoctorProfileData = {
     latitude?: number | string | null;
     longitude?: number | string | null;
   } | null;
+  phone?: string | null;
+  email?: string | null;
 };
 
 type BookingSlot = {
@@ -77,7 +105,11 @@ function unwrapData(data: unknown): unknown {
 function normalizeDoctor(data: unknown): DoctorProfileData | null {
   const unwrapped = unwrapData(data);
   if (!isRecord(unwrapped)) return null;
-  return (unwrapped.doctor || unwrapped.profile || unwrapped) as DoctorProfileData;
+  const doc = (unwrapped.doctor || unwrapped.profile || unwrapped) as any;
+  return {
+    ...doc,
+    phone: doc.phone ?? doc.profile?.phone ?? null,
+  };
 }
 
 function normalizeSlots(data: unknown): BookingSlot[] {
@@ -283,14 +315,14 @@ export default function DoctorProfilePage() {
   const [doctorRatingComment, setDoctorRatingComment] = useState("");
   const [doctorRatingSubmitting, setDoctorRatingSubmitting] = useState(false);
   const [doctorRatingSubmitError, setDoctorRatingSubmitError] = useState("");
-  const [doctorRatingSubmitSuccess, setDoctorRatingSubmitSuccess] =
-    useState("");
+  const [doctorRatingSubmitSuccess, setDoctorRatingSubmitSuccess] = useState("");
   const [doctorRatingsRefreshKey, setDoctorRatingsRefreshKey] = useState(0);
   const [validationModalData, setValidationModalData] = useState<{
     type: "success" | "warning";
     title: string;
     message: string;
   } | null>(null);
+  const [fullyBookedDates, setFullyBookedDates] = useState<string[]>([]);
 
   useEffect(() => {
     const stored = localStorage.getItem("locale");
@@ -373,7 +405,20 @@ export default function DoctorProfilePage() {
           );
         }
 
-        setSlots(normalizeSlots(payload));
+        const fetchedSlots = normalizeSlots(payload);
+        setSlots(fetchedSlots);
+        if (fetchedSlots.length > 0 && fetchedSlots.every(slot => !slot.available)) {
+          setFullyBookedDates((prev) => [...new Set([...prev, selectedDate])]);
+          setSelectedTime("");
+          Swal.fire({
+            icon: "warning",
+            title: locale === "en" ? "اليوم محجوز بالكامل" : "Fully Booked Day",
+            text: locale === "en" 
+              ? "عذراً، جميع المواعيد في هذا اليوم محجوزة بالكامل. يرجى اختيار يوم آخر."
+              : "Sorry, all booking times on this day are fully booked. Please choose another date.",
+            confirmButtonText: locale === "en" ? "موافق" : "OK",
+          });
+        }
       } catch (error: unknown) {
         console.error("Booking slots fetch error:", error);
         setSlots([]);
@@ -812,6 +857,18 @@ export default function DoctorProfilePage() {
                 {isBooking ? "Booking..." : t("booking.bookNow", locale)}
               </button>
 
+              {doctor?.phone && (
+                <a
+                  href={getWhatsAppUrl(doctor.phone)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-3 w-full bg-emerald-600 hover:bg-emerald-700 text-white py-4 rounded-2xl font-bold transition-colors shadow-lg shadow-emerald-900/10 flex items-center justify-center gap-2 cursor-pointer text-center"
+                >
+                  <MessageSquare className="w-5 h-5" />
+                  <span>{locale === "en" ? "ارسال رساله" : "Send Message"}</span>
+                </a>
+              )}
+
               {(doctor.work_from || doctor.work_to) && (
                 <p className="mt-4 text-xs text-gray-400">
                   {t("booking.workingHours", locale)} {doctor.work_from || ""}
@@ -1003,6 +1060,8 @@ export default function DoctorProfilePage() {
         {showDatePicker && (
           <DatePicker
             selectedDate={selectedDate}
+            allowedDays={parseWorkDays(doctor?.work_days)}
+            disabledDates={fullyBookedDates}
             onSelect={(date) => {
               setSelectedDate(date);
               setSelectedTime("");

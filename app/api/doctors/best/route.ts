@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { doctorService } from "@/lib/api/doctors";
 
-// GET /api/doctors/best?limit=3
+// GET /api/doctors/best?limit=5
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const limitParam = searchParams.get("limit");
-    const limit = limitParam ? parseInt(limitParam) : 3;
+    const limit = limitParam ? parseInt(limitParam) : 5;
 
     const response = await doctorService.getBest();
     

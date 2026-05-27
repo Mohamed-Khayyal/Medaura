@@ -209,13 +209,53 @@ export const adminService = {
   },
 
   async listStaff(token: string) {
-    const res = await apiClient.get<ApiResponse<AdminStaffList[]>>("/api/admin/staff", { token });
-    return res.data || [];
+    const res = await apiClient.get<
+      | AdminStaffList[]
+      | {
+          status?: string;
+          staff?: AdminStaffList[];
+          data?: AdminStaffList[];
+        }
+    >("/api/admin/staff", { token });
+
+    if (Array.isArray(res)) {
+      return res;
+    }
+
+    if (Array.isArray(res.data)) {
+      return res.data;
+    }
+
+    if ("staff" in res && Array.isArray(res.staff)) {
+      return res.staff;
+    }
+
+    return [];
   },
 
   async listPatients(token: string) {
-    const res = await apiClient.get<ApiResponse<unknown[]>>("/api/admin/patients", { token });
-    return res.data || [];
+    const res = await apiClient.get<
+      | unknown[]
+      | {
+          status?: string;
+          patients?: unknown[];
+          data?: unknown[];
+        }
+    >("/api/admin/patients", { token });
+
+    if (Array.isArray(res)) {
+      return res;
+    }
+
+    if (Array.isArray(res.data)) {
+      return res.data;
+    }
+
+    if ("patients" in res && Array.isArray(res.patients)) {
+      return res.patients;
+    }
+
+    return [];
   },
 
   async listAllBookings(token: string) {
@@ -316,5 +356,45 @@ export const adminService = {
 
   async createAdmin(data: AdminCreateRequest, token: string) {
     return apiClient.post<unknown>("/api/admin/create-admin", data, { token });
+  },
+
+  async listAdmins(token: string) {
+    const res = await apiClient.get<
+      | unknown[]
+      | {
+          status?: string;
+          admins?: unknown[];
+          data?: unknown[];
+        }
+    >("/api/admin/admins", { token });
+
+    if (Array.isArray(res)) {
+      return res;
+    }
+
+    if (Array.isArray(res.data)) {
+      return res.data;
+    }
+
+    if ("admins" in res && Array.isArray(res.admins)) {
+      return res.admins;
+    }
+
+    return [];
+  },
+
+  async deleteUser(userId: number, token: string) {
+    return apiClient.delete<unknown>(
+      `/api/admin/users/${userId}/delete`,
+      { token }
+    );
+  },
+
+  async undeleteUser(userId: number, token: string) {
+    return apiClient.patch<unknown>(
+      `/api/admin/users/${userId}/undelete`,
+      undefined,
+      { token }
+    );
   },
 };

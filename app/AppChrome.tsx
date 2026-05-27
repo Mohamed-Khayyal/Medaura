@@ -80,13 +80,13 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
           headers.set("X-Client-Longitude", lon);
         }
         if (city && !headers.has("x-client-city")) {
-          headers.set("X-Client-City", city);
+          headers.set("X-Client-City", encodeURIComponent(city));
         }
         if (region && !headers.has("x-client-region")) {
-          headers.set("X-Client-Region", region);
+          headers.set("X-Client-Region", encodeURIComponent(region));
         }
         if (country && !headers.has("x-client-country")) {
-          headers.set("X-Client-Country", country);
+          headers.set("X-Client-Country", encodeURIComponent(country));
         }
 
         init.headers = headers;

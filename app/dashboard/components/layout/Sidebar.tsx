@@ -40,14 +40,14 @@ function Sidebar({ open, onClose }: SidebarProps) {
         { text: "المرضى", icon: <Users size={18} />, href: "/dashboard/pages/patients" },
         { text: "الأطباء", icon: <Stethoscope size={18} />, href: "/dashboard/pages/doctors/requests" },
         { text: "المواعيد", icon: <Calendar size={18} />, href: "/dashboard/pages/appointments" },
-        { text: "الزيارات", icon: <ClipboardList size={18} />, href: "/dashboard/visits" },
+        { text: "دكاتره العيادات", icon: <UserRound size={18} />, href: "/dashboard/pages/clinic-doctors" },
         { text: "العيادات", icon: <Hospital size={18} />, href: "/dashboard/clinics" },
       ],
     },
     {
       title: "الإدارة",
       items: [
-        { text: "الموظفين", icon: <UserRound size={18} />, href: "/dashboard/staff" },
+        { text: "الموظفين", icon: <UserRound size={18} />, href: "/dashboard/pages/staff" },
         { text: "سجلات التدقيق", icon: <FileText size={18} />, href: "/dashboard/audit-logs" },
         { text: "الإشعارات", icon: <Bell size={18} />, href: "/dashboard/notifications" },
         { text: "الإعدادات", icon: <Settings size={18} />, href: "/dashboard/settings" },

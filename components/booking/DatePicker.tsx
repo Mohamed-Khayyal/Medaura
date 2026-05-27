@@ -8,6 +8,8 @@ interface DatePickerProps {
   onSelect: (date: string) => void;
   onClose: () => void;
   selectedDate?: string;
+  allowedDays?: string[];
+  disabledDates?: string[];
 }
 
 function toDateInputValue(date: Date) {
@@ -21,6 +23,8 @@ export default function DatePicker({
   onSelect,
   onClose,
   selectedDate,
+  allowedDays,
+  disabledDates,
 }: DatePickerProps) {
   const initialDate = selectedDate ? new Date(selectedDate) : new Date();
   const [currentDate, setCurrentDate] = useState(
@@ -105,17 +109,26 @@ export default function DatePicker({
   for (let d = 1; d <= totalDays; d++) {
     const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), d);
     const value = toDateInputValue(date);
-    const isPast = date < today;
+    const isPastDate = date < today;
+    
+    const dayMap = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+    const dayName = dayMap[date.getDay()];
+    const isWorkingDay = !allowedDays || 
+      allowedDays.includes(dayName) ||
+      (dayName === "tue" && allowedDays.includes("tues")) ||
+      (dayName === "thu" && allowedDays.includes("thur"));
+
+    const isDisabled = isPastDate || !isWorkingDay || (disabledDates && disabledDates.includes(value));
     const isSelected = selectedDate === value;
 
     days.push(
       <button
         key={value}
-        disabled={isPast}
+        disabled={isDisabled}
         onClick={() => onSelect(value)}
         className={`relative h-10 w-10 flex items-center justify-center rounded-lg text-sm transition-colors
           ${
-            isPast
+            isDisabled
               ? "text-gray-300 cursor-not-allowed"
               : isSelected
                 ? "bg-[#001A6E] text-white"
@@ -124,7 +137,7 @@ export default function DatePicker({
         `}
       >
         {d}
-        {isPast && (
+        {isDisabled && (
           <div className="absolute w-6 h-[1px] bg-gray-300 rotate-[-45deg]"></div>
         )}
       </button>

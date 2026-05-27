@@ -120,14 +120,22 @@ const Navbar: FC = () => {
     setLoadingNotif(true);
     setNotifError(null);
     try {
-      const res = await fetch("http://localhost:3001/api/notifications/me", {
+      const res = await fetch("/api/notifications/me", {
         method: "GET",
         credentials: "include",
       });
       const result = await res.json();
-      if (!res.ok || result.status !== "success")
-        throw new Error(result.message || "فشل في جلب الإشعارات");
-      setNotifications(result.notifications || []);
+      if (!res.ok || !result.success)
+        throw new Error(result.error || "فشل في جلب الإشعارات");
+      
+      const mapped = (result.data || []).map((n: any) => ({
+        notification_id: n.id,
+        title: n.title,
+        message: n.message,
+        is_read: n.read,
+        created_at: n.created_at,
+      }));
+      setNotifications(mapped);
     } catch (err) {
       setNotifError(
         err instanceof Error ? err.message : "فشل في جلب الإشعارات"
@@ -139,7 +147,7 @@ const Navbar: FC = () => {
 
   async function markAsRead(id: number) {
     try {
-      await fetch(`http://localhost:3001/api/notifications/${id}/read`, {
+      await fetch(`/api/notifications/${id}/read`, {
         method: "PATCH",
         credentials: "include",
       });
@@ -152,7 +160,19 @@ const Navbar: FC = () => {
   }
 
   useEffect(() => {
-    if (notifOpen && notifications.length === 0) loadNotifications();
+    if (isAuthenticated) {
+      loadNotifications();
+      const interval = setInterval(loadNotifications, 30000);
+      return () => clearInterval(interval);
+    } else {
+      setNotifications([]);
+    }
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (notifOpen) {
+      loadNotifications();
+    }
   }, [notifOpen]);
 
   // ── user photo ────────────────────────────────────────────

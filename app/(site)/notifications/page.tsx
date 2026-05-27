@@ -74,13 +74,21 @@ export default function NotificationsPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("http://localhost:3001/api/notifications/me", {
+      const res = await fetch("/api/notifications/me", {
         credentials: "include",
       });
       const result = await res.json();
-      if (!res.ok || result.status !== "success")
-        throw new Error(result.message || "فشل في جلب الإشعارات");
-      setNotifications(result.notifications || []);
+      if (!res.ok || !result.success)
+        throw new Error(result.error || "فشل في جلب الإشعارات");
+      
+      const mapped = (result.data || []).map((n: any) => ({
+        notification_id: n.id,
+        title: n.title,
+        message: n.message,
+        is_read: n.read,
+        created_at: n.created_at,
+      }));
+      setNotifications(mapped);
     } catch (err) {
       setError(err instanceof Error ? err.message : "فشل في جلب الإشعارات");
     } finally {
@@ -94,7 +102,7 @@ export default function NotificationsPage() {
 
   async function markAsRead(id: number) {
     try {
-      await fetch(`http://localhost:3001/api/notifications/${id}/read`, {
+      await fetch(`/api/notifications/${id}/read`, {
         method: "PATCH",
         credentials: "include",
       });
@@ -110,7 +118,7 @@ export default function NotificationsPage() {
       const unread = notifications.filter((n) => !n.is_read);
       await Promise.all(
         unread.map((n) =>
-          fetch(`http://localhost:3001/api/notifications/${n.notification_id}/read`, {
+          fetch(`/api/notifications/${n.notification_id}/read`, {
             method: "PATCH",
             credentials: "include",
           })

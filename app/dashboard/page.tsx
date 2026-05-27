@@ -20,6 +20,7 @@ import {
   FileText,
   Activity,
   Wallet,
+  ShieldCheck,
 } from "lucide-react";
 
 function Dashboard({ childern }: { childern: React.ReactNode }) {
@@ -122,6 +123,24 @@ function Dashboard({ childern }: { childern: React.ReactNode }) {
                 { value: 12 },
                 { value: 20 },
                 { value: 16 },
+              ]}
+            />
+
+            <StatsCard
+              title="إجمالي الموظفين"
+              value={stats?.totalStaff ?? 0}
+              percentage={5}
+              icon={
+                <ShieldCheck size={20} strokeWidth={2} className="text-white" />
+              }
+              iconBg="bg-[#00796B]"
+              chartColor="#00796B"
+              data={[
+                { value: 4 },
+                { value: 5 },
+                { value: 4 },
+                { value: 6 },
+                { value: 5 },
               ]}
             />
           </div>
