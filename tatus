@@ -1,0 +1,96 @@
+[33mf976983[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Merge pull request #19 from Mohamed-Khayyal/main
+[33m5b4904a[m add watsap for doctor page
+[33mb095d99[m add admin stats
+[33m798dda3[m edit
+[33mbe6c0a0[m add slider
+[33m61319eb[m add slider
+[33med6a028[m Merge pull request #18 from Mohamed-Khayyal/main
+[33mb4a9ff1[m add logger for admin to get real data and updata profile for admin and also create admin
+[33m09c77fe[m Merge pull request #17 from Mohamed-Khayyal/main
+[33m0302597[m add clinic dashboard
+[33ma2a414d[m fix
+[33m692571e[m Merge pull request #16 from MohammedKhaled-co/main
+[33mfdb24f4[m Clincs Dashboard implementation
+[33m190bfc7[m Merge pull request #15 from Mohamed-Khayyal/main
+[33m5d8d9a7[m add logger and notification and clinics for admin and make the doctors page to filter and make the specilacest page and enhance the navbar
+[33m762fd74[m Merge pull request #14 from Mohamed-Khayyal/main
+[33m7bd22f0[m make password reset with OTP and forget password
+[33m854da20[m Merge pull request #13 from Mohamed-Khayyal/main
+[33m5141d9a[m finish the rating
+[33m4a85cec[m clinic fixed
+[33m9767b07[m clinic fixed
+[33mc36bc01[m Merge pull request #12 from Mohamed-Khayyal/main
+[33m832204a[m finish the rating
+[33mf521329[m Merge pull request #11 from Mohamed-Khayyal/main
+[33m7414457[m enhance the profile
+[33m5e01ba3[m Merge pull request #10 from MohammedKhaled-co/main
+[33mfb0e7b3[m merge remote main
+[33m0052e52[m Merge branch 'Mohamed-Khalid'
+[33m320c716[m merge remote main
+[33m5e8e710[m Merge pull request #9 from Mohamed-Khayyal/main
+[33m705499f[m Create Staff Dashboard and Improve dashboard UI and responsiveness
+[33mf108471[m make best doctors
+[33m223cd59[m Create Staff Dashboard and Improve dashboard UI and responsiveness
+[33m267ed13[m Create Staff Dashboard and Improve dashboard UI and responsiveness
+[33m67ce979[m edit and update doctor profile, doctor patients
+[33mb5c7603[m Merge pull request #8 from Mohamed-Khayyal/main
+[33m071df46[m make best doctors
+[33m834c922[m edit and update doctor profile
+[33mf72f862[m edit and update doctor profile
+[33m6a5ed9a[m edit and update doctor profile
+[33m817283f[m Merge pull request #7 from Mohamed-Khayyal/main
+[33m066b026[m update the admin page
+[33m8817994[m Merge pull request #6 from Mohamed-Khayyal/main
+[33m9633f3b[m make the admin dashboard
+[33mada6c74[m Merge pull request #5 from Mohamed-Khayyal/main
+[33m5c4f316[m fix clinic profile
+[33mb933b50[m Merge pull request #4 from Mohamed-Khayyal/main
+[33mb03493e[m complete the booking and make the update profile for patient
+[33ma4f9236[m Merge pull request #3 from Mohamed-Khayyal/main
+[33m80524f6[m add the booking for staff and the patint show the bokking data
+[33m23d1847[m fix signup
+[33m4680097[m clinic signup
+[33m3a4d132[m get clinic doctors fix
+[33mcca5a67[m get clinic doctors
+[33m62ea887[m notifications api
+[33m18b2659[m notifications
+[33m3594fde[m new staff
+[33m542740f[m specialites and doctors
+[33m212368d[m add-animation
+[33m9b162f7[m admin
+[33m343e3f3[m dashboard admin ui and dashboard doctor clinic
+[33m8f802aa[m get doctors in user
+[33me399204[m fix
+[33m8533201[m admin get all doctors (verified)
+[33md0c7d42[m fix dashboard
+[33m1f0491e[m fix errors
+[33mcb171b0[m doctor info dashboard
+[33m0edba8e[m dashboard merge
+[33m15e29b5[m doctor auth
+[33mdbebfda[m auth and profile
+[33m9e2c345[m BFF
+[33m30965e5[m fix language
+[33mb409e7d[m about us
+[33mb9cc378[m doctors
+[33m9ea007d[m Merge pull request #2 from MostafaDeif/Mostafa-Deif
+[33m60c87f0[m branch
+[33m45fcbe2[m edit links
+[33m88c2796[m specialties
+[33m07453a8[m add booking
+[33m8d7861f[m my changes
+[33m698f081[m add booking
+[33mfa59e73[m add clinics
+[33m826b0c9[m Footer
+[33mb4e6b46[m pretter
+[33m7a1a202[m edit nav
+[33m49cf213[m home page i18n
+[33mc0155be[m home page
+[33m1fe432e[m specialties
+[33m8573297[m doctorDocument
+[33md0f5135[m auth ui done
+[33md3f0081[m login
+[33m4d505a3[m clinic and doctor register page
+[33md3e4a7e[m fix password input
+[33m4c43101[m fix name and responsive
+[33m18d0354[m first commit
+[33m0e379cd[m Initial commit from Create Next App

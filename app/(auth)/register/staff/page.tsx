@@ -4,6 +4,11 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { getDashboardPathByUserType } from "@/lib/utils/redirect";
+import {
+  getApiErrorMessage,
+  getDuplicateEmailValidationMessage,
+  isDuplicateEmailError,
+} from "@/lib/utils/api-errors";
 import type { ClinicProfile, StaffSignupProfile } from "@/lib/types/api";
 import { EyeIcon } from "../utils";
 
@@ -58,7 +63,7 @@ export default function StaffRegisterPage() {
     setSelectedDays((current) =>
       current.includes(dayId)
         ? current.filter((day) => day !== dayId)
-        : [...current, dayId]
+        : [...current, dayId],
     );
   }
 
@@ -67,10 +72,19 @@ export default function StaffRegisterPage() {
       setLoadingClinics(true);
 
       try {
-        const response = await fetch("http://localhost:3001/api/clinic");
+        const response = await fetch("/api/clinic", {
+          cache: "no-store",
+          credentials: "include",
+        });
         const data = await response.json();
-        const clinicList =
-          Array.isArray(data) ? data : data.data ?? data.clinics ?? [];
+
+        if (!response.ok) {
+          throw new Error(data?.error || "Failed to fetch clinics");
+        }
+
+        const clinicList = Array.isArray(data)
+          ? data
+          : (data.data ?? data.clinics ?? data.data?.clinics ?? []);
         setClinics(clinicList);
       } catch (error) {
         console.error("Failed to load clinics", error);
@@ -142,12 +156,17 @@ export default function StaffRegisterPage() {
       const redirectPath = getDashboardPathByUserType(response.user_type);
       router.push(redirectPath);
     } catch (error) {
-      setErrors({
-        form:
-          error instanceof Error
-            ? error.message
-            : "تعذر إنشاء الحساب، حاول مرة أخرى",
-      });
+      const message =
+        getApiErrorMessage(error) ||
+        (error instanceof Error
+          ? error.message
+          : "تعذر إنشاء الحساب، حاول مرة أخرى");
+
+      if (isDuplicateEmailError(error, message)) {
+        setErrors({ email: getDuplicateEmailValidationMessage() });
+      } else {
+        setErrors({ form: message });
+      }
     } finally {
       setLoading(false);
     }
@@ -501,11 +520,7 @@ export default function StaffRegisterPage() {
         أوافق على الشروط
       </label>
       {errors.terms && (
-        <p
-          id="terms-error"
-          role="alert"
-          className="text-sm text-red-700 mt-1"
-        >
+        <p id="terms-error" role="alert" className="text-sm text-red-700 mt-1">
           {errors.terms}
         </p>
       )}
@@ -519,10 +534,7 @@ export default function StaffRegisterPage() {
         {loading ? "جاري التسجيل..." : "التسجيل"}
       </button>
 
-      <div
-        className="flex items-center gap-3 my-2 sm:my-3"
-        aria-hidden="true"
-      >
+      <div className="flex items-center gap-3 my-2 sm:my-3" aria-hidden="true">
         <div className="h-px bg-zinc-200 flex-1" />
         <div className="text-sm text-zinc-500">أو</div>
         <div className="h-px bg-zinc-200 flex-1" />

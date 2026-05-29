@@ -2,6 +2,11 @@
 
 import { useState } from "react";
 import { X, User, Mail, Lock, Briefcase, Stethoscope, Plus } from "lucide-react";
+import {
+  extractErrorMessage,
+  getDuplicateEmailValidationMessage,
+  isDuplicateEmailError,
+} from "@/lib/utils/api-errors";
 
 interface CreateStaffForm {
   email: string;
@@ -61,6 +66,9 @@ export default function CreateStaffModal({
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<
+    Partial<Record<keyof CreateStaffForm, string>>
+  >({});
   const [success, setSuccess] = useState(false);
 
   if (!open) return null;
@@ -68,7 +76,14 @@ export default function CreateStaffModal({
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    const fieldName = e.target.name as keyof CreateStaffForm;
+
+    setForm((prev) => ({ ...prev, [fieldName]: e.target.value }));
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      delete next[fieldName];
+      return next;
+    });
     setError(null);
   };
 
@@ -76,6 +91,7 @@ export default function CreateStaffModal({
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setFieldErrors({});
 
     try {
       const res = await fetch("/api/staff/create", {
@@ -91,21 +107,35 @@ export default function CreateStaffModal({
         }),
       });
 
-      const result = await res.json();
+      const result = await res.json().catch(() => null);
+      const resultMessage = extractErrorMessage(result);
 
-      if (!res.ok || !result.success) {
-        throw new Error(result.error || "فشل إنشاء الموظف");
+      if (!res.ok || !result?.success) {
+        const duplicateError = {
+          status: res.status,
+          data: result,
+        };
+
+        if (isDuplicateEmailError(duplicateError, resultMessage)) {
+          setFieldErrors({
+            email: getDuplicateEmailValidationMessage(),
+          });
+          return;
+        }
+
+        throw new Error(resultMessage || "فشل إنشاء الموظف");
       }
 
       setSuccess(true);
       setTimeout(() => {
         setSuccess(false);
         setForm({ email: "", password: "", full_name: "", role_title: "", specialist: "" });
+        setFieldErrors({});
         onSuccess();
         onClose();
       }, 1200);
-    } catch (err: any) {
-      setError(err.message || "حدث خطأ غير متوقع");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "حدث خطأ غير متوقع");
     } finally {
       setLoading(false);
     }
@@ -200,9 +230,26 @@ export default function CreateStaffModal({
                   required
                   placeholder="staff@example.com"
                   dir="ltr"
-                  className="w-full pr-9 pl-4 py-2.5 rounded-xl border border-(--input-border) bg-(--input-bg) text-sm text-(--text-primary) placeholder:text-(--text-secondary) focus:outline-none focus:ring-2 focus:ring-teal-500/40"
+                  aria-invalid={!!fieldErrors.email}
+                  aria-describedby={
+                    fieldErrors.email ? "staff-email-error" : undefined
+                  }
+                  className={`w-full pr-9 pl-4 py-2.5 rounded-xl border bg-(--input-bg) text-sm text-(--text-primary) placeholder:text-(--text-secondary) focus:outline-none focus:ring-2 ${
+                    fieldErrors.email
+                      ? "border-red-300 focus:ring-red-500/30"
+                      : "border-(--input-border) focus:ring-teal-500/40"
+                  }`}
                 />
               </div>
+              {fieldErrors.email && (
+                <p
+                  id="staff-email-error"
+                  role="alert"
+                  className="mt-1.5 text-xs text-red-600 dark:text-red-400"
+                >
+                  {fieldErrors.email}
+                </p>
+              )}
             </div>
 
             {/* Password */}

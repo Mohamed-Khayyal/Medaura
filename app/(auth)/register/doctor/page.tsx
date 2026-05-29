@@ -4,6 +4,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { getDashboardPathByUserType } from "@/lib/utils/redirect";
+import {
+  getApiErrorMessage,
+  getDuplicateEmailValidationMessage,
+  isDuplicateEmailError,
+} from "@/lib/utils/api-errors";
 import type { DoctorSignupProfile } from "@/lib/types/api";
 import { EyeIcon } from "../utils";
 
@@ -126,11 +131,19 @@ export default function DoctorRegisterPage() {
       const redirectPath = getDashboardPathByUserType(response.user_type);
       router.push(redirectPath);
     } catch (error) {
+      const message =
+        getApiErrorMessage(error) ||
+        (error instanceof Error
+          ? error.message
+          : "تعذر إنشاء حساب الدكتور، حاول مرة أخرى");
+
+      if (isDuplicateEmailError(error, message)) {
+        setErrors({ email: getDuplicateEmailValidationMessage() });
+        return;
+      }
+
       setErrors({
-        form:
-          error instanceof Error
-            ? error.message
-            : "تعذر إنشاء حساب الدكتور، حاول مرة أخرى",
+        form: message,
       });
     } finally {
       setLoading(false);
