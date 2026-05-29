@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, User, Mail, Lock, Briefcase, Stethoscope, Plus } from "lucide-react";
+import { X, User, Mail, Lock, Stethoscope, Plus } from "lucide-react";
 import {
   extractErrorMessage,
   getDuplicateEmailValidationMessage,
@@ -12,7 +12,6 @@ interface CreateStaffForm {
   email: string;
   password: string;
   full_name: string;
-  role_title: string;
   specialist: string;
 }
 
@@ -23,33 +22,18 @@ interface CreateStaffModalProps {
 }
 
 const SPECIALTIES = [
-  "طب عام",
-  "طب الأطفال",
-  "طب الأسنان",
+  "مخ واعصاب",
+  "عظام",
+  "الأورام",
+  "طب الأذن والأنف والحنجرة",
   "طب العيون",
-  "جراحة العظام",
-  "القلب والأوعية الدموية",
-  "الجهاز الهضمي",
-  "الأمراض الجلدية",
-  "الصحة النفسية",
-  "طب الطوارئ",
-  "التمريض",
-  "الصيدلة",
-  "الأشعة",
-  "التحاليل المخبرية",
-  "العلاج الطبيعي",
-];
-
-const ROLES = [
-  "طبيب",
-  "ممرض",
-  "ممرضة",
-  "صيدلاني",
-  "فني مختبر",
-  "موظف استقبال",
-  "إداري",
-  "فني أشعة",
-  "معالج فيزيائي",
+  "قلب و اوعية دموية",
+  "صدر و جهاز تنفسي",
+  "كلى",
+  "اسنان",
+  "اطفال و حديثي الولادة",
+  "جلدية",
+  "نسا و توليد",
 ];
 
 export default function CreateStaffModal({
@@ -61,7 +45,6 @@ export default function CreateStaffModal({
     email: "",
     password: "",
     full_name: "",
-    role_title: "",
     specialist: "",
   });
   const [loading, setLoading] = useState(false);
@@ -99,11 +82,11 @@ export default function CreateStaffModal({
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
-          email: form.email,
+          email: form.email.trim(),
           password: form.password,
-          full_name: form.full_name,
-          role_title: form.role_title,
-          ...(form.specialist ? { specialist: form.specialist } : {}),
+          full_name: form.full_name.trim(),
+          role_title: "doctor",
+          specialist: form.specialist.trim(),
         }),
       });
 
@@ -123,13 +106,13 @@ export default function CreateStaffModal({
           return;
         }
 
-        throw new Error(resultMessage || "فشل إنشاء الموظف");
+        throw new Error(resultMessage || "فشل إنشاء حساب الطبيب");
       }
 
       setSuccess(true);
       setTimeout(() => {
         setSuccess(false);
-        setForm({ email: "", password: "", full_name: "", role_title: "", specialist: "" });
+        setForm({ email: "", password: "", full_name: "", specialist: "" });
         setFieldErrors({});
         onSuccess();
         onClose();
@@ -167,9 +150,9 @@ export default function CreateStaffModal({
                 id="create-staff-title"
                 className="text-base font-bold text-(--text-primary)"
               >
-                إضافة موظف جديد
+                إضافة طبيب جديد
               </h2>
-              <p className="text-xs text-(--text-secondary)">أدخل بيانات الموظف</p>
+              <p className="text-xs text-(--text-secondary)">البيانات الأساسية لحساب الطبيب</p>
             </div>
           </div>
           <button
@@ -188,7 +171,7 @@ export default function CreateStaffModal({
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <p className="text-emerald-700 font-semibold">تم إضافة الموظف بنجاح!</p>
+            <p className="text-emerald-700 font-semibold">تم إنشاء حساب الطبيب بنجاح!</p>
           </div>
         )}
 
@@ -274,33 +257,10 @@ export default function CreateStaffModal({
               </div>
             </div>
 
-            {/* Role title */}
-            <div>
-              <label className="block text-xs font-semibold text-(--text-secondary) mb-1.5">
-                الدور الوظيفي *
-              </label>
-              <div className="relative">
-                <Briefcase size={15} className="absolute right-3 top-1/2 -translate-y-1/2 text-(--text-secondary) pointer-events-none" />
-                <select
-                  id="staff-role"
-                  name="role_title"
-                  value={form.role_title}
-                  onChange={handleChange}
-                  required
-                  className="w-full pr-9 pl-4 py-2.5 rounded-xl border border-(--input-border) bg-(--input-bg) text-sm text-(--text-primary) focus:outline-none focus:ring-2 focus:ring-teal-500/40 appearance-none"
-                >
-                  <option value="">اختر الدور...</option>
-                  {ROLES.map((r) => (
-                    <option key={r} value={r}>{r}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
             {/* Specialist */}
             <div>
               <label className="block text-xs font-semibold text-(--text-secondary) mb-1.5">
-                التخصص <span className="text-(--text-secondary) font-normal">(اختياري)</span>
+                التخصص *
               </label>
               <div className="relative">
                 <Stethoscope size={15} className="absolute right-3 top-1/2 -translate-y-1/2 text-(--text-secondary) pointer-events-none" />
@@ -309,6 +269,7 @@ export default function CreateStaffModal({
                   name="specialist"
                   value={form.specialist}
                   onChange={handleChange}
+                  required
                   className="w-full pr-9 pl-4 py-2.5 rounded-xl border border-(--input-border) bg-(--input-bg) text-sm text-(--text-primary) focus:outline-none focus:ring-2 focus:ring-teal-500/40 appearance-none"
                 >
                   <option value="">اختر التخصص...</option>
@@ -349,7 +310,7 @@ export default function CreateStaffModal({
                 ) : (
                   <>
                     <Plus size={15} />
-                    إضافة الموظف
+                    إضافة الطبيب
                   </>
                 )}
               </button>

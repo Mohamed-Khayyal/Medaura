@@ -1,8 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle, Clock, User, Briefcase, Stethoscope, BadgeCheck } from "lucide-react";
-import { getStaffId, getStaffRowKey, getStaffVerified } from "./staffIdentity";
+import {
+  BadgeCheck,
+  CheckCircle,
+  CircleOff,
+  Clock,
+  Mail,
+  Stethoscope,
+  User,
+  UserCheck,
+} from "lucide-react";
+import {
+  getStaffId,
+  getStaffRoleLabel,
+  getStaffRowKey,
+  getStaffVerified,
+} from "./staffIdentity";
 
 export interface StaffMember {
   id?: number;
@@ -12,6 +26,10 @@ export interface StaffMember {
   userId?: number | string;
   is_verified?: boolean | number | string;
   isVerified?: boolean | number | string;
+  is_active?: boolean | number | string;
+  isActive?: boolean | number | string;
+  active?: boolean | number | string;
+  email?: string;
   full_name: string;
   role_title: string;
   specialist?: string;
@@ -20,12 +38,31 @@ export interface StaffMember {
   work_to?: string;
   consultation_price?: number;
   verified?: boolean;
+  photo?: string | null;
 }
 
 interface StaffTableProps {
   staff: StaffMember[];
   loading: boolean;
   onVerify: (id: number) => Promise<void>;
+}
+
+function toBooleanFlag(value: unknown) {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "number") return value === 1;
+
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+
+    if (["true", "1", "yes", "active"].includes(normalized)) return true;
+    if (["false", "0", "no", "inactive"].includes(normalized)) return false;
+  }
+
+  return null;
+}
+
+function getActiveStatus(member: StaffMember) {
+  return toBooleanFlag(member.is_active ?? member.isActive ?? member.active);
 }
 
 export default function StaffTable({ staff, loading, onVerify }: StaffTableProps) {
@@ -59,7 +96,7 @@ export default function StaffTable({ staff, loading, onVerify }: StaffTableProps
         <div className="w-16 h-16 rounded-full bg-(--semi-card-bg) flex items-center justify-center">
           <User size={28} className="text-(--text-secondary)" />
         </div>
-        <p className="text-(--text-secondary) text-sm">لا يوجد موظفون في العيادة بعد</p>
+        <p className="text-(--text-secondary) text-sm">لا يوجد أطباء في العيادة بعد</p>
       </div>
     );
   }
@@ -69,7 +106,7 @@ export default function StaffTable({ staff, loading, onVerify }: StaffTableProps
       <table className="w-full text-sm" dir="rtl">
         <thead>
           <tr className="border-b border-(--card-border)">
-            {["الاسم", "الدور الوظيفي", "التخصص", "أيام العمل", "الحالة", "إجراء"].map(
+            {["الطبيب", "البريد الإلكتروني", "الدور", "التخصص", "أيام العمل", "التوثيق", "الحساب", "إجراء"].map(
               (h) => (
                 <th
                   key={h}
@@ -85,6 +122,7 @@ export default function StaffTable({ staff, loading, onVerify }: StaffTableProps
           {staff.map((member, idx) => {
             const staffId = getStaffId(member);
             const verified = getStaffVerified(member);
+            const active = getActiveStatus(member);
 
             return (
               <tr
@@ -94,8 +132,16 @@ export default function StaffTable({ staff, loading, onVerify }: StaffTableProps
               {/* Name */}
               <td className="px-4 py-3.5 whitespace-nowrap">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center shrink-0">
-                    <User size={15} className="text-teal-600" />
+                  <div className="w-9 h-9 rounded-xl bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center shrink-0 overflow-hidden">
+                    {member.photo ? (
+                      <img
+                        src={member.photo}
+                        alt={member.full_name}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <User size={15} className="text-teal-600" />
+                    )}
                   </div>
                   <span className="font-medium text-(--text-primary)">
                     {member.full_name}
@@ -103,11 +149,23 @@ export default function StaffTable({ staff, loading, onVerify }: StaffTableProps
                 </div>
               </td>
 
+              {/* Email */}
+              <td className="px-4 py-3.5 whitespace-nowrap">
+                {member.email ? (
+                  <div className="flex items-center gap-1.5 text-(--text-secondary)" dir="ltr">
+                    <Mail size={13} />
+                    <span>{member.email}</span>
+                  </div>
+                ) : (
+                  <span className="text-(--text-secondary)">—</span>
+                )}
+              </td>
+
               {/* Role */}
               <td className="px-4 py-3.5 whitespace-nowrap">
                 <div className="flex items-center gap-1.5 text-(--text-secondary)">
-                  <Briefcase size={13} />
-                  <span>{member.role_title || "—"}</span>
+                  <UserCheck size={13} />
+                  <span>{getStaffRoleLabel(member)}</span>
                 </div>
               </td>
 
@@ -142,6 +200,23 @@ export default function StaffTable({ staff, loading, onVerify }: StaffTableProps
                   <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
                     <Clock size={12} />
                     في الانتظار
+                  </span>
+                )}
+              </td>
+
+              {/* Account */}
+              <td className="px-4 py-3.5 whitespace-nowrap">
+                {active === null ? (
+                  <span className="text-(--text-secondary)">—</span>
+                ) : active ? (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400">
+                    <CheckCircle size={12} />
+                    نشط
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                    <CircleOff size={12} />
+                    غير نشط
                   </span>
                 )}
               </td>

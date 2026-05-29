@@ -20,6 +20,7 @@ import type { PendingStaffMember } from "./features/staff/PendingRequests";
 import {
   getStaffId,
   getStaffVerified,
+  isDoctorStaffRecord,
   normalizeStaffRecord,
 } from "./features/staff/staffIdentity";
 
@@ -64,7 +65,7 @@ async function fetchPendingStaff(): Promise<PendingStaffMember[]> {
     if (!json.success) return [];
     return extractStaffList<PendingStaffMember>(json.data)
       .map(normalizeStaffRecord)
-      .filter((member) => !getStaffVerified(member));
+      .filter((member) => isDoctorStaffRecord(member) && !getStaffVerified(member));
   } catch {
     return [];
   }
@@ -81,7 +82,7 @@ async function verifyStaff(id: number): Promise<void> {
   });
   const json = await res.json();
   if (!res.ok || !json.success) {
-    throw new Error(json.error || "فشل توثيق الموظف");
+    throw new Error(json.error || "فشل توثيق الطبيب");
   }
 }
 
@@ -164,7 +165,8 @@ export default function ClinicDashPage() {
     totalStaff: stats?.total_staff ?? staff.length,
     pendingStaff: pending.length,
     totalBookings: stats?.total_bookings ?? 0,
-    totalDoctors: stats?.total_doctors ?? 0,
+    totalDoctors:
+      stats?.total_doctors ?? staff.filter((member) => isDoctorStaffRecord(member)).length,
   };
 
   return (
@@ -176,7 +178,7 @@ export default function ClinicDashPage() {
             {stats?.clinic_name ? `مرحباً، ${stats.clinic_name}` : "لوحة تحكم العيادة"}
           </h1>
           <p className="text-sm text-(--text-secondary) mt-0.5">
-            إدارة موظفي العيادة وإحصاءاتها
+            إدارة أطباء العيادة وإحصاءاتها
           </p>
         </div>
 
@@ -194,7 +196,7 @@ export default function ClinicDashPage() {
             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-teal-500 text-white text-sm font-semibold hover:bg-teal-600 transition shadow-sm hover:shadow-md hover:-translate-y-px"
           >
             <Plus size={15} />
-            إضافة موظف
+            إضافة طبيب
           </button>
         </div>
       </div>
@@ -202,12 +204,12 @@ export default function ClinicDashPage() {
       {/* ── Stats cards ──────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
         <StatsCard
-          title="إجمالي الموظفين"
-          value={statsLoading ? "—" : cardStats.totalStaff}
+          title="إجمالي الأطباء"
+          value={statsLoading ? "—" : cardStats.totalDoctors}
           icon={<Users size={18} strokeWidth={2} className="text-white" />}
           iconBg="bg-teal-500"
           chartColor="#14b8a6"
-          badge={cardStats.totalStaff > 0 ? `${cardStats.totalStaff} موظف` : undefined}
+          badge={cardStats.totalDoctors > 0 ? `${cardStats.totalDoctors} طبيب` : undefined}
           badgeColor="teal"
           data={
             stats?.monthly_bookings
@@ -240,10 +242,10 @@ export default function ClinicDashPage() {
           }
         />
 
-        {cardStats.totalDoctors > 0 && (
+        {cardStats.totalStaff !== cardStats.totalDoctors && cardStats.totalStaff > 0 && (
           <StatsCard
-            title="الأطباء"
-            value={statsLoading ? "—" : cardStats.totalDoctors}
+            title="إجمالي الحسابات"
+            value={statsLoading ? "—" : cardStats.totalStaff}
             icon={<Stethoscope size={18} strokeWidth={2} className="text-white" />}
             iconBg="bg-[#6A1B9A]"
             chartColor="#6A1B9A"
@@ -268,10 +270,10 @@ export default function ClinicDashPage() {
                   : "text-(--text-secondary) hover:text-(--text-primary)"
               }`}
             >
-              جميع الموظفين
+              جميع الأطباء
               {staff.length > 0 && (
                 <span className="mr-2 text-xs bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400 rounded-full px-1.5 py-0.5">
-                  {staff.length}
+                  {staff.filter((member) => isDoctorStaffRecord(member)).length}
                 </span>
               )}
             </button>
@@ -284,7 +286,7 @@ export default function ClinicDashPage() {
                   : "text-(--text-secondary) hover:text-(--text-primary)"
               }`}
             >
-              الطلبات المعلقة
+              طلبات الأطباء المعلقة
               {pending.length > 0 && (
                 <span className="mr-2 text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-full px-1.5 py-0.5">
                   {pending.length}
@@ -298,7 +300,7 @@ export default function ClinicDashPage() {
             className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-teal-500/10 text-teal-600 text-sm font-semibold hover:bg-teal-500/20 transition"
           >
             <Plus size={14} />
-            إضافة
+              إضافة طبيب
           </button>
         </div>
 
@@ -306,7 +308,7 @@ export default function ClinicDashPage() {
         <div className="p-5">
           {activeTab === "all" ? (
             <StaffTable
-              staff={staff}
+              staff={staff.filter((member) => isDoctorStaffRecord(member))}
               loading={staffLoading}
               onVerify={handleVerify}
             />

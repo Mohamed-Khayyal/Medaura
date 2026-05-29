@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { Plus, RefreshCw } from "lucide-react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { BadgeCheck, Clock, Plus, RefreshCw, Search, Stethoscope, Users } from "lucide-react";
 import StaffTable from "@/app/clinicDash/features/staff/StaffTable";
 import CreateStaffModal from "@/app/clinicDash/features/staff/CreateStaffModal";
 import type { StaffMember } from "@/app/clinicDash/features/staff/StaffTable";
 import {
   getStaffId,
+  getStaffVerified,
+  isDoctorStaffRecord,
   normalizeStaffRecord,
 } from "@/app/clinicDash/features/staff/staffIdentity";
 
@@ -50,6 +52,8 @@ export default function StaffPage() {
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [search, setSearch] = useState("");
+  const [specialtyFilter, setSpecialtyFilter] = useState("all");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -81,13 +85,51 @@ export default function StaffPage() {
     );
   };
 
+  const doctors = useMemo(
+    () => staff.filter((member) => isDoctorStaffRecord(member)),
+    [staff]
+  );
+
+  const specialties = useMemo(() => {
+    const unique = new Set<string>();
+
+    doctors.forEach((doctor) => {
+      const specialty = doctor.specialist?.trim();
+      if (specialty) unique.add(specialty);
+    });
+
+    return Array.from(unique);
+  }, [doctors]);
+
+  const filteredDoctors = useMemo(() => {
+    const term = search.trim().toLowerCase();
+
+    return doctors.filter((doctor) => {
+      const matchesSearch =
+        !term ||
+        [doctor.full_name, doctor.email, doctor.specialist]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase()
+          .includes(term);
+
+      const matchesSpecialty =
+        specialtyFilter === "all" || doctor.specialist === specialtyFilter;
+
+      return matchesSearch && matchesSpecialty;
+    });
+  }, [doctors, search, specialtyFilter]);
+
+  const verifiedDoctors = doctors.filter((doctor) => getStaffVerified(doctor)).length;
+  const pendingDoctors = doctors.length - verifiedDoctors;
+
   return (
     <div className="space-y-6" dir="rtl">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-(--text-primary)">موظفو العيادة</h1>
+          <h1 className="text-xl font-bold text-(--text-primary)">أطباء العيادة</h1>
           <p className="text-sm text-(--text-secondary) mt-0.5">
-            إدارة جميع موظفي العيادة
+            بيانات حسابات الأطباء داخل العيادة
           </p>
         </div>
         <div className="flex gap-3">
@@ -104,13 +146,83 @@ export default function StaffPage() {
             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-teal-500 text-white text-sm font-semibold hover:bg-teal-600 transition shadow-sm"
           >
             <Plus size={15} />
-            إضافة موظف
+            إضافة طبيب
           </button>
         </div>
       </div>
 
-      <div className="rounded-2xl border border-(--card-border) bg-(--card-bg) shadow-[var(--shadow-soft)] p-5">
-        <StaffTable staff={staff} loading={loading} onVerify={handleVerify} />
+      <div className="grid gap-4 sm:grid-cols-3">
+        <SummaryCard
+          icon={<Users size={18} />}
+          label="إجمالي الأطباء"
+          value={loading ? "—" : doctors.length}
+          tone="teal"
+        />
+        <SummaryCard
+          icon={<BadgeCheck size={18} />}
+          label="الأطباء الموثقون"
+          value={loading ? "—" : verifiedDoctors}
+          tone="emerald"
+        />
+        <SummaryCard
+          icon={<Clock size={18} />}
+          label="بانتظار التوثيق"
+          value={loading ? "—" : pendingDoctors}
+          tone="amber"
+        />
+      </div>
+
+      <div className="rounded-2xl border border-(--card-border) bg-(--card-bg) shadow-[var(--shadow-soft)] overflow-hidden">
+        <div className="flex flex-col gap-4 border-b border-(--card-border) p-5 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <h2 className="text-base font-bold text-(--text-primary)">دليل الأطباء</h2>
+            <p className="mt-0.5 text-sm text-(--text-secondary)">
+              عرض {loading ? "—" : filteredDoctors.length} من أصل {loading ? "—" : doctors.length} طبيب
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="relative w-full sm:w-72">
+              <Search
+                size={16}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-(--text-secondary)"
+              />
+              <input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="ابحث بالاسم أو البريد أو التخصص"
+                className="w-full rounded-xl border border-(--input-border) bg-(--input-bg) py-2.5 pl-4 pr-10 text-sm text-(--text-primary) outline-none transition placeholder:text-(--text-secondary) focus:ring-2 focus:ring-teal-500/30"
+              />
+            </div>
+
+            <div className="relative w-full sm:w-56">
+              <Stethoscope
+                size={15}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-(--text-secondary)"
+              />
+              <select
+                value={specialtyFilter}
+                onChange={(event) => setSpecialtyFilter(event.target.value)}
+                className="w-full rounded-xl border border-(--input-border) bg-(--input-bg) py-2.5 pl-4 pr-9 text-sm text-(--text-primary) outline-none transition focus:ring-2 focus:ring-teal-500/30"
+              >
+                <option value="all">كل التخصصات</option>
+                {specialties.map((specialty) => (
+                  <option key={specialty} value={specialty}>
+                    {specialty}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-5">
+          <StaffTable
+            staff={filteredDoctors}
+            loading={loading}
+            onVerify={handleVerify}
+          />
+        </div>
       </div>
 
       <CreateStaffModal
@@ -118,6 +230,36 @@ export default function StaffPage() {
         onClose={() => setModalOpen(false)}
         onSuccess={() => setRefreshKey((k) => k + 1)}
       />
+    </div>
+  );
+}
+
+function SummaryCard({
+  icon,
+  label,
+  value,
+  tone,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: number | string;
+  tone: "teal" | "emerald" | "amber";
+}) {
+  const tones = {
+    teal: "bg-teal-500/10 text-teal-600",
+    emerald: "bg-emerald-500/10 text-emerald-600",
+    amber: "bg-amber-500/10 text-amber-600",
+  } as const;
+
+  return (
+    <div className="rounded-2xl border border-(--card-border) bg-(--card-bg) p-5 shadow-[var(--shadow-soft)]">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-2xl font-black text-(--text-primary)">{value}</p>
+          <p className="mt-1 text-xs font-semibold text-(--text-secondary)">{label}</p>
+        </div>
+        <div className={`rounded-xl p-2.5 ${tones[tone]}`}>{icon}</div>
+      </div>
     </div>
   );
 }

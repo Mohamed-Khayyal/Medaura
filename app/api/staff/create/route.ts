@@ -2,6 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { staffService } from "@/lib/api/staff";
 import { getServerAccessToken, applyAuthCookies } from "@/lib/api/server-auth";
 
+function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error ? error.message : fallback;
+}
+
+function getErrorStatus(error: unknown) {
+  return typeof error === "object" &&
+    error !== null &&
+    "status" in error &&
+    typeof error.status === "number"
+    ? error.status
+    : 500;
+}
+
 // POST /api/staff/create
 export async function POST(request: NextRequest) {
   try {
@@ -16,24 +29,36 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
 
-    if (!body.email || !body.password || !body.full_name || !body.role_title) {
+    const email = String(body.email ?? "").trim();
+    const fullName = String(body.full_name ?? "").trim();
+    const specialist = String(body.specialist ?? "").trim();
+
+    if (!email || !body.password || !fullName || !specialist) {
       return NextResponse.json(
         {
           success: false,
-          error: "Missing required fields: email, password, full_name, role_title",
+          error: "Missing required fields: email, password, full_name, specialist",
         },
         { status: 400 }
       );
     }
 
-    const data = await staffService.createStaff(body, auth.token);
+    const payload = {
+      ...body,
+      email,
+      full_name: fullName,
+      specialist,
+      role_title: "doctor",
+    };
+
+    const data = await staffService.createStaff(payload, auth.token);
     const res = NextResponse.json({ success: true, data }, { status: 201 });
     return applyAuthCookies(res, auth);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Create staff error:", error);
     return NextResponse.json(
-      { success: false, error: error.message || "Failed to create staff" },
-      { status: error.status || 500 }
+      { success: false, error: getErrorMessage(error, "Failed to create staff") },
+      { status: getErrorStatus(error) }
     );
   }
 }

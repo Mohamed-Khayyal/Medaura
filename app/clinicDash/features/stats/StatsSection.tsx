@@ -28,15 +28,30 @@ const BOOKING_STATUS_COLORS: Record<string, string> = {
   cancelled: "#f87171",
 };
 
+type TooltipPayloadItem = {
+  name?: string;
+  value?: number | string;
+  color?: string;
+};
+
+type ArabicTooltipProps = {
+  active?: boolean;
+  payload?: TooltipPayloadItem[];
+  label?: string | number;
+};
+
 // Arabic tooltip
-const ArabicTooltip = ({ active, payload, label }: any) => {
+const ArabicTooltip = ({ active, payload, label }: ArabicTooltipProps) => {
   if (!active || !payload?.length) return null;
   return (
     <div className="bg-white dark:bg-[#121b33] border border-[#e6eaf0] dark:border-[#1f2a44] rounded-xl px-4 py-2.5 shadow-lg text-sm">
       {label && <p className="font-semibold text-[#0f1b3d] dark:text-[#e6edf7] mb-1">{label}</p>}
-      {payload.map((entry: any, i: number) => (
+      {payload.map((entry, i) => (
         <p key={i} style={{ color: entry.color }} className="font-medium">
-          {entry.name}: {entry.value?.toLocaleString("ar-EG")}
+          {entry.name}:{" "}
+          {typeof entry.value === "number"
+            ? entry.value.toLocaleString("ar-EG")
+            : entry.value}
         </p>
       ))}
     </div>
@@ -76,7 +91,7 @@ export default function StatsSection({ stats, loading }: StatsSectionProps) {
       }))
     : null;
 
-  // --- Staff by specialty pie chart ---
+  // --- Doctors by specialty pie chart ---
   const hasSpecialtyData =
     stats?.staff_by_specialty && stats.staff_by_specialty.length > 0;
 
@@ -192,11 +207,11 @@ export default function StatsSection({ stats, loading }: StatsSectionProps) {
           </div>
         )}
 
-        {/* Staff by specialty donut */}
+        {/* Doctors by specialty donut */}
         {specialtyPieData && (
           <div className="rounded-2xl border border-(--card-border) bg-(--card-bg) shadow-[var(--shadow-soft)] p-5">
             <h3 className="text-sm font-semibold text-(--text-primary) mb-4" dir="rtl">
-              توزيع الموظفين حسب التخصص
+              توزيع الأطباء حسب التخصص
             </h3>
             <div className="h-52">
               <ResponsiveContainer width="100%" height="100%">

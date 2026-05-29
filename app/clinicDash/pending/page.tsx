@@ -7,6 +7,7 @@ import type { PendingStaffMember } from "@/app/clinicDash/features/staff/Pending
 import {
   getStaffId,
   getStaffVerified,
+  isDoctorStaffRecord,
   normalizeStaffRecord,
 } from "@/app/clinicDash/features/staff/staffIdentity";
 
@@ -28,7 +29,7 @@ async function fetchPending(): Promise<PendingStaffMember[]> {
     if (!json.success) return [];
     return extractStaffList(json.data)
       .map(normalizeStaffRecord)
-      .filter((member) => !getStaffVerified(member));
+      .filter((member) => isDoctorStaffRecord(member) && !getStaffVerified(member));
   } catch {
     return [];
   }
@@ -88,9 +89,9 @@ export default function PendingPage() {
     <div className="space-y-6" dir="rtl">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-(--text-primary)">الطلبات المعلقة</h1>
+          <h1 className="text-xl font-bold text-(--text-primary)">طلبات الأطباء المعلقة</h1>
           <p className="text-sm text-(--text-secondary) mt-0.5">
-            مراجعة وتوثيق طلبات انضمام الموظفين
+            مراجعة وتوثيق حسابات أطباء العيادة
           </p>
         </div>
         <button

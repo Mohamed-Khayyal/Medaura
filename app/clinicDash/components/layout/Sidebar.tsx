@@ -29,16 +29,16 @@ const menu = [
     ],
   },
   {
-    title: "إدارة الموظفين",
+    title: "إدارة الأطباء",
     items: [
       {
-        text: "موظفو العيادة",
+        text: "أطباء العيادة",
         icon: <Users size={16} />,
         href: "/clinicDash/staff",
         exact: false,
       },
       {
-        text: "الطلبات المعلقة",
+        text: "طلبات الأطباء",
         icon: <Clock size={16} />,
         href: "/clinicDash/pending",
         exact: false,

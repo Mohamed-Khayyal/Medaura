@@ -1,7 +1,12 @@
 "use client";
 
 import { BadgeCheck, Clock, Stethoscope, User, Briefcase } from "lucide-react";
-import { getStaffId, getStaffRowKey, getStaffVerified } from "./staffIdentity";
+import {
+  getStaffId,
+  getStaffRoleLabel,
+  getStaffRowKey,
+  getStaffVerified,
+} from "./staffIdentity";
 
 export interface PendingStaffMember {
   id?: number;
@@ -50,7 +55,7 @@ export default function PendingRequests({
           <BadgeCheck size={24} className="text-emerald-600" />
         </div>
         <p className="text-(--text-secondary) text-sm font-medium">لا توجد طلبات معلقة</p>
-        <p className="text-(--text-secondary) text-xs opacity-70">جميع الموظفين موثقون</p>
+        <p className="text-(--text-secondary) text-xs opacity-70">جميع الأطباء موثقون</p>
       </div>
     );
   }
@@ -78,7 +83,7 @@ export default function PendingRequests({
                 {member.role_title && (
                   <span className="flex items-center gap-1 text-xs text-(--text-secondary)">
                     <Briefcase size={11} />
-                    {member.role_title}
+                    {getStaffRoleLabel(member)}
                   </span>
                 )}
                 {member.specialist && (

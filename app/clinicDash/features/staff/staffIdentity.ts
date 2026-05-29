@@ -10,6 +10,8 @@ type StaffIdentityRecord = {
   verified_status?: unknown;
   verify_status?: unknown;
   status?: unknown;
+  role_title?: unknown;
+  roleTitle?: unknown;
   staff?: {
     id?: unknown;
     staff_id?: unknown;
@@ -101,6 +103,26 @@ export function getStaffVerified(value: unknown) {
   }
 
   return false;
+}
+
+export function isDoctorStaffRecord(value: unknown) {
+  const record = value as StaffIdentityRecord;
+  const rawRole = record.role_title ?? record.roleTitle;
+
+  if (typeof rawRole !== "string") return true;
+
+  const role = rawRole.trim().toLowerCase();
+
+  return role === "" || role === "doctor" || role === "طبيب";
+}
+
+export function getStaffRoleLabel(value: unknown) {
+  const record = value as StaffIdentityRecord;
+  const rawRole = record.role_title ?? record.roleTitle;
+
+  if (typeof rawRole !== "string" || !rawRole.trim()) return "طبيب";
+
+  return isDoctorStaffRecord(value) ? "طبيب" : rawRole.trim();
 }
 
 export function normalizeStaffRecord<T extends object>(value: T) {

@@ -6,13 +6,30 @@ import { useRouter } from "next/navigation";
 import { DashboardThemeContext } from "../../../providers/DashboardThemeProvider";
 import { useAuth } from "@/context/AuthContext";
 
+type NotificationItem = {
+  id: string;
+  title: string;
+  body: string;
+  time: string;
+  read: boolean;
+  avatar: string;
+};
+
+type NotificationResponseItem = {
+  id: number | string;
+  title?: string;
+  message?: string;
+  created_at?: string;
+  read?: boolean;
+};
+
 function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
   const { darkMode, toggleTheme } = useContext(DashboardThemeContext);
   const { logout, user } = useAuth();
   const clinicName = (user?.profile?.name as string) || "عيادتي";
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [query, setQuery] = useState("");
   const avatarSrc = "/images/blank-profile-picture.png";
   const notifRef = useRef<HTMLDivElement | null>(null);
@@ -27,15 +44,15 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
       .then((res) => {
         if (res.success && Array.isArray(res.data)) {
           setNotifications(
-            res.data.map((n: any) => ({
+            res.data.map((n: NotificationResponseItem) => ({
               id: String(n.id),
-              title: n.title,
-              body: n.message,
-              time: new Date(n.created_at).toLocaleTimeString("ar-EG", {
+              title: n.title || "",
+              body: n.message || "",
+              time: new Date(n.created_at || Date.now()).toLocaleTimeString("ar-EG", {
                 hour: "2-digit",
                 minute: "2-digit",
               }),
-              read: n.read,
+              read: n.read === true,
               avatar: "/images/blank-profile-picture.png",
             }))
           );
@@ -101,7 +118,7 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
                   id="clinic-nav-search"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder="ابحث عن موظف، موعد..."
+                  placeholder="ابحث عن طبيب، موعد..."
                   dir="rtl"
                   className="w-full pr-10 pl-4 py-2 rounded-2xl border border-(--input-border) bg-(--input-bg) text-sm text-(--text-primary) placeholder:text-(--text-secondary) focus:outline-none focus:ring-2 focus:ring-teal-500/40"
                 />
