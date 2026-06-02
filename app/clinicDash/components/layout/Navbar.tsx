@@ -1,8 +1,8 @@
 "use client";
 
 import { Sun, Moon, Bell, Search, LogOut, X, Menu } from "lucide-react";
-import { useState, useRef, useEffect, useContext } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useRef, useEffect, useContext, useCallback } from "react";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { DashboardThemeContext } from "../../../providers/DashboardThemeProvider";
 import { useAuth } from "@/context/AuthContext";
 
@@ -30,12 +30,36 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
-  const [query, setQuery] = useState("");
-  const avatarSrc = "/images/blank-profile-picture.png";
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const [query, setQuery] = useState(searchParams.get("q") ?? "");
+  const avatarSrc =
+    (typeof user?.photo === "string" && user.photo) ||
+    (user?.profile?.photo as string) ||
+    "/images/blank-profile-picture.png";
   const notifRef = useRef<HTMLDivElement | null>(null);
   const profileRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
   const [isTransitioning, setIsTransitioning] = useState(false);
+
+  // Debounced URL update so page.tsx can read ?q= and filter
+  const pushSearch = useCallback(
+    (value: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (value.trim()) {
+        params.set("q", value.trim());
+      } else {
+        params.delete("q");
+      }
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    },
+    [searchParams, pathname, router]
+  );
+
+  useEffect(() => {
+    const timer = setTimeout(() => pushSearch(query), 300);
+    return () => clearTimeout(timer);
+  }, [query, pushSearch]);
 
   // Fetch notifications
   useEffect(() => {
@@ -48,13 +72,16 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
               id: String(n.id),
               title: n.title || "",
               body: n.message || "",
-              time: new Date(n.created_at || Date.now()).toLocaleTimeString("ar-EG", {
-                hour: "2-digit",
-                minute: "2-digit",
-              }),
+              time: new Date(n.created_at || Date.now()).toLocaleTimeString(
+                "ar-EG",
+                {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                },
+              ),
               read: n.read === true,
               avatar: "/images/blank-profile-picture.png",
-            }))
+            })),
           );
         }
       })
@@ -143,13 +170,17 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
                   <Sun
                     size={18}
                     className={`absolute inset-0 transition-all duration-500 ${
-                      darkMode ? "opacity-100 rotate-0 scale-100" : "opacity-0 rotate-90 scale-50 hidden"
+                      darkMode
+                        ? "opacity-100 rotate-0 scale-100"
+                        : "opacity-0 rotate-90 scale-50 pointer-events-none"
                     }`}
                   />
                   <Moon
                     size={18}
                     className={`absolute inset-0 transition-all duration-500 ${
-                      darkMode ? "opacity-0 -rotate-90 scale-50 hidden" : "opacity-100 rotate-0 scale-100"
+                      darkMode
+                        ? "opacity-0 -rotate-90 scale-50 pointer-events-none"
+                        : "opacity-100 rotate-0 scale-100"
                     }`}
                   />
                 </div>
@@ -172,7 +203,9 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
                 {notifOpen && (
                   <div className="absolute left-0 mt-2 w-80 bg-(--card-bg) border border-(--card-border) rounded-2xl shadow-[var(--shadow-soft)] p-3 z-40 backdrop-blur-md">
                     <div className="flex items-center justify-between px-2 mb-2">
-                      <h4 className="font-semibold text-(--text-primary) text-sm">الإشعارات</h4>
+                      <h4 className="font-semibold text-(--text-primary) text-sm">
+                        الإشعارات
+                      </h4>
                       <div className="flex items-center gap-2">
                         {unreadCount > 0 && (
                           <button
@@ -202,7 +235,9 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
                             key={n.id}
                             onClick={() => {
                               setNotifications((prev) =>
-                                prev.map((x) => (x.id === n.id ? { ...x, read: true } : x))
+                                prev.map((x) =>
+                                  x.id === n.id ? { ...x, read: true } : x,
+                                ),
                               );
                               setNotifOpen(false);
                             }}
@@ -270,7 +305,9 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
                         <div className="text-sm font-semibold text-(--text-primary) truncate">
                           {clinicName}
                         </div>
-                        <div className="text-xs text-teal-600 mt-0.5">عيادة</div>
+                        <div className="text-xs text-teal-600 mt-0.5">
+                          عيادة
+                        </div>
                       </div>
                     </div>
                     <div className="border-t border-(--card-border) mt-1" />

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useEffect } from "react";
+import React, { createContext, useCallback, useEffect, useState } from "react";
 
 type ThemeContextType = {
   darkMode: boolean;
@@ -12,18 +12,37 @@ export const DashboardThemeContext = createContext<ThemeContextType>({
   toggleTheme: () => {},
 });
 
-export default function DashboardThemeProvider({ children }: { children: React.ReactNode }) {
-  // Dashboard is always light-mode — remove dark class if it was previously saved
+const STORAGE_KEY = "dashboard-theme";
+
+export default function DashboardThemeProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  // Initialise from localStorage so theme persists across page reloads
+  const [darkMode, setDarkMode] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem(STORAGE_KEY) === "dark";
+  });
+
+  // Apply / remove the .dark class on the dashboard container whenever darkMode changes
   useEffect(() => {
-    const dashboardContainer = document.querySelector("[data-theme-dashboard]");
-    if (dashboardContainer) {
-      dashboardContainer.classList.remove("dark");
+    const container = document.querySelector("[data-theme-dashboard]");
+    if (!container) return;
+    if (darkMode) {
+      container.classList.add("dark");
+    } else {
+      container.classList.remove("dark");
     }
-    localStorage.removeItem("dashboard-theme");
+    localStorage.setItem(STORAGE_KEY, darkMode ? "dark" : "light");
+  }, [darkMode]);
+
+  const toggleTheme = useCallback(() => {
+    setDarkMode((prev) => !prev);
   }, []);
 
   return (
-    <DashboardThemeContext.Provider value={{ darkMode: false, toggleTheme: () => {} }}>
+    <DashboardThemeContext.Provider value={{ darkMode, toggleTheme }}>
       {children}
     </DashboardThemeContext.Provider>
   );

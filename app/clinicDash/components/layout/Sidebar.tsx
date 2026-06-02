@@ -63,14 +63,14 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
 
   return (
     <div
-      className={`fixed inset-y-0 right-0 z-50 h-screen w-64 bg-[#0f2044] text-white p-4 space-y-4 overflow-auto shadow-2xl lg:shadow-none transform translate-x-full lg:translate-x-0 lg:sticky lg:top-0 transition-transform duration-300 ease-in-out border-l border-white/10 ${
-        open ? "translate-x-0" : "translate-x-full lg:translate-x-0"
+      className={`fixed inset-y-0 right-0 z-50 h-screen w-64 bg-[#0f2044] text-white p-4 space-y-4 overflow-auto shadow-2xl xl:shadow-none transform transition-transform duration-300 ease-in-out border-l border-white/10 xl:sticky xl:top-0 ${
+        open ? "translate-x-0" : "translate-x-full xl:translate-x-0"
       }`}
       dir="rtl"
     >
-      {/* Close button (mobile) */}
+      {/* Close button (mobile only) */}
       <button
-        className="lg:hidden mb-3 p-2 rounded-lg hover:bg-white/10 transition-colors"
+        className="xl:hidden mb-3 p-2 rounded-lg hover:bg-white/10 transition-colors"
         onClick={onClose}
         aria-label="Close sidebar"
       >

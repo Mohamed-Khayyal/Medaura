@@ -26,6 +26,21 @@ export const staffService = {
     );
   },
 
+  async unverify(staffId: number, token: string) {
+    return apiClient.patch<unknown>(
+      `/api/staff/${staffId}/unverify`,
+      undefined,
+      { token }
+    );
+  },
+
+  async deleteStaff(staffId: number, token: string) {
+    return apiClient.delete<unknown>(
+      `/api/staff/${staffId}/delete`,
+      { token }
+    );
+  },
+
   async getPendingStaff(token: string) {
     return apiClient.get<StaffProfile[]>("/api/staff/pending", { token });
   },
