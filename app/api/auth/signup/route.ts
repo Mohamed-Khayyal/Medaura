@@ -22,18 +22,13 @@ export async function POST(request: NextRequest) {
       const profile = body.profile as Partial<DoctorSignupProfile> | undefined;
 
       if (
-        !profile?.full_name ||
-        !profile.specialist ||
-        !profile.work_days ||
-        !profile.work_from ||
-        !profile.work_to ||
-        profile.consultation_price === undefined
+        !profile?.full_name
       ) {
         return NextResponse.json(
           {
             success: false,
             error:
-              "Missing required doctor profile fields: full_name, specialist, work_days, work_from, work_to, consultation_price",
+              "Missing required doctor profile fields: full_name",
           },
           { status: 400 }
         );
@@ -44,20 +39,13 @@ export async function POST(request: NextRequest) {
       const profile = body.profile as Partial<StaffSignupProfile> | undefined;
 
       if (
-        !profile?.full_name ||
-        !profile?.name ||
-        !profile?.role_title ||
-        !profile?.specialist ||
-        !profile?.work_days ||
-        !profile?.work_from ||
-        !profile?.work_to ||
-        profile.consultation_price === undefined
+        !profile?.full_name
       ) {
         return NextResponse.json(
           {
             success: false,
             error:
-              "Missing required staff profile fields: full_name, name, role_title, specialist, work_days, work_from, work_to, consultation_price",
+              "Missing required staff profile fields: full_name, name",
           },
           { status: 400 }
         );

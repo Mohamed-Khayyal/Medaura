@@ -1,52 +1,48 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prescriptionService } from "@/lib/api/prescriptions";
+
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://127.0.0.1:3001";
 
 // GET /api/prescriptions/my-prescriptions
 export async function GET(request: NextRequest) {
   try {
-    // Extract JWT from cookies
     const token = request.cookies.get("jwt")?.value;
 
     if (!token) {
       return NextResponse.json(
-        {
-          success: false,
-          error: "Not authenticated",
-        },
-        { status: 401 }
+        { success: false, error: "Not authenticated" },
+        { status: 401 },
       );
     }
 
-    const response = await prescriptionService.getMyPrescriptions(token);
-    const responseData = (response as { data?: unknown }).data;
-    const nestedData = (responseData as { data?: unknown } | undefined)?.data;
-    const prescriptions = Array.isArray(response)
-      ? response
-      : Array.isArray(responseData)
-        ? responseData
-        : Array.isArray(nestedData)
-          ? nestedData
-        : [];
+    const response = await fetch(
+      `${BACKEND_URL}/api/prescriptions/my-prescriptions`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
 
-    return NextResponse.json({ success: true, data: prescriptions });
+    const data = await response.json();
+
+    if (!response.ok) {
+      return NextResponse.json(
+        { success: false, error: data.message || "Failed to fetch prescriptions" },
+        { status: response.status },
+      );
+    }
+
+    // Clynk returns { status, results, prescriptions }
+    const prescriptions = data.prescriptions || data.data || data;
+    const list = Array.isArray(prescriptions) ? prescriptions : [];
+
+    return NextResponse.json({ success: true, data: list });
   } catch (error: unknown) {
     console.error("Get my prescriptions error:", error);
     const message =
       error instanceof Error ? error.message : "Failed to fetch prescriptions";
-    const status =
-      typeof error === "object" &&
-      error !== null &&
-      "status" in error &&
-      typeof (error as { status?: unknown }).status === "number"
-        ? (error as { status: number }).status
-        : 500;
-
-    return NextResponse.json(
-      {
-        success: false,
-        error: message,
-      },
-      { status }
-    );
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

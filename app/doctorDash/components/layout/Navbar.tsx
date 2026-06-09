@@ -13,32 +13,60 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
   const specialist = (user?.profile?.specialist as string) || "طبيب قلب";
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [notifications, setNotifications] = useState<any[]>([
-    {
-      id: "1",
-      title: "New appointment booked",
-      body: "محمد احمد booked an appointment",
-      time: "2m",
-      read: false,
-      avatar: "/images/blank-profile-picture.png",
-    },
-    {
-      id: "2",
-      title: "Lab results ready",
-      body: "Results for د.احمد السيد",
-      time: "1h",
-      read: false,
-      avatar: "/images/blank-profile-picture.png",
-    },
-    {
-      id: "3",
-      title: "System update",
-      body: "Scheduled maintenance tonight",
-      time: "1d",
-      read: true,
-      avatar: "/images/blank-profile-picture.png",
-    },
-  ]);
+  const [notifications, setNotifications] = useState<any[]>([]);
+
+  useEffect(() => {
+    async function loadNotifications() {
+      try {
+        const response = await fetch("/api/notifications/me", { credentials: "include" });
+        const json = await response.json();
+        if (response.ok && json.success && Array.isArray(json.data)) {
+          const mapped = json.data.map((item: any) => {
+            let timeStr = "";
+            if (item.created_at) {
+              const diffMs = Date.now() - new Date(item.created_at).getTime();
+              const diffMins = Math.floor(diffMs / 60000);
+              const diffHours = Math.floor(diffMins / 60);
+              const diffDays = Math.floor(diffHours / 24);
+              if (diffMins < 60) {
+                timeStr = `${Math.max(1, diffMins)}m`;
+              } else if (diffHours < 24) {
+                timeStr = `${diffHours}h`;
+              } else {
+                timeStr = `${diffDays}d`;
+              }
+            }
+            return {
+              id: String(item.id),
+              title: item.title || "Notification",
+              body: item.message || "",
+              time: timeStr || "now",
+              read: Boolean(item.read),
+              avatar: "/images/blank-profile-picture.png"
+            };
+          });
+          setNotifications(mapped);
+        }
+      } catch (error) {
+        console.error("Failed to load notifications", error);
+      }
+    }
+    loadNotifications();
+  }, []);
+
+  const handleMarkAllRead = async () => {
+    const unread = notifications.filter(n => !n.read);
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    try {
+      await Promise.all(
+        unread.map(n =>
+          fetch(`/api/notifications/${n.id}/read`, { method: "PATCH" })
+        )
+      );
+    } catch (e) {
+      console.error("Failed to mark notifications as read", e);
+    }
+  };
   const [query, setQuery] = useState("");
   const avatarSrc =
     (typeof user?.photo === "string" && user.photo) ||
@@ -248,11 +276,7 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
                       <h4 className="font-semibold">Notifications</h4>
                       <div className="flex items-center gap-2">
                         <button
-                          onClick={() =>
-                            setNotifications((prev) =>
-                              prev.map((n) => ({ ...n, read: true })),
-                            )
-                          }
+                          onClick={handleMarkAllRead}
                           className="text-xs text-slate-500 hover:text-slate-700"
                         >
                           Mark all read
@@ -276,15 +300,22 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
                       {notifications.map((n) => (
                         <div
                           key={n.id}
-                          onClick={() => {
+                          onClick={async () => {
                             setNotifications((prev) =>
                               prev.map((x) =>
                                 x.id === n.id ? { ...x, read: true } : x,
                               ),
                             );
                             setNotifOpen(false);
+                            try {
+                              if (!n.read) {
+                                await fetch(`/api/notifications/${n.id}/read`, { method: "PATCH" });
+                              }
+                            } catch (e) {
+                              console.error(e);
+                            }
                           }}
-                          className={`group flex items-start gap-3 px-3 py-2 rounded-xl cursor-pointer transition hover:shadow-md hover:-translate-y-0.5 ${n.read ? "bg-transparent opacity-90" : "bg-linear-to-r from-indigo-50 to-white dark:from-slate-800 dark:to-slate-900"}`}
+                          className={`group flex items-start gap-3 px-3 py-2 rounded-xl cursor-pointer transition hover:bg-(--hover-bg) ${n.read ? "bg-transparent opacity-70" : "bg-[#f0f4ff] dark:bg-blue-950/30 border border-[#e2e8f0]/40 dark:border-blue-900/20"}`}
                         >
                           <div className="relative">
                             <img
@@ -300,14 +331,14 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between">
-                              <p className="text-sm font-medium text-slate-800 dark:text-slate-100 truncate">
+                              <p className="text-sm font-semibold text-(--text-primary) truncate">
                                 {n.title}
                               </p>
-                              <span className="text-xs text-slate-400 ml-2 whitespace-nowrap">
+                              <span className="text-xs text-(--text-secondary) ml-2 whitespace-nowrap">
                                 {n.time}
                               </span>
                             </div>
-                            <p className="text-xs text-slate-500 mt-1 truncate">
+                            <p className="text-xs text-(--text-secondary) mt-1 truncate">
                               {n.body}
                             </p>
                           </div>
@@ -324,10 +355,10 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
                       </button>
                       <button
                         onClick={() => {
-                          /* navigate to notifications page if exists */
                           setNotifOpen(false);
+                          router.push("/doctorDash/notifications");
                         }}
-                        className="text-xs text-slate-500"
+                        className="text-xs text-slate-500 hover:text-indigo-600 font-semibold cursor-pointer"
                       >
                         View all
                       </button>

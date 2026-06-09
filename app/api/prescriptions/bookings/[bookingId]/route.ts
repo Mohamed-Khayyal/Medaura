@@ -1,16 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prescriptionService } from "@/lib/api/prescriptions";
-import type { PrescriptionCreateRequest } from "@/lib/types/api";
+
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://127.0.0.1:3001";
 
 export async function POST(request: NextRequest) {
   try {
-    const authHeader = request.headers.get("authorization");
-    const token = authHeader?.replace("Bearer ", "");
+    const token =
+      request.cookies.get("jwt")?.value ||
+      request.headers.get("authorization")?.replace("Bearer ", "");
 
     if (!token) {
       return NextResponse.json(
-        { success: false, error: "Missing authorization token" },
-        { status: 401 }
+        { success: false, error: "Not authenticated" },
+        { status: 401 },
       );
     }
 
@@ -20,68 +21,38 @@ export async function POST(request: NextRequest) {
     if (!bookingId) {
       return NextResponse.json(
         { success: false, error: "Missing booking ID" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    const body = (await request.json()) as PrescriptionCreateRequest;
+    const body = await request.json();
 
-    if (!body.patient_age || !body.diagnosis || !body.medication_name || !body.dose || !body.duration) {
-      return NextResponse.json(
-        { success: false, error: "Missing required prescription fields" },
-        { status: 400 }
-      );
-    }
-
-    const response = await prescriptionService.createPrescription(
-      parseInt(bookingId),
-      body,
-      token
+    const response = await fetch(
+      `${BACKEND_URL}/api/prescriptions/bookings/${bookingId}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(body),
+      },
     );
 
-    return NextResponse.json({ success: true, data: response }, { status: 201 });
-  } catch (error: any) {
+    const data = await response.json();
+
+    if (!response.ok) {
+      return NextResponse.json(
+        { success: false, error: data.message || "Failed to create prescription" },
+        { status: response.status },
+      );
+    }
+
+    return NextResponse.json({ success: true, data }, { status: 201 });
+  } catch (error: unknown) {
     console.error("Create prescription error:", error);
-    return NextResponse.json(
-      { success: false, error: error.message || "Failed to create prescription" },
-      { status: error.status || 500 }
-    );
-  }
-}
-
-export async function GET(request: NextRequest) {
-  try {
-    const authHeader = request.headers.get("authorization");
-    const token = authHeader?.replace("Bearer ", "");
-
-    if (!token) {
-      return NextResponse.json(
-        { success: false, error: "Missing authorization token" },
-        { status: 401 }
-      );
-    }
-
-    const segments = request.nextUrl.pathname.split("/").filter(Boolean);
-    const bookingId = segments[segments.length - 1];
-
-    if (!bookingId) {
-      return NextResponse.json(
-        { success: false, error: "Missing booking ID" },
-        { status: 400 }
-      );
-    }
-
-    const response = await prescriptionService.getPrescription(
-      parseInt(bookingId),
-      token
-    );
-
-    return NextResponse.json({ success: true, data: response });
-  } catch (error: any) {
-    console.error("Get prescription by booking ID error:", error);
-    return NextResponse.json(
-      { success: false, error: error.message || "Failed to fetch prescription" },
-      { status: error.status || 500 }
-    );
+    const message =
+      error instanceof Error ? error.message : "Failed to create prescription";
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

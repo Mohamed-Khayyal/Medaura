@@ -144,8 +144,8 @@ function Dashboard({ childern }: { childern: React.ReactNode }) {
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-2 gap-5">
             <StatsCard
               title="المواعيد"
-              value={appointmentCard?.value ?? 659}
-              percentage={appointmentCard?.percentage ?? -15}
+              value={appointmentCard?.value ?? 0}
+              percentage={appointmentCard?.percentage ?? 0}
               icon={
                 <Calendar size={18} strokeWidth={2} className="text-white" />
               }
@@ -153,28 +153,28 @@ function Dashboard({ childern }: { childern: React.ReactNode }) {
               chartColor="#E65100"
               data={
                 appointmentCard?.trend ?? [
-                  { value: 15 },
-                  { value: 18 },
-                  { value: 12 },
-                  { value: 20 },
-                  { value: 16 },
+                  { value: 0 },
+                  { value: 0 },
+                  { value: 0 },
+                  { value: 0 },
+                  { value: 0 },
                 ]
               }
             />
             <StatsCard
               title="إجمالي المرضى"
-              value={patientCard?.value ?? 108}
-              percentage={patientCard?.percentage ?? 20}
+              value={patientCard?.value ?? 0}
+              percentage={patientCard?.percentage ?? 0}
               icon={<User size={18} strokeWidth={2} className="text-white" />}
               iconBg="bg-[#001A6E]"
               chartColor="#001A6E"
               data={
                 patientCard?.trend ?? [
-                  { value: 5 },
-                  { value: 8 },
-                  { value: 6 },
-                  { value: 10 },
-                  { value: 9 },
+                  { value: 0 },
+                  { value: 0 },
+                  { value: 0 },
+                  { value: 0 },
+                  { value: 0 },
                 ]
               }
             />
@@ -186,26 +186,26 @@ function Dashboard({ childern }: { childern: React.ReactNode }) {
               <ChartBar data={filteredData} />
             </div>
             <AppointsmentRequests
-              appointments={dashboardData?.appointmentRequests}
+              appointments={dashboardData?.appointmentRequests?.slice(0, 5)}
             />
           </div>
 
           {/* Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
             <VisitsGauge
-              male={dashboardData?.genderStats?.male ?? 69}
-              female={dashboardData?.genderStats?.female ?? 56}
-              total={dashboardData?.genderStats?.total ?? 80}
+              male={dashboardData?.genderStats?.male ?? 0}
+              female={dashboardData?.genderStats?.female ?? 0}
+              total={dashboardData?.genderStats?.total ?? 0}
             />
-            <DoctorsList appointments={dashboardData?.todayAppointments} />
-            <PatientsTable patients={dashboardData?.patients} />
+            <DoctorsList appointments={dashboardData?.todayAppointments?.slice(0, 5)} />
+            <PatientsTable patients={dashboardData?.patients?.slice(0, 5)} />
           </div>
           <div className="grid grid-cols-1 gap-5">
-            <ClinicsList reports={dashboardData?.reports} />
+            <ClinicsList reports={dashboardData?.reports?.slice(0, 5)} />
           </div>
           {/* Appointments */}
           <div className="grid grid-cols-1 gap-5">
-            <AppointmentsTable appointments={dashboardData?.appointments} />
+            <AppointmentsTable appointments={dashboardData?.appointments?.slice(0, 5)} />
           </div>
         </div>
       </div>

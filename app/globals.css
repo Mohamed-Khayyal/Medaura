@@ -1,6 +1,28 @@
 @import "tailwindcss";
 @import "leaflet/dist/leaflet.css";
 
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card-bg: var(--card-bg);
+  --color-card-border: var(--card-border);
+  --color-input-bg: var(--input-bg);
+  --color-input-border: var(--input-border);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-semi-card-bg: var(--semi-card-bg);
+  --color-hover-bg: var(--hover-bg);
+  --color-btn-bg: var(--btn-bg);
+  --color-input2-bg: var(--input2-bg);
+  --color-text2-bg: var(--text2-bg);
+  --color-donut-bg: var(--donut-bg);
+  --color-status-hover: var(--status-hover);
+  --color-primary: var(--primary);
+  --color-primary-600: var(--primary-600);
+  --color-accent-teal: var(--accent-teal);
+  --color-accent-amber: var(--accent-amber);
+}
+
 :root {
   --background: #f6f8fb;
   --foreground: #0f1b3d;

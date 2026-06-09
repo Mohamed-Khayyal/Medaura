@@ -275,10 +275,44 @@ export interface PrescriptionAccess {
 }
 
 export interface Prescription {
-  id: number;
+  prescription_id: number;
+  id?: number; // alias for backward compat
   booking_id: number;
-  content: string;
+  patient_age?: number | null;
+  visit_date?: string | null;
+  symptoms?: string | null;
+  diagnosis?: string | null;
+  medication_name?: string | null;
+  dose?: string | null;
+  duration?: string | null;
+  test_name?: string | null;
+  test_result?: string | null;
+  test_date?: string | null;
+  notes?: string | null;
+  patient_name?: string;
+  provider_name?: string;
+  provider_specialty?: string;
+  prescriber_type?: "doctor" | "staff";
+  booking_date?: string;
+  booking_from?: string;
+  booking_to?: string;
   created_at: string;
+  // legacy compat
+  content?: string;
+}
+
+export interface BookingWithAccess {
+  booking_id: number;
+  booking_date: string;
+  booking_from: string;
+  booking_to: string;
+  status: string;
+  prescription_access_status: "pending" | "accepted" | "rejected" | null;
+  prescription_access_requested_at?: string | null;
+  prescription_access_responded_at?: string | null;
+  patient_name: string;
+  patient_phone?: string | null;
+  doctor_name?: string | null;
 }
 
 // Admin Types
@@ -363,12 +397,17 @@ export interface AdminCreateRequest {
 }
 
 export interface PrescriptionCreateRequest {
-  patient_age: number;
-  diagnosis: string;
-  medication_name: string;
-  dose: string;
-  duration: string;
-  notes?: string;
+  patient_age?: number | null;
+  visit_date?: string | null;
+  symptoms?: string | null;
+  diagnosis?: string | null;
+  medication_name?: string | null;
+  dose?: string | null;
+  duration?: string | null;
+  test_name?: string | null;
+  test_result?: string | null;
+  test_date?: string | null;
+  notes?: string | null;
 }
 
 export interface PrescriptionActionRequest {

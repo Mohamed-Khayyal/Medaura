@@ -10,6 +10,7 @@ import {
   Send,
   LayoutDashboard,
   Building,
+  FileText,
 } from "lucide-react";
 interface SidebarProps {
   open: boolean;
@@ -34,11 +35,6 @@ function Sidebar({ open, onClose }: SidebarProps) {
       title: "الرعاية الصحية",
       items: [
         {
-          text: "العيادات",
-          icon: <Building size={16} />,
-          href: "/doctorDash/pages/clinics",
-        },
-        {
           text: "المرضى",
           icon: <Users size={16} />,
           href: "/doctorDash/pages/patients",
@@ -47,6 +43,11 @@ function Sidebar({ open, onClose }: SidebarProps) {
           text: "المواعيد",
           icon: <Calendar size={16} />,
           href: "/doctorDash/pages/appointments",
+        },
+        {
+          text: "الروشتات الطبية",
+          icon: <FileText size={16} />,
+          href: "/doctorDash/pages/prescriptions",
         },
       ],
     },

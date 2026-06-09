@@ -52,7 +52,7 @@ export default function StatsCard({
               {title}
             </p>
 
-            <h3 className="text-xl sm:text-2xl font-bold text-(--text-primary) tracking-tight">
+            <h3 className="text-xl sm:text-2xl font-bold text-text-primary tracking-tight">
               {title === "المعاملات" ? "$" : ""}
               {value.toLocaleString()}
             </h3>

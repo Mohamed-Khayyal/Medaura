@@ -10,13 +10,11 @@ import {
 } from "recharts";
 import { useState, useMemo } from "react";
 
-const data = [
-  { name: "كشف عام", value: 90, color: "#0F2A7A" },
-  { name: "متابعة", value: 60, color: "#0B8A13" },
-  { name: "استشارة", value: 50, color: "#E65100" },
-];
-
-const totalPatients = data.reduce((sum, d) => sum + d.value, 0);
+interface CasesDonutProps {
+  completed?: number;
+  confirmed?: number;
+  pending?: number;
+}
 
 const renderActiveShape = (props: any) => {
   const {
@@ -49,20 +47,24 @@ const renderActiveShape = (props: any) => {
   );
 };
 
-export default function CasesDonut() {
+export default function CasesDonut({ completed = 0, confirmed = 0, pending = 0 }: CasesDonutProps) {
   const [activeIndex, setActiveIndex] = useState<number>(-1);
   const [tooltipActive, setTooltipActive] = useState<boolean>(false);
 
-  const totalAppointments = useMemo(
-    () => data.reduce((sum, dep) => sum + dep.value, 0),
-    []
-  );
+  const data = useMemo(() => [
+    { name: "كشف عام", value: completed, color: "#0F2A7A" },
+    { name: "متابعة", value: confirmed, color: "#0B8A13" },
+    { name: "استشارة", value: pending, color: "#E65100" },
+  ], [completed, confirmed, pending]);
+
+  const totalPatients = useMemo(() => data.reduce((sum, d) => sum + d.value, 0), [data]);
+  const totalAppointments = totalPatients;
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (!active || !payload || !payload.length) return null;
 
     const { name, value, color } = payload[0].payload;
-    const percentage = ((value / totalAppointments) * 100).toFixed(1);
+    const percentage = totalAppointments > 0 ? ((value / totalAppointments) * 100).toFixed(1) : "0.0";
 
     return (
       <div className="min-w-28 sm:min-w-32 p-3 sm:p-4 rounded-2xl bg-(--card-bg) backdrop-blur-md shadow-2xl border border-(--card-border)">
@@ -164,7 +166,7 @@ export default function CasesDonut() {
               <span className="w-2 h-2 rounded-full" style={{ background: d.color }} />
             </div>
             <span className=" text-lg sm:text-xl font-bold text-(--text-primary)">
-              {((d.value / totalPatients) * 100).toFixed(0)}%
+              {totalPatients > 0 ? ((d.value / totalPatients) * 100).toFixed(0) : "0"}%
             </span>
           </div>
         ))}

@@ -1,9 +1,18 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useApi } from "@/lib/hooks/useApi";
-import type { BookingResponse, Prescription } from "@/lib/types/api";
+import type { BookingResponse, BookingWithAccess, Prescription } from "@/lib/types/api";
+import {
+  Pill,
+  Stethoscope,
+  FlaskConical,
+  StickyNote,
+  CheckCircle,
+  XCircle,
+  Clock,
+} from "lucide-react";
 
 type ProfileForm = {
   full_name: string;
@@ -13,17 +22,18 @@ type ProfileForm = {
   gender: string;
 };
 
-type BookingView = BookingResponse & {
-  booking_id?: number;
-  booking_to?: string;
-  doctor_name?: string;
-  doctor_specialty?: string;
-  staff_id?: number;
-  staff_name?: string;
-  staff_specialty?: string;
-  specialist?: string;
-  specialty?: string;
-};
+type BookingView = BookingResponse &
+  Partial<BookingWithAccess> & {
+    booking_id?: number;
+    booking_to?: string;
+    doctor_name?: string;
+    doctor_specialty?: string;
+    staff_id?: number;
+    staff_name?: string;
+    staff_specialty?: string;
+    specialist?: string;
+    specialty?: string;
+  };
 
 type ProfileSummary = {
   name?: string;
@@ -62,7 +72,6 @@ type ProfileResponse = {
 const navItems = [
   { id: "profile", label: "الملف الشخصي" },
   { id: "history", label: "سجل الزيارات" },
-  { id: "clinics", label: "العيادات التي زرت" },
   { id: "prescriptions", label: "الوصفات الطبية" },
   { id: "followup", label: "المتابعة" },
 ];
@@ -99,6 +108,11 @@ export default function PatientProfilePage() {
   const [staffProfiles, setStaffProfiles] = useState<
     Record<number, ProfileSummary>
   >({});
+
+  // Booking access respond state
+  const [accessRespondLoading, setAccessRespondLoading] = useState<number | null>(null);
+  const [localBookings, setLocalBookings] = useState<BookingView[]>([]);
+  const [selectedPrescription, setSelectedPrescription] = useState<Prescription | null>(null);
 
   const profileUser = useMemo(() => {
     const data = profileApi.data;
@@ -162,6 +176,14 @@ export default function PatientProfilePage() {
         : [],
     [bookingsApi.data],
   );
+
+  // Sync localBookings when API data arrives
+  useEffect(() => {
+    if (Array.isArray(bookingsApi.data)) {
+      setLocalBookings(bookingsApi.data as BookingView[]);
+    }
+  }, [bookingsApi.data]);
+
   const prescriptions = useMemo(
     () => (Array.isArray(prescriptionsApi.data) ? prescriptionsApi.data : []),
     [prescriptionsApi.data],
@@ -405,6 +427,38 @@ export default function PatientProfilePage() {
     }
   };
 
+  const handleRespondAccess = async (bookingId: number, action: "accept" | "reject") => {
+    setAccessRespondLoading(bookingId);
+    try {
+      const response = await fetch(
+        `/api/prescriptions/bookings/${bookingId}/access`,
+        {
+          method: "PATCH",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action }),
+        },
+      );
+      const result = await response.json();
+      if (!response.ok) {
+        alert(result.error || "حدث خطأ");
+        return;
+      }
+      // Update local bookings state
+      setLocalBookings((prev) =>
+        prev.map((b) =>
+          (b.booking_id || (b as unknown as Record<string, number>).booking_id) === bookingId
+            ? { ...b, prescription_access_status: action === "accept" ? "accepted" : "rejected" }
+            : b,
+        ),
+      );
+    } catch {
+      alert("حدث خطأ في الاتصال");
+    } finally {
+      setAccessRespondLoading(null);
+    }
+  };
+
   if (authLoading) {
     return (
       <div className="min-h-[calc(100vh-16rem)] flex items-center justify-center">
@@ -431,6 +485,7 @@ export default function PatientProfilePage() {
   }
 
   return (
+    <>
     <div className="pb-16 pt-20">
       <div className="space-y-6">
         <div className="rounded-4xl border border-slate-200 bg-slate-50 p-8 shadow-sm">
@@ -545,7 +600,13 @@ export default function PatientProfilePage() {
                   <button
                     key={item.id}
                     type="button"
-                    onClick={() => setActiveSection(item.id)}
+                    onClick={() => {
+                      setActiveSection(item.id);
+                      const element = document.getElementById(item.id);
+                      if (element) {
+                        element.scrollIntoView({ behavior: "smooth", block: "start" });
+                      }
+                    }}
                     className={`w-full rounded-2xl px-4 py-3 text-left transition ${
                       activeSection === item.id
                         ? "bg-[#001A6E] text-white"
@@ -560,7 +621,10 @@ export default function PatientProfilePage() {
           </aside>
 
           <main className="space-y-6">
-            <section className="rounded-4xl border border-slate-200 bg-white p-6 shadow-sm">
+            <section
+              id="profile"
+              className="rounded-4xl border border-slate-200 bg-white p-6 shadow-sm"
+            >
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-sm text-slate-500">تحديث الملف الشخصي</p>
@@ -749,36 +813,27 @@ export default function PatientProfilePage() {
                   <div className="rounded-3xl border border-slate-200 bg-slate-50 p-6 text-slate-600">
                     جارٍ تحميل السجل...
                   </div>
-                ) : bookings.length ? (
-                  bookings.map((booking, index) => {
-                    const doctorProfile = booking.doctor_id
-                      ? doctorProfiles[booking.doctor_id]
-                      : undefined;
-                    const staffProfile = booking.staff_id
-                      ? staffProfiles[booking.staff_id]
-                      : undefined;
+                ) : localBookings.length ? (
+                  localBookings.map((booking, index) => {
+                    const bookingId =
+                      booking.booking_id ||
+                      (booking as unknown as Record<string, number>).booking_id;
                     const doctorName =
                       booking.doctor_name ||
                       booking.staff_name ||
-                      staffProfile?.name ||
-                      doctorProfile?.name ||
                       (booking.doctor_id
                         ? `Doctor #${booking.doctor_id}`
                         : booking.staff_id
                           ? `Staff #${booking.staff_id}`
                           : "—");
-                    const doctorImage =
-                      doctorProfile?.photo ||
-                      doctorProfile?.image ||
-                      staffProfile?.photo ||
-                      staffProfile?.image ||
-                      DOCTOR_FALLBACK_IMAGE;
                     const bookingDate = formatDateOnly(booking.booking_date);
+                    const accessStatus = booking.prescription_access_status;
+                    const isPending = accessStatus === "pending";
 
                     return (
                       <div
-                        key={`${booking.id ?? "booking"}-${booking.booking_date ?? ""}-${booking.booking_from ?? ""}-${index}`}
-                        className="rounded-3xl border border-slate-200 bg-slate-50 p-5"
+                        key={`${booking.id ?? booking.booking_id ?? "booking"}-${booking.booking_date ?? ""}-${index}`}
+                        className="rounded-3xl border border-slate-200 bg-slate-50 p-5 space-y-3"
                       >
                         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                           <div className="flex items-center gap-4">
@@ -801,6 +856,70 @@ export default function PatientProfilePage() {
                             {booking.status}
                           </span>
                         </div>
+
+                        {/* Prescription access request banner */}
+                        {isPending && bookingId && (
+                          <div className="rounded-2xl bg-amber-50 border border-amber-200 p-4">
+                            <div className="flex items-start gap-3 flex-col sm:flex-row sm:items-center sm:justify-between">
+                              <div className="flex items-center gap-2 text-amber-800">
+                                <Clock size={16} className="shrink-0" />
+                                <p className="text-sm font-medium">
+                                  الطبيب يطلب إذنك لكتابة روشتة طبية لهذا الحجز
+                                </p>
+                              </div>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => handleRespondAccess(bookingId, "accept")}
+                                  disabled={accessRespondLoading === bookingId}
+                                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-green-600 text-white hover:bg-green-700 transition disabled:opacity-60"
+                                >
+                                  <CheckCircle size={13} />
+                                  قبول
+                                </button>
+                                <button
+                                  onClick={() => handleRespondAccess(bookingId, "reject")}
+                                  disabled={accessRespondLoading === bookingId}
+                                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition disabled:opacity-60"
+                                >
+                                  <XCircle size={13} />
+                                  رفض
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {accessStatus === "accepted" && bookingId && (
+                          <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-2xl p-4 mt-2">
+                            <div className="flex items-center gap-2 text-green-700 text-sm font-medium">
+                              <CheckCircle size={16} className="shrink-0" />
+                              <span>تم منح الطبيب صلاحية كتابة الروشتة</span>
+                            </div>
+                            <button
+                              onClick={() => handleRespondAccess(bookingId, "reject")}
+                              disabled={accessRespondLoading === bookingId}
+                              className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition disabled:opacity-60"
+                            >
+                              إلغاء الصلاحية
+                            </button>
+                          </div>
+                        )}
+
+                        {accessStatus === "rejected" && bookingId && (
+                          <div className="flex items-center justify-between bg-red-50 border border-red-200 rounded-2xl p-4 mt-2">
+                            <div className="flex items-center gap-2 text-red-700 text-sm font-medium">
+                              <XCircle size={16} className="shrink-0" />
+                              <span>تم رفض/إلغاء صلاحية الروشتة</span>
+                            </div>
+                            <button
+                              onClick={() => handleRespondAccess(bookingId, "accept")}
+                              disabled={accessRespondLoading === bookingId}
+                              className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-green-600 text-white hover:bg-green-700 transition disabled:opacity-60"
+                            >
+                              السماح بالوصول
+                            </button>
+                          </div>
+                        )}
                       </div>
                     );
                   })
@@ -836,23 +955,64 @@ export default function PatientProfilePage() {
                 ) : prescriptions.length ? (
                   prescriptions.map((prescription, index) => (
                     <div
-                      key={`${prescription.id ?? "prescription"}-${prescription.created_at ?? ""}-${index}`}
-                      className="rounded-3xl border border-slate-200 bg-slate-50 p-5"
+                      key={`${prescription.prescription_id ?? prescription.id ?? "rx"}-${index}`}
+                      className="rounded-3xl border border-slate-200 bg-slate-50 p-5 space-y-3 cursor-pointer hover:border-[#001A6E]/30 transition"
+                      onClick={() => setSelectedPrescription(prescription)}
                     >
-                      <div className="flex items-start justify-between gap-4">
-                        <div>
-                          <p className="text-sm text-slate-500">
-                            وصفة رقم {prescription.id}
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-slate-500">
+                          {prescription.created_at?.split("T")[0] || "بدون تاريخ"}
+                        </span>
+                        <span className="font-bold text-slate-900">
+                          وصفة #{prescription.prescription_id || prescription.id}
+                        </span>
+                      </div>
+
+                      {prescription.provider_name && (
+                        <p className="text-sm text-slate-600">
+                          الطبيب: <span className="font-medium text-slate-900">{prescription.provider_name}</span>
+                        </p>
+                      )}
+
+                      {prescription.diagnosis && (
+                        <div className="rounded-2xl bg-blue-50 px-4 py-2.5">
+                          <p className="text-xs font-semibold text-blue-600 flex items-center gap-1 justify-end mb-1">
+                            <Stethoscope size={12} /> التشخيص
                           </p>
-                          <h3 className="mt-2 text-lg font-semibold text-slate-900">
-                            {prescription.created_at?.split("T")[0] ||
-                              "بدون تاريخ"}
-                          </h3>
-                          <p className="mt-1 text-sm text-slate-600">
-                            {prescription.content}
+                          <p className="text-sm text-blue-900 text-right">{prescription.diagnosis}</p>
+                        </div>
+                      )}
+                      {prescription.medication_name && (
+                        <div className="rounded-2xl bg-green-50 px-4 py-2.5">
+                          <p className="text-xs font-semibold text-green-700 flex items-center gap-1 justify-end mb-1">
+                            <Pill size={12} /> الدواء
+                          </p>
+                          <p className="text-sm text-green-900 text-right">
+                            {prescription.medication_name}
+                            {prescription.dose && <span className="text-green-600"> — {prescription.dose}</span>}
+                            {prescription.duration && <span className="text-green-600"> لمدة {prescription.duration}</span>}
                           </p>
                         </div>
-                      </div>
+                      )}
+                      {prescription.test_name && (
+                        <div className="rounded-2xl bg-purple-50 px-4 py-2.5">
+                          <p className="text-xs font-semibold text-purple-700 flex items-center gap-1 justify-end mb-1">
+                            <FlaskConical size={12} /> الفحوصات
+                          </p>
+                          <p className="text-sm text-purple-900 text-right">
+                            {prescription.test_name}
+                            {prescription.test_result && <span className="text-purple-600"> — {prescription.test_result}</span>}
+                          </p>
+                        </div>
+                      )}
+                      {prescription.notes && (
+                        <div className="rounded-2xl bg-amber-50 px-4 py-2.5">
+                          <p className="text-xs font-semibold text-amber-700 flex items-center gap-1 justify-end mb-1">
+                            <StickyNote size={12} /> ملاحظات
+                          </p>
+                          <p className="text-sm text-amber-900 text-right">{prescription.notes}</p>
+                        </div>
+                      )}
                     </div>
                   ))
                 ) : (
@@ -904,5 +1064,89 @@ export default function PatientProfilePage() {
         </div>
       </div>
     </div>
+
+    {/* Prescription Detail Modal */}
+    {selectedPrescription && (
+      <div
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+        onClick={() => setSelectedPrescription(null)}
+      >
+        <div
+          className="bg-white rounded-4xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl p-6 space-y-4"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => setSelectedPrescription(null)}
+              className="p-2 rounded-2xl hover:bg-slate-100 transition"
+            >
+              ✕
+            </button>
+            <div className="text-right">
+              <p className="text-sm text-slate-500">تفاصيل الوصفة</p>
+              <h3 className="font-bold text-xl text-slate-900">
+                وصفة #{selectedPrescription.prescription_id || selectedPrescription.id}
+              </h3>
+            </div>
+          </div>
+
+          <div className="border-t border-slate-200" />
+
+          <div className="space-y-3">
+            {selectedPrescription.provider_name && (
+              <div className="text-right">
+                <p className="text-xs text-slate-500">الطبيب</p>
+                <p className="font-semibold text-slate-900">{selectedPrescription.provider_name}</p>
+                {selectedPrescription.provider_specialty && (
+                  <p className="text-sm text-slate-500">{selectedPrescription.provider_specialty}</p>
+                )}
+              </div>
+            )}
+            <p className="text-xs text-slate-400 text-right">
+              {selectedPrescription.created_at?.split("T")[0]}
+            </p>
+
+            {selectedPrescription.symptoms && (
+              <div className="rounded-3xl bg-slate-50 p-4 text-right">
+                <p className="text-xs font-semibold text-slate-600 mb-1">الأعراض</p>
+                <p className="text-sm text-slate-900">{selectedPrescription.symptoms}</p>
+              </div>
+            )}
+            {selectedPrescription.diagnosis && (
+              <div className="rounded-3xl bg-blue-50 p-4 text-right">
+                <p className="text-xs font-semibold text-blue-600 mb-1">التشخيص</p>
+                <p className="text-sm text-blue-900">{selectedPrescription.diagnosis}</p>
+              </div>
+            )}
+            {selectedPrescription.medication_name && (
+              <div className="rounded-3xl bg-green-50 p-4 text-right">
+                <p className="text-xs font-semibold text-green-700 mb-1">الدواء</p>
+                <p className="text-sm text-green-900">
+                  {selectedPrescription.medication_name}
+                  {selectedPrescription.dose && <span className="text-green-600"> — {selectedPrescription.dose}</span>}
+                  {selectedPrescription.duration && <span className="text-green-600"> لمدة {selectedPrescription.duration}</span>}
+                </p>
+              </div>
+            )}
+            {selectedPrescription.test_name && (
+              <div className="rounded-3xl bg-purple-50 p-4 text-right">
+                <p className="text-xs font-semibold text-purple-700 mb-1">الفحوصات</p>
+                <p className="text-sm text-purple-900">
+                  {selectedPrescription.test_name}
+                  {selectedPrescription.test_result && <span className="text-purple-600"> — {selectedPrescription.test_result}</span>}
+                </p>
+              </div>
+            )}
+            {selectedPrescription.notes && (
+              <div className="rounded-3xl bg-amber-50 p-4 text-right">
+                <p className="text-xs font-semibold text-amber-700 mb-1">ملاحظات</p>
+                <p className="text-sm text-amber-900">{selectedPrescription.notes}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }

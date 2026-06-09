@@ -2,12 +2,21 @@
 
 import { Plus, Download, TrendingUp, TrendingDown } from "lucide-react";
 
-export default function TodayOverview() {
+interface TodayOverviewProps {
+  totals?: {
+    appointments: number;
+    pending: number;
+    cancellationRate: number;
+  };
+  todayCount?: number;
+}
+
+export default function TodayOverview({ totals, todayCount = 0 }: TodayOverviewProps) {
   const stats = [
-    { title: "معدل الإلغاء", value: "3.4%", change: -2 },
-    { title: "في الانتظار", value: 4, change: 0 },
-    { title: "مواعيد اليوم", value: 12, change: 8 },
-    { title: "إجمالي المواعيد", value: 205, change: 55 },
+    { title: "معدل الإلغاء", value: `${totals?.cancellationRate ?? 0}%`, change: 0 },
+    { title: "في الانتظار", value: totals?.pending ?? 0, change: 0 },
+    { title: "مواعيد اليوم", value: todayCount, change: 0 },
+    { title: "إجمالي المواعيد", value: totals?.appointments ?? 0, change: 0 },
   ];
 
   return (
@@ -35,7 +44,7 @@ export default function TodayOverview() {
             نظرة عامة علي المواعيد
           </h2>
           <p className="text-xs sm:text-md text-(--text-secondary)">
-            تحليل ذكي لبيانات الجدول والتدفق ليوم 25 مايو 2025
+            تحليل ذكي لبيانات الجدول والتدفق ليوم {new Date().toLocaleDateString("ar-EG", { day: 'numeric', month: 'long', year: 'numeric' })}
           </p>
         </div>
 

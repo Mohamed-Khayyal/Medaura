@@ -1,127 +1,18 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Search, ChevronRight, ChevronLeft } from "lucide-react";
-const data = [
-  {
-    id: "PT0025",
-    name: "محمد احمد",
-    email: "ahmed.m@example.com",
-    age: 34,
-    status: "تحت العلاج",
-    lastVisit: "منذ يومين",
-    img: "https://i.pravatar.cc/40?img=1",
-  },
-  {
-    id: "PT0024",
-    name: "بسمة احمد",
-    email: "basma@example.com",
-    age: 28,
-    status: "نشط",
-    lastVisit: "منذ يومين",
-    img: "https://i.pravatar.cc/40?img=2",
-  },
-  {
-    id: "PT0023",
-    name: "احمد السيد",
-    email: "ahmed@example.com",
-    age: 40,
-    status: "متعافي",
-    lastVisit: "منذ 4 ساعات",
-    img: "https://i.pravatar.cc/40?img=3",
-  },
-  {
-    id: "PT0023",
-    name: "احمد السيد",
-    email: "ahmed@example.com",
-    age: 40,
-    status: "متعافي",
-    lastVisit: "منذ 4 ساعات",
-    img: "https://i.pravatar.cc/40?img=3",
-  },
-  {
-    id: "PT0023",
-    name: "احمد السيد",
-    email: "ahmed@example.com",
-    age: 40,
-    status: "متعافي",
-    lastVisit: "منذ 4 ساعات",
-    img: "https://i.pravatar.cc/40?img=3",
-  },
-  {
-    id: "PT0023",
-    name: "احمد السيد",
-    email: "ahmed@example.com",
-    age: 40,
-    status: "متعافي",
-    lastVisit: "منذ 4 ساعات",
-    img: "https://i.pravatar.cc/40?img=3",
-  },
-  {
-    id: "PT0023",
-    name: "احمد السيد",
-    email: "ahmed@example.com",
-    age: 40,
-    status: "متعافي",
-    lastVisit: "منذ 4 ساعات",
-    img: "https://i.pravatar.cc/40?img=3",
-  },
-  {
-    id: "PT0023",
-    name: "احمد السيد",
-    email: "ahmed@example.com",
-    age: 40,
-    status: "متعافي",
-    lastVisit: "منذ 4 ساعات",
-    img: "https://i.pravatar.cc/40?img=3",
-  },
-  {
-    id: "PT0023",
-    name: "احمد السيد",
-    email: "ahmed@example.com",
-    age: 40,
-    status: "متعافي",
-    lastVisit: "منذ 4 ساعات",
-    img: "https://i.pravatar.cc/40?img=3",
-  },
-  {
-    id: "PT0023",
-    name: "احمد السيد",
-    email: "ahmed@example.com",
-    age: 40,
-    status: "متعافي",
-    lastVisit: "منذ 4 ساعات",
-    img: "https://i.pravatar.cc/40?img=3",
-  },
-  {
-    id: "PT0023",
-    name: "احمد السيد",
-    email: "ahmed@example.com",
-    age: 40,
-    status: "متعافي",
-    lastVisit: "منذ 4 ساعات",
-    img: "https://i.pravatar.cc/40?img=3",
-  },
-  {
-    id: "PT0023",
-    name: "احمد السيد",
-    email: "ahmed@example.com",
-    age: 40,
-    status: "متعافي",
-    lastVisit: "منذ 4 ساعات",
-    img: "https://i.pravatar.cc/40?img=3",
-  },
-  {
-    id: "PT0023",
-    name: "احمد السيد",
-    email: "ahmed@example.com",
-    age: 40,
-    status: "متعافي",
-    lastVisit: "منذ 4 ساعات",
-    img: "https://i.pravatar.cc/40?img=3",
-  },
-];
+
+interface Patient {
+  id: string;
+  name: string;
+  email: string;
+  age: number | string;
+  status: string;
+  lastVisit: string;
+  img: string;
+}
 
 const statusColors: any = {
   نشط: "bg-green-100 text-green-600",
@@ -133,19 +24,71 @@ export default function PatientsTable() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("الكل");
   const [page, setPage] = useState(1);
+  const [data, setData] = useState<Patient[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const pageSize = 3;
+
+  useEffect(() => {
+    async function loadPatients() {
+      try {
+        setLoading(true);
+        const response = await fetch("/api/bookings/my-bookings", {
+          credentials: "include",
+        });
+        const result = await response.json();
+        if (response.ok && result.success && Array.isArray(result.data)) {
+          const uniquePatientsMap = new Map<string, any>();
+          
+          result.data.forEach((b: any) => {
+            const key = b.patient_phone || b.patient_name || String(b.booking_id);
+            if (!key) return;
+
+            const existing = uniquePatientsMap.get(key);
+            if (
+              !existing ||
+              new Date(b.booking_date) > new Date(existing.booking_date)
+            ) {
+              uniquePatientsMap.set(key, b);
+            }
+          });
+
+          const mappedPatients = Array.from(uniquePatientsMap.values()).map((b: any, index: number) => {
+            const dateStr = b.booking_date ? new Date(b.booking_date).toISOString().slice(0, 10) : "—";
+            return {
+              id: String(b.booking_id),
+              name: b.patient_name || "Unknown",
+              email: b.patient_phone || "لا يوجد هاتف",
+              age: "--",
+              status: b.status === "confirmed" ? "نشط" : b.status === "completed" ? "متعافي" : "تحت العلاج",
+              lastVisit: dateStr,
+              img: `https://i.pravatar.cc/40?u=${b.patient_phone || index}`,
+            };
+          });
+
+          setData(mappedPatients);
+        }
+      } catch (error) {
+        console.error("Failed to load patients", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadPatients();
+  }, []);
 
   const filtered = useMemo(() => {
     return data.filter((item) => {
       const matchSearch =
-        item.name.includes(search) || item.id.includes(search);
+        item.name.toLowerCase().includes(search.toLowerCase()) || 
+        item.id.toLowerCase().includes(search.toLowerCase()) ||
+        item.email.toLowerCase().includes(search.toLowerCase());
 
       const matchFilter = filter === "الكل" || item.status === filter;
 
       return matchSearch && matchFilter;
     });
-  }, [search, filter]);
+  }, [data, search, filter]);
   const getPages = () => {
     const pages: (number | string)[] = [];
 
@@ -227,46 +170,60 @@ export default function PatientsTable() {
         </thead>
 
         <tbody>
-          {paginated.map((p, i) => (
-            <tr
-              key={i}
-              className="  text-(--text-primary) hover:bg-(--semi-card-bg)  transition text-center cursor-pointer"
-              onClick={() => router.push(`/doctorDash/pages/patients/${p.id}`)}
-              onKeyDown={(e) =>
-                e.key === "Enter" && router.push(`/doctorDash/pages/patients/${p.id}`)
-              }
-            >
-              <td className="">{p.lastVisit}</td>
-              {/* Status */}
-              <td>
-                <span
-                  className={`px-2 py-1 text-xs rounded-full ${
-                    statusColors[p.status]
-                  }`}
-                >
-                  {p.status}
-                </span>
-              </td>
-
-              <td className="">{p.age}</td>
-              <td className="">{p.id}</td>
-
-              {/* Patient */}
-              <td className="py-4">
-                <div className="flex items-center gap-3 justify-end">
-                  <div className="text-right">
-                    <p className="font-medium ">{p.name}</p>
-                    <p className="text-xs text-(--text-secondary)">{p.email}</p>
-                  </div>
-
-                  <img
-                    src={p.img}
-                    className="w-9 h-9 rounded-full object-cover"
-                  />
-                </div>
+          {loading ? (
+            <tr>
+              <td colSpan={5} className="text-center py-6 text-(--text-secondary)">
+                جاري تحميل المرضى...
               </td>
             </tr>
-          ))}
+          ) : paginated.length === 0 ? (
+            <tr>
+              <td colSpan={5} className="text-center py-6 text-(--text-secondary)">
+                لا يوجد مرضى
+              </td>
+            </tr>
+          ) : (
+            paginated.map((p, i) => (
+              <tr
+                key={i}
+                className="  text-(--text-primary) hover:bg-(--semi-card-bg)  transition text-center cursor-pointer"
+                onClick={() => router.push(`/doctorDash/pages/patients/${p.id}`)}
+                onKeyDown={(e) =>
+                  e.key === "Enter" && router.push(`/doctorDash/pages/patients/${p.id}`)
+                }
+              >
+                <td className="">{p.lastVisit}</td>
+                {/* Status */}
+                <td>
+                  <span
+                    className={`px-2 py-1 text-xs rounded-full ${
+                      statusColors[p.status]
+                    }`}
+                  >
+                    {p.status}
+                  </span>
+                </td>
+
+                <td className="">{p.age}</td>
+                <td className="">{p.id}</td>
+
+                {/* Patient */}
+                <td className="py-4">
+                  <div className="flex items-center gap-3 justify-end">
+                    <div className="text-right">
+                      <p className="font-medium ">{p.name}</p>
+                      <p className="text-xs text-(--text-secondary)">{p.email}</p>
+                    </div>
+
+                    <img
+                      src={p.img}
+                      className="w-9 h-9 rounded-full object-cover"
+                    />
+                  </div>
+                </td>
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
 

@@ -10,19 +10,12 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import type { TooltipPayload } from "recharts";
 
-const weeklyData = [
-  { day: 1, value: 45 },
-  { day: 2, value: 60 },
-  { day: 3, value: 70 },
-  { day: 4, value: 90 },
-  { day: 5, value: 80 },
-  { day: 6, value: 50 },
-  { day: 7, value: 40 },
-];
+interface WeeklyAppointmentsChartProps {
+  bookings?: any[];
+}
 
-export default function WeeklyAppointmentsChart() {
+export default function WeeklyAppointmentsChart({ bookings = [] }: WeeklyAppointmentsChartProps) {
   const [mode, setMode] = useState<"current" | "last7">("current");
 
   const weekRange = useMemo(() => {
@@ -37,18 +30,28 @@ export default function WeeklyAppointmentsChart() {
         label: d.toLocaleDateString("ar-EG", { weekday: "long" }),
         day: d.getDate(),
         month: d.toLocaleDateString("en-EG", { month: "long" }).slice(0, 3),
+        dateStr: d.toISOString().slice(0, 10), // YYYY-MM-DD
       };
     });
   }, []);
 
   const chartData = useMemo(() => {
-    return weekRange.map((day, i) => ({
-      label: day.label,
-      day: day.day,
-      month: day.month,
-      value: weeklyData[i]?.value || 0,
-    }));
-  }, [weekRange]);
+    return weekRange.map((day) => {
+      // count bookings on day.dateStr
+      const count = bookings.filter((b: any) => {
+        if (!b.booking_date) return false;
+        const bDate = new Date(b.booking_date).toISOString().slice(0, 10);
+        return bDate === day.dateStr;
+      }).length;
+
+      return {
+        label: day.label,
+        day: day.day,
+        month: day.month,
+        value: count,
+      };
+    });
+  }, [weekRange, bookings]);
 
   const visibleChartData = useMemo(() => {
     if (mode === "current") return chartData;
