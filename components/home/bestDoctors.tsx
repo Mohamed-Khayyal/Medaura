@@ -193,9 +193,13 @@ export default function BestDoctors() {
         )}
         <div className="w-full overflow-hidden">
           <Swiper
-            slidesPerView={3}
             spaceBetween={20}
             modules={[Navigation]}
+            breakpoints={{
+              0: { slidesPerView: 1 },
+              768: { slidesPerView: 2 },
+              1024: { slidesPerView: 3 },
+            }}
             navigation={{
               prevEl: prevRef.current,
               nextEl: nextRef.current,
