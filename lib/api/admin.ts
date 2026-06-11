@@ -336,6 +336,10 @@ export const adminService = {
     return [];
   },
 
+  async clearAuditLogs(token: string) {
+    return apiClient.delete<unknown>("/api/admin/audit-logs", { token });
+  },
+
   async getAuditStats(token: string) {
     const res = await apiClient.get<
       | ApiResponse<AuditStats>
