@@ -24,6 +24,7 @@ import {
   Info,
   Search,
   Trash2,
+  XCircle,
 } from "lucide-react";
 import type { AuditLog, AuditStats } from "@/lib/types/api";
 
