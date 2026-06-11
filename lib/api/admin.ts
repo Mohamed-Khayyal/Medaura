@@ -329,6 +329,10 @@ export const adminService = {
       return res.logs;
     }
 
+    if (res.data && typeof res.data === "object" && "logs" in res.data && Array.isArray((res.data as Record<string, unknown>).logs)) {
+      return (res.data as Record<string, unknown>).logs as AuditLog[];
+    }
+
     return [];
   },
 
