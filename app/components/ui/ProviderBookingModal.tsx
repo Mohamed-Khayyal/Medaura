@@ -178,11 +178,14 @@ export default function ProviderBookingModal({ isOpen, onClose, role, staffMembe
                   required
                 >
                   <option value="">اختر الطبيب...</option>
-                  {staffMembers.map((staff) => (
-                    <option key={staff._id} value={staff._id}>
-                      {staff.full_name}
-                    </option>
-                  ))}
+                  {staffMembers.map((staff) => {
+                    const id = staff.id || staff.staff_id || staff._id;
+                    return (
+                      <option key={id} value={id}>
+                        {staff.full_name}
+                      </option>
+                    );
+                  })}
                 </select>
               </div>
             )}

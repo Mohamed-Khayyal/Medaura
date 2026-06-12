@@ -50,7 +50,10 @@ const Navbar: FC = () => {
   useEffect(() => {
     try {
       const stored = localStorage.getItem("locale");
-      if (stored) setLocale(stored);
+      if (stored) {
+        setLocale(stored);
+        window.dispatchEvent(new CustomEvent("localeChange", { detail: stored }));
+      }
     } catch {}
   }, []);
 
@@ -60,6 +63,9 @@ const Navbar: FC = () => {
     try {
       localStorage.setItem("locale", next);
     } catch {}
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("localeChange", { detail: next }));
+    }
   }
 
   // ── nav items ─────────────────────────────────────────────
@@ -191,7 +197,7 @@ const Navbar: FC = () => {
       className="fixed left-0 top-0 z-50 w-full border-b border-[#d9e3ff] bg-[#edf2ff]"
     >
       {/* ── Main bar ── */}
-      <div className="mx-auto flex max-w-[1400px] items-center justify-between px-4 py-3 sm:px-6">
+      <div className="mx-auto flex max-w-[1400px] items-center justify-between px-4 py-3 sm:px-6 lg:px-12 xl:px-24">
 
         {/* Left: Logo */}
         <Link href="/" className="flex shrink-0 items-center gap-2">
