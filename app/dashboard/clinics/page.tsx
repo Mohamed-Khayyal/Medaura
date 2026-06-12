@@ -60,6 +60,7 @@ export default function ClinicRequests() {
   const [clinics, setClinics] = useState<Clinic[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Clinic | null>(null);
+  const [showMobileDetails, setShowMobileDetails] = useState(false);
   const [filter, setFilter] = useState<FilterType>("all");
   const [search, setSearch] = useState("");
   const [toast, setToast] = useState<{ msg: string; visible: boolean }>({
@@ -187,7 +188,7 @@ export default function ClinicRequests() {
   return (
     <div className="flex h-screen bg-gray-50" dir="rtl">
       {/* ── Sidebar ── */}
-      <aside className="w-80 flex-shrink-0 bg-white border-l border-gray-100 flex flex-col overflow-hidden">
+      <aside className="hidden lg:flex w-80 flex-shrink-0 bg-white border-l border-gray-100 flex-col overflow-hidden">
         {/* Header */}
         <div className="p-5 border-b border-gray-100">
           <p className="text-xs text-gray-400 flex items-center gap-1 mb-1">
@@ -299,45 +300,54 @@ export default function ClinicRequests() {
             {filtered.map((c) => (
               <div
                 key={c.clinic_id}
-                onClick={() => setSelected(c)}
-                className={`bg-white rounded-2xl border p-4 flex items-center gap-4 cursor-pointer transition-all
+                onClick={() => {
+                  setSelected(c);
+                  setShowMobileDetails(true);
+                }}
+                className={`bg-white rounded-2xl border p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer transition-all
                   ${
                     selected?.clinic_id === c.clinic_id
                       ? "border-[#1A3A9C] border-[1.5px]"
                       : "border-gray-100 hover:border-gray-300"
                   }`}
               >
-                <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
-                  <Building2 size={24} className="text-[#1A3A9C]" />
+                <div className="flex items-center gap-4 w-full sm:w-auto">
+                  <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
+                    <Building2 size={24} className="text-[#1A3A9C]" />
+                  </div>
+                  <div className="min-w-0 text-right">
+                    <p className="text-base font-semibold text-gray-900">
+                      {c.name}
+                    </p>
+                    <p className="text-sm text-gray-400 flex items-center gap-1 mt-0.5 justify-start">
+                      <MapPin size={12} />
+                      {c.location}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-base font-semibold text-gray-900">
-                    {c.name}
-                  </p>
-                  <p className="text-sm text-gray-400 flex items-center gap-1 mt-0.5">
-                    <MapPin size={12} />
-                    {c.location}
-                  </p>
-                </div>
-                <div className="flex items-center gap-6">
+
+                <div className="flex items-center gap-4 sm:gap-6 justify-between sm:justify-start w-full sm:w-auto border-t border-b border-gray-100 py-2 sm:py-0 sm:border-0">
                   <StatCell label="الموظفين" value={c.total_staff} />
                   <StatCell label="التقييم" value={c.average_rating} />
                   <StatCell label="الحجوزات" value={c.total_ratings} />
                 </div>
-                <span
-                  className={`text-xs px-3 py-1.5 rounded-full font-medium ${statusConfig[c.status].cls}`}
-                >
-                  {statusConfig[c.status].label}
-                </span>
-                <span className="text-xs text-gray-400 bg-gray-100 px-2.5 py-1 rounded-full flex-shrink-0">
-                  #{c.clinic_id}
-                </span>
+
+                <div className="flex items-center gap-3 justify-between sm:justify-start w-full sm:w-auto">
+                  <span
+                    className={`text-xs px-3 py-1.5 rounded-full font-medium ${statusConfig[c.status].cls}`}
+                  >
+                    {statusConfig[c.status].label}
+                  </span>
+                  <span className="text-xs text-gray-400 bg-gray-100 px-2.5 py-1 rounded-full flex-shrink-0">
+                    #{c.clinic_id}
+                  </span>
+                </div>
               </div>
             ))}
           </div>
 
           {/* Detail panel */}
-          <aside className="w-72 flex-shrink-0 bg-white border-r border-gray-100 overflow-y-auto p-5">
+          <aside className="hidden lg:block w-72 flex-shrink-0 bg-white border-r border-gray-100 overflow-y-auto p-5">
             {!selected ? (
               <div className="flex flex-col items-center justify-center h-full gap-3 text-gray-300">
                 <Building2 size={52} />
@@ -353,6 +363,32 @@ export default function ClinicRequests() {
           </aside>
         </div>
       </main>
+
+      {/* Mobile Details Modal */}
+      {showMobileDetails && selected && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm lg:hidden" dir="rtl">
+          <div className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl border border-(--card-border) bg-(--card-bg) p-6 shadow-2xl animate-in fade-in zoom-in duration-200">
+            {/* Close button */}
+            <button
+              onClick={() => setShowMobileDetails(false)}
+              className="absolute top-4 left-4 p-2 rounded-xl text-(--text-secondary) hover:bg-(--hover-bg) transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* Content (reusing ClinicDetail) */}
+            <div className="mt-4 text-right">
+              <ClinicDetail
+                clinic={selected}
+                statusConfig={statusConfig}
+                onStatus={handleStatus}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Toast */}
       {toast.visible && (

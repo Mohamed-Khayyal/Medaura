@@ -41,10 +41,21 @@ export default function LoginPage() {
     } catch (error) {
       let errorMessage = "تعذر تسجيل الدخول، حاول مرة أخرى";
       if (error instanceof Error) {
-        if (error.message.includes("Incorrect email or password")) {
-          errorMessage = "البريد الإلكتروني أو كلمة المرور غير صحيحة";
-        } else if (error.message.includes("Too many") || error.message.includes("rate limit")) {
+        const status = (error as any).status;
+        if (
+          status === 429 ||
+          error.message.includes("Too many") ||
+          error.message.includes("rate limit") ||
+          error.message.includes("too many requests")
+        ) {
           errorMessage = "محاولات تسجيل دخول كثيرة جداً. يرجى المحاولة لاحقاً";
+        } else if (
+          status === 401 ||
+          error.message.includes("Incorrect email or password") ||
+          error.message.includes("invalid") ||
+          error.message.includes("unauthorized")
+        ) {
+          errorMessage = "البريد الإلكتروني أو كلمة المرور غير صحيحة";
         } else {
           errorMessage = error.message;
         }

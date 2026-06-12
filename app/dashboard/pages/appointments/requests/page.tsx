@@ -221,9 +221,8 @@ export default function RequestsPage() {
         </div>
       </div>
 
-      {/*  Table */}
-      <div className="overflow-hidden rounded-xl border border-(--card-border)">
-        <table className="w-full text-sm text-center">
+      <div className="overflow-x-auto rounded-xl border border-(--card-border) w-full">
+        <table className="w-full min-w-max text-sm text-center">
           <thead className="bg-(--hover-bg) text-center text-(--text-secondary)">
             <tr>
               <th>الإجراءات</th>

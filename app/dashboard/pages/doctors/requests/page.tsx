@@ -203,6 +203,7 @@ export default function DoctorRequestsPage() {
     Record<string | number, RequestStatus>
   >({});
   const [selectedId, setSelectedId] = useState<string | number | null>(null);
+  const [showMobileDetails, setShowMobileDetails] = useState(false);
   const [filter, setFilter] = useState<FilterStatus>("all");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -478,7 +479,10 @@ export default function DoctorRequestsPage() {
               paginatedRequests.map((request) => (
                 <button
                   key={request.id}
-                  onClick={() => setSelectedId(request.id)}
+                  onClick={() => {
+                    setSelectedId(request.id);
+                    setShowMobileDetails(true);
+                  }}
                   className={`w-full rounded-xl border p-4 text-right transition ${
                     selectedRequest?.id === request.id
                       ? "border-[#1F2B6C] bg-[#EBF2F9]"
@@ -560,7 +564,7 @@ export default function DoctorRequestsPage() {
           </div>
         </section>
 
-        <aside className="h-max rounded-xl border border-(--card-border) bg-(--card-bg) p-5">
+        <aside className="hidden xl:block h-max rounded-xl border border-(--card-border) bg-(--card-bg) p-5">
           {selectedRequest ? (
             <div className="space-y-5">
               <div className="flex items-start justify-between gap-4">
@@ -683,6 +687,139 @@ export default function DoctorRequestsPage() {
           )}
         </aside>
       </div>
+
+      {/* Mobile Details Modal */}
+      {showMobileDetails && selectedRequest && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm xl:hidden" dir="rtl">
+          <div className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl border border-(--card-border) bg-(--card-bg) p-6 shadow-2xl animate-in fade-in zoom-in duration-200">
+            {/* Close button */}
+            <button
+              onClick={() => setShowMobileDetails(false)}
+              className="absolute top-4 left-4 p-2 rounded-xl text-(--text-secondary) hover:bg-(--hover-bg) transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* Content (reusing the same aside layout but styling it for modal) */}
+            <div className="space-y-5 mt-4">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <img
+                    src={selectedRequest.avatar}
+                    alt={selectedRequest.name}
+                    className="h-16 w-16 rounded-full object-cover"
+                  />
+                  <div className="text-right">
+                    <h2 className="text-xl font-bold text-(--text-primary)">
+                      {selectedRequest.name}
+                    </h2>
+                    <p className="text-sm text-(--text-secondary)">
+                      {selectedRequest.specialty}
+                    </p>
+                  </div>
+                </div>
+                <StatusBadge status={selectedRequest.status} />
+              </div>
+
+              <div className="grid gap-3 rounded-xl bg-(--semi-card-bg) p-4 text-sm text-(--text-secondary) text-right">
+                <Info
+                  icon={<Stethoscope size={16} />}
+                  text={selectedRequest.clinic}
+                />
+                <Info icon={<Mail size={16} />} text={selectedRequest.email} />
+                <Info icon={<Phone size={16} />} text={selectedRequest.phone} />
+                <Info
+                  icon={<FileCheck2 size={16} />}
+                  text={`ترخيص رقم ${selectedRequest.licenseNumber}`}
+                />
+              </div>
+
+              <div className="text-right">
+                <h3 className="mb-3 text-base font-bold text-(--text-primary)">
+                  المستندات
+                </h3>
+                <div className="space-y-2">
+                  {selectedRequest.documents.map((document) => (
+                    <div
+                      key={document.title}
+                      className="flex items-center justify-between rounded-lg border border-(--card-border) p-3"
+                    >
+                      <div className="text-right">
+                        <p className="font-medium text-(--text-primary)">
+                          {document.title}
+                        </p>
+                        <p className="text-xs text-(--text-secondary)">
+                          {document.value}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {document.url && (
+                           <a
+                             href={document.url}
+                             target="_blank"
+                             rel="noopener noreferrer"
+                             className="rounded-lg bg-indigo-50 px-2 py-1 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 transition-colors"
+                           >
+                             عرض المستند
+                           </a>
+                        )}
+                        {document.verified ? (
+                           <BadgeCheck size={20} className="text-[#008236]" />
+                        ) : (
+                           <ShieldAlert size={20} className="text-[#C10007]" />
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                {selectedRequest.status === "approved" ? (
+                  <button
+                    onClick={() =>
+                      void updateStatus(selectedRequest.id, "pending")
+                    }
+                    disabled={verifyingId === selectedRequest.id}
+                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 px-4 py-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {verifyingId === selectedRequest.id ? (
+                      <Loader2 size={18} className="animate-spin" />
+                    ) : (
+                      <XCircle size={18} />
+                    )}
+                    إلغاء التوثيق
+                  </button>
+                ) : (
+                  <button
+                    onClick={() =>
+                      void updateStatus(selectedRequest.id, "approved")
+                    }
+                    disabled={verifyingId === selectedRequest.id}
+                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#00A63E] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#008236] disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {verifyingId === selectedRequest.id ? (
+                      <Loader2 size={18} className="animate-spin" />
+                    ) : (
+                      <ShieldCheck size={18} />
+                    )}
+                    توثيق الطبيب
+                  </button>
+                )}
+              </div>
+
+              {selectedRequest.status === "approved" && (
+                <div className="flex items-center gap-2 rounded-lg bg-[#DCFCE7] p-3 text-sm text-[#008236] justify-end">
+                  <CheckCircle2 size={18} />
+                  تم توثيق الطبيب بنجاح.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -195,7 +195,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback(
     async (credentials: LoginRequest) => {
       try {
-        setLoading(true);
         setError(null);
 
         const response = await fetch("/api/auth/login", {
@@ -206,7 +205,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
         const result = await response.json();
         if (!response.ok || !result.success) {
-          throw new Error(result.error || "Login failed");
+          const loginError = new Error(result.error || "Login failed");
+          (loginError as Error & { status?: number }).status = response.status;
+          throw loginError;
         }
         const authData = normalizeAuthResponse(result.data);
         saveAuth(authData);
@@ -216,8 +217,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           err instanceof Error ? err : new Error("Login failed");
         setError(authError);
         throw authError;
-      } finally {
-        setLoading(false);
       }
     },
     [saveAuth]

@@ -178,7 +178,7 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
           <button
             type="button"
             onClick={onToggleSidebar}
-            className="flex-shrink-0 inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[#e6eaf0] bg-white text-[#5e6b85] hover:bg-[#f1f4f9] transition xl:hidden"
+            className="flex-shrink-0 inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[#e6eaf0] bg-white text-[#5e6b85] hover:bg-[#f1f4f9] transition lg:hidden"
             aria-label="Open sidebar"
           >
             <Menu size={18} />
