@@ -61,11 +61,20 @@ function getBookingDate(b: RawBooking): string {
   return b.booking_date ?? b.created_at?.slice(0, 10) ?? "";
 }
 
-/** Check whether a booking counts as revenue-generating */
+/**
+ * Returns true for any booking status that represents a completed/finished appointment.
+ * Covers multiple possible backend values — use the debug endpoint to verify yours.
+ */
 export function isCompleted(b: RawBooking): boolean {
-  const s = (b.status ?? "").toLowerCase();
-  // Accept "completed" or "confirmed" — adjust if backend uses different value
-  return s === "completed" || s === "confirmed";
+  const s = (b.status ?? "").toLowerCase().trim();
+  return (
+    s === "completed" ||
+    s === "confirmed" ||
+    s === "done" ||
+    s === "finished" ||
+    s === "attended" ||
+    s === "approved"
+  );
 }
 
 // ── Core Calculations ──────────────────────────────────────────────────────────
