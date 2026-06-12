@@ -503,7 +503,6 @@ export default function ClinicDashPage() {
           key={lastBooking.timestamp}
           booking={lastBooking}
           onDismiss={() => setShowToast(false)}
-          onSuccess={loadData}
         />
       )}
       
