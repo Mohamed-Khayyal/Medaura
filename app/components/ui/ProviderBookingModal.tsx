@@ -70,7 +70,7 @@ export default function ProviderBookingModal({ isOpen, onClose, role, staffMembe
   const fetchSlots = async () => {
     try {
       setLoadingSlots(true);
-      let query = `?date=${bookingDate}`;
+      let query = `?booking_date=${bookingDate}`;
       if (role === "clinic" && staffId) {
         query += `&staff_id=${staffId}`;
       } else if (role === "doctor") {
@@ -80,7 +80,7 @@ export default function ProviderBookingModal({ isOpen, onClose, role, staffMembe
       const res = await fetch(`/api/book/slots${query}`);
       const data = await res.json();
       if (data.success) {
-        setAvailableSlots(data.data.available_slots || []);
+        setAvailableSlots(data.data?.slots || data.data?.available_slots || []);
       } else {
         setAvailableSlots([]);
       }
