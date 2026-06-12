@@ -48,24 +48,12 @@ export default function StaffRegisterPage() {
   const [clinics, setClinics] = useState<ClinicProfile[]>([]);
   const [loadingClinics, setLoadingClinics] = useState(false);
   const [specialist, setSpecialist] = useState("");
-  const [selectedDays, setSelectedDays] = useState<string[]>([]);
-  const [workFrom, setWorkFrom] = useState("");
-  const [workTo, setWorkTo] = useState("");
-  const [consultationPrice, setConsultationPrice] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [terms, setTerms] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
-
-  function toggleDay(dayId: string) {
-    setSelectedDays((current) =>
-      current.includes(dayId)
-        ? current.filter((d) => d !== dayId)
-        : [...current, dayId],
-    );
-  }
 
   useEffect(() => {
     async function loadClinics() {
@@ -96,11 +84,6 @@ export default function StaffRegisterPage() {
     if (!fullName.trim()) nextErrors.full_name = "الاسم الكامل مطلوب";
     if (!selectedClinic.trim()) nextErrors.name = "اختر العيادة";
     if (!specialist) nextErrors.specialist = "التخصص مطلوب";
-    if (selectedDays.length === 0) nextErrors.work_days = "اختر يوم عمل على الأقل";
-    if (!workFrom) nextErrors.work_from = "وقت بدء العمل مطلوب";
-    if (!workTo) nextErrors.work_to = "وقت انتهاء العمل مطلوب";
-    if (!consultationPrice || isNaN(Number(consultationPrice)) || Number(consultationPrice) <= 0)
-      nextErrors.consultation_price = "سعر الاستشارة مطلوب";
     if (!email.trim()) nextErrors.email = "البريد الإلكتروني مطلوب";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
       nextErrors.email = "صيغة البريد غير صحيحة";
@@ -125,10 +108,6 @@ export default function StaffRegisterPage() {
         name: selectedClinic,
         role_title: "doctor",
         specialist,
-        work_days: selectedDays.join(","),
-        work_from: workFrom,
-        work_to: workTo,
-        consultation_price: Number(consultationPrice),
       };
 
       const response = await signup({
@@ -244,80 +223,7 @@ export default function StaffRegisterPage() {
         {errors.specialist && <p className="text-sm text-red-700 mt-1">{errors.specialist}</p>}
       </div>
 
-      {/* أيام العمل */}
-      <div>
-        <span className="block text-sm font-medium text-zinc-700 mb-2">أيام العمل</span>
-        <div className="flex flex-wrap gap-2">
-          {WORK_DAYS.map((day) => (
-            <button
-              key={day.id}
-              type="button"
-              onClick={() => toggleDay(day.id)}
-              className={`px-3 py-1.5 rounded-full text-sm border transition-all duration-200 ${
-                selectedDays.includes(day.id)
-                  ? "bg-indigo-700 text-white border-indigo-700"
-                  : "border-zinc-200 text-zinc-600 hover:border-indigo-400"
-              }`}
-            >
-              {day.label}
-            </button>
-          ))}
-        </div>
-        {errors.work_days && <p className="text-sm text-red-700 mt-1">{errors.work_days}</p>}
-      </div>
 
-      {/* ساعات العمل */}
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label htmlFor="workFrom" className="block text-sm font-medium text-zinc-700 mb-1">
-            من
-          </label>
-          <input
-            id="workFrom"
-            type="time"
-            value={workFrom}
-            onChange={(e) => setWorkFrom(e.target.value)}
-            aria-invalid={!!errors.work_from}
-            className={inputCls("work_from")}
-          />
-          {errors.work_from && <p className="text-sm text-red-700 mt-1">{errors.work_from}</p>}
-        </div>
-        <div>
-          <label htmlFor="workTo" className="block text-sm font-medium text-zinc-700 mb-1">
-            إلى
-          </label>
-          <input
-            id="workTo"
-            type="time"
-            value={workTo}
-            onChange={(e) => setWorkTo(e.target.value)}
-            aria-invalid={!!errors.work_to}
-            className={inputCls("work_to")}
-          />
-          {errors.work_to && <p className="text-sm text-red-700 mt-1">{errors.work_to}</p>}
-        </div>
-      </div>
-
-      {/* سعر الاستشارة */}
-      <div>
-        <label htmlFor="consultationPrice" className="block text-sm font-medium text-zinc-700 mb-1">
-          سعر الاستشارة (ريال)
-        </label>
-        <input
-          id="consultationPrice"
-          type="number"
-          min="1"
-          step="1"
-          placeholder="مثال: 150"
-          value={consultationPrice}
-          onChange={(e) => setConsultationPrice(e.target.value)}
-          aria-invalid={!!errors.consultation_price}
-          className={inputCls("consultation_price")}
-        />
-        {errors.consultation_price && (
-          <p className="text-sm text-red-700 mt-1">{errors.consultation_price}</p>
-        )}
-      </div>
 
       {/* البريد الإلكتروني */}
       <div>

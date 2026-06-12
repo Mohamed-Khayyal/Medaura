@@ -10,6 +10,8 @@ import ClinicsList from "./features/clinics/ClinicsList";
 import DepartmentsChart from "./components/charts/DepartmentsChart";
 import PatientsTable from "./features/clinics/PatientsTable";
 import AppointmentsTable from "./features/appointments/AppointmentsTable";
+import { useLocale } from "@/lib/hooks";
+import { t } from "@/i18n";
 
 import React, { useState, useEffect } from "react";
 import {
@@ -27,6 +29,8 @@ function Dashboard({ childern }: { childern: React.ReactNode }) {
   const [range, setRange] = useState<any>();
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState<any>(null);
+  const locale = useLocale();
+  const isRtl = locale === "ar";
 
   useEffect(() => {
     async function fetchDashboardData() {
@@ -67,7 +71,7 @@ function Dashboard({ childern }: { childern: React.ReactNode }) {
   const stats = dashboardData?.stats ?? dashboardData ?? {};
 
   return (
-    <div className="flex w-full">
+    <div className="flex w-full" dir={isRtl ? "rtl" : "ltr"}>
       <div className="flex w-full flex-col bg-(--background) min-h-screen transition-colors duration-300">
         <div className="p-6">
           <DashboardHeader range={range} setRange={setRange} />
@@ -75,7 +79,7 @@ function Dashboard({ childern }: { childern: React.ReactNode }) {
           {/* Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-6">
             <StatsCard
-              title=" إجمالي الأطباء"
+              title={t("adminDash.totalDoctors", locale)}
               value={stats?.totalDoctors ?? 0}
               percentage={18}
               icon={
@@ -93,7 +97,7 @@ function Dashboard({ childern }: { childern: React.ReactNode }) {
             />
 
             <StatsCard
-              title="إجمالي المرضى"
+              title={t("adminDash.totalPatients", locale)}
               value={stats?.totalPatients ?? 0}
               percentage={20}
               icon={<User size={20} strokeWidth={2} className="text-white" />}
@@ -109,7 +113,7 @@ function Dashboard({ childern }: { childern: React.ReactNode }) {
             />
 
             <StatsCard
-              title="إجمالي العيادات"
+              title={t("adminDash.totalClinics", locale)}
               value={stats?.totalClinics ?? 0}
               percentage={-15}
               icon={
@@ -127,7 +131,7 @@ function Dashboard({ childern }: { childern: React.ReactNode }) {
             />
 
             <StatsCard
-              title="إجمالي الموظفين"
+              title={t("adminDash.totalStaff", locale)}
               value={stats?.totalStaff ?? 0}
               percentage={5}
               icon={

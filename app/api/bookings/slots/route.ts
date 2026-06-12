@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { bookingService } from "@/lib/api/bookings";
 import { apiClient } from "@/lib/api/client";
+import { authService } from "@/lib/api/auth";
+import { getServerAccessToken } from "@/lib/api/server-auth";
 
 // GET /api/bookings/slots?staff_id=2&booking_date=2026-02-22
 export async function GET(request: NextRequest) {
@@ -21,9 +23,64 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    if (doctorId) {
+    let resolvedDoctorId = doctorId;
+    let resolvedStaffId = staffId;
+
+    if (doctorId === "me") {
+      const auth = await getServerAccessToken(request);
+      if (!auth.token) {
+        return NextResponse.json(
+          { success: false, error: "Not authenticated" },
+          { status: 401 }
+        );
+      }
+
+      // Fetch profile
+      let profileRes: any;
+      try {
+        profileRes = await authService.getProfile(auth.token);
+      } catch (err) {
+        console.error("Failed to fetch profile in slots route:", err);
+        return NextResponse.json(
+          { success: false, error: "Failed to fetch profile" },
+          { status: 500 }
+        );
+      }
+
+      const userRole = profileRes?.user?.role || profileRes?.role;
+      const userProfile = profileRes?.user?.profile || profileRes?.profile;
+
+      if (userRole === "doctor") {
+        const docId = userProfile?.doctor_id || userProfile?.id || userProfile?._id;
+        if (!docId) {
+          return NextResponse.json(
+            { success: false, error: "Doctor profile ID not found" },
+            { status: 404 }
+          );
+        }
+        resolvedDoctorId = String(docId);
+        resolvedStaffId = null;
+      } else if (userRole === "staff") {
+        const stId = userProfile?.staff_id || userProfile?.id || userProfile?._id;
+        if (!stId) {
+          return NextResponse.json(
+            { success: false, error: "Staff profile ID not found" },
+            { status: 404 }
+          );
+        }
+        resolvedDoctorId = null;
+        resolvedStaffId = String(stId);
+      } else {
+        return NextResponse.json(
+          { success: false, error: "Unauthorized user role for slots lookup" },
+          { status: 403 }
+        );
+      }
+    }
+
+    if (resolvedDoctorId) {
       const params = new URLSearchParams({
-        doctor_id: doctorId,
+        doctor_id: resolvedDoctorId,
         booking_date: bookingDate,
       });
       const response = await apiClient.get(
@@ -33,7 +90,7 @@ export async function GET(request: NextRequest) {
     }
 
     const response = await bookingService.getAvailableSlots({
-      staff_id: staffId as string,
+      staff_id: resolvedStaffId as string,
       booking_date: bookingDate,
     });
 
@@ -56,3 +113,4 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+

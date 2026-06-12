@@ -5,6 +5,7 @@ import Sidebar from "./components/layout/Sidebar";
 import Navbar from "./components/layout/Navbar";
 import DashboardThemeProvider from "../providers/DashboardThemeProvider";
 import RouteGuard from "@/components/auth/RouteGuard";
+import { useLocale } from "@/lib/hooks";
 
 export default function DashboardLayout({
   children,
@@ -12,6 +13,8 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const locale = useLocale();
+  const isRtl = locale === "ar";
 
   useEffect(() => {
     if (sidebarOpen) {
@@ -27,7 +30,7 @@ export default function DashboardLayout({
   return (
     <RouteGuard allowedRoles={["admin"]}>
       <DashboardThemeProvider>
-        <div className="min-h-screen flex bg-(--background)" data-theme-dashboard>
+        <div className="min-h-screen flex bg-(--background)" data-theme-dashboard dir={isRtl ? "rtl" : "ltr"}>
         
         {/* Sidebar */}
         <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />

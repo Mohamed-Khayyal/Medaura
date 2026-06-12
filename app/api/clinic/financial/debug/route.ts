@@ -21,10 +21,10 @@ export async function GET(request: NextRequest) {
     ]);
 
     // Normalize bookings
-    const bookings = Array.isArray(bookingsRaw) ? bookingsRaw : [];
+    const bookings = (Array.isArray(bookingsRaw) ? bookingsRaw : []) as any[];
 
     // Normalize staff
-    let staff: unknown[] = [];
+    let staff: any[] = [];
     if (Array.isArray(staffRaw)) {
       staff = staffRaw;
     } else if (staffRaw && typeof staffRaw === "object") {
@@ -37,13 +37,13 @@ export async function GET(request: NextRequest) {
     }
 
     // Unique statuses in bookings
-    const statuses = [...new Set(bookings.map((b: Record<string, unknown>) => b.status))];
+    const statuses = [...new Set(bookings.map((b: any) => b.status))];
 
     // Doctor IDs used in bookings
-    const bookingDocIds = [...new Set(bookings.map((b: Record<string, unknown>) => b.doctor_id ?? b.staff_id))];
+    const bookingDocIds = [...new Set(bookings.map((b: any) => b.doctor_id ?? b.staff_id))];
 
     // Staff IDs available
-    const staffIds = staff.map((s: Record<string, unknown>) => ({
+    const staffIds = staff.map((s: any) => ({
       id: s.id,
       staff_id: s.staff_id,
       user_id: s.user_id,
@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
     }));
 
     // Sample bookings (first 5)
-    const sampleBookings = bookings.slice(0, 5).map((b: Record<string, unknown>) => ({
+    const sampleBookings = bookings.slice(0, 5).map((b: any) => ({
       id: b.id,
       doctor_id: b.doctor_id,
       staff_id: b.staff_id,

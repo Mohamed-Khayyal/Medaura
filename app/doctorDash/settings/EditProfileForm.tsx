@@ -138,7 +138,6 @@ function buildRequestPayload(formData: DoctorEditableProfile) {
     work_to: formData.work_to,
     work_days: formData.work_days,
     location: toNullableString(formData.location),
-    specialist: toNullableString(formData.specialist),
 
     latitude: String(formData.geo_location.latitude),
     longitude: String(formData.geo_location.longitude),
@@ -455,10 +454,8 @@ export default function EditProfileForm({
                 </span>
                 <select
                   value={formData.specialist}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, specialist: e.target.value }))
-                  }
-                  className="w-full rounded-lg border border-(--card-border) bg-(--card-bg) px-4 py-2 text-(--text-primary) focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled
+                  className="w-full rounded-lg border border-(--card-border) bg-zinc-100 dark:bg-zinc-800/50 px-4 py-2 text-zinc-500 cursor-not-allowed focus:outline-none"
                 >
                   <option value="">Choose specialty...</option>
                   {SPECIALTIES.map((s) => (

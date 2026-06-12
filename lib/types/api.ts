@@ -8,10 +8,10 @@ export interface PatientSignupProfile {
 export interface DoctorSignupProfile {
   full_name: string;
   specialist: string;
-  work_days: string;
-  work_from: string;
-  work_to: string;
-  consultation_price: number;
+  work_days?: string;
+  work_from?: string;
+  work_to?: string;
+  consultation_price?: number;
   licence?: string; // Cloudinary URL — added via profile update, not signup
 }
 
@@ -30,10 +30,10 @@ export interface StaffSignupProfile {
   name: string;
   role_title: string;
   specialist: string;
-  work_days: string;
-  work_from: string;
-  work_to: string;
-  consultation_price: number;
+  work_days?: string;
+  work_from?: string;
+  work_to?: string;
+  consultation_price?: number;
 }
 
 export interface SignupRequest {

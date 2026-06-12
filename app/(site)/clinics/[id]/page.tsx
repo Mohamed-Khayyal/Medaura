@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import DoctorCard from "@/components/home/doctorCard/doctorCard";
 import { t } from "@/i18n";
+import { useAuth } from "@/context/AuthContext";
 
 const API_BASE_URL = "/api";
 const RATINGS_PAGE_SIZE = 4;
@@ -281,6 +282,9 @@ function RatingStars({
 export default function ClinicDetailsPage() {
   const params = useParams();
   const clinicId = params.id;
+  const { user, isAuthenticated } = useAuth();
+  const isNotPatient = isAuthenticated && user?.user_type?.toLowerCase() !== "patient";
+  const canRateAndSeeReviews = isAuthenticated && user?.user_type?.toLowerCase() === "patient";
 
   const [visibleDoctors, setVisibleDoctors] = useState(3);
   const [selectedSpecialty, setSelectedSpecialty] = useState("");
@@ -373,6 +377,10 @@ export default function ClinicDetailsPage() {
 
   useEffect(() => {
     if (!clinicId) return;
+    if (!canRateAndSeeReviews) {
+      setClinicRatingsLoading(false);
+      return;
+    }
     let active = true;
 
     async function loadClinicRatings() {
@@ -425,7 +433,7 @@ export default function ClinicDetailsPage() {
     return () => {
       active = false;
     };
-  }, [clinicId, clinicRatingsPage, clinicRatingsRefreshKey]);
+  }, [clinicId, clinicRatingsPage, clinicRatingsRefreshKey, canRateAndSeeReviews]);
 
   const clinic = clinicProfile;
   const clinicSpecialties = Array.from(
@@ -781,155 +789,159 @@ export default function ClinicDetailsPage() {
             </p>
           </div>
 
-          <div className="mt-10">
-            {clinicRatingsLoading ? (
-              <p className="text-center text-[#001A6E]">
-                {locale === "en" ? "جاري تحميل التقييمات..." : "Loading ratings..."}
-              </p>
-            ) : clinicRatingsError ? (
-              <p className="text-center text-red-600">{clinicRatingsError}</p>
-            ) : clinicRatings.length === 0 ? (
-              <p className="text-center text-gray-400">
-                {locale === "en"
-                  ? "لا توجد تقييمات بعد."
-                  : "No reviews yet."}
-              </p>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
-                {clinicRatings.map((review) => (
-                  <div
-                    key={review.rating_id}
-                    className="bg-linear-to-br from-blue-50 to-white border border-blue-100 p-6 rounded-3xl shadow-sm hover:shadow-md transition-shadow text-left"
+          {canRateAndSeeReviews && (
+            <>
+              <div className="mt-10">
+                {clinicRatingsLoading ? (
+                  <p className="text-center text-[#001A6E]">
+                    {locale === "en" ? "جاري تحميل التقييمات..." : "Loading ratings..."}
+                  </p>
+                ) : clinicRatingsError ? (
+                  <p className="text-center text-red-600">{clinicRatingsError}</p>
+                ) : clinicRatings.length === 0 ? (
+                  <p className="text-center text-gray-400">
+                    {locale === "en"
+                      ? "لا توجد تقييمات بعد."
+                      : "No reviews yet."}
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+                    {clinicRatings.map((review) => (
+                      <div
+                        key={review.rating_id}
+                        className="bg-linear-to-br from-blue-50 to-white border border-blue-100 p-6 rounded-3xl shadow-sm hover:shadow-md transition-shadow text-left"
+                      >
+                        <div className="flex gap-0.5 mb-3">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`w-4 h-4 ${i < Math.round(review.rating)
+                                  ? "text-yellow-400 fill-yellow-400"
+                                  : "text-gray-200"
+                                }`}
+                            />
+                          ))}
+                        </div>
+                        <div className="mb-3 flex items-center gap-3">
+                          <div className="h-10 w-10 overflow-hidden rounded-full bg-[#eaf0fb]">
+                            {review.patient_photo ? (
+                              <img
+                                src={review.patient_photo}
+                                alt={review.patient_name || "Patient"}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : null}
+                          </div>
+                          <p className="text-xs font-semibold text-gray-500">
+                            {review.patient_name ||
+                              (locale === "en" ? "مريض" : "Patient")}
+                          </p>
+                        </div>
+                        {review.comment ? (
+                          <p className="text-gray-600 text-sm leading-relaxed">
+                            &quot;{review.comment}&quot;
+                          </p>
+                        ) : (
+                          <p className="text-gray-400 text-sm">
+                            {locale === "en" ? "بدون تعليق" : "No comment"}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {clinicRatingsTotalPages > 1 && (
+                <div className="mt-8 flex items-center justify-center gap-4">
+                  <button
+                    onClick={() =>
+                      setClinicRatingsPage((prev) => Math.max(1, prev - 1))
+                    }
+                    disabled={clinicRatingsPage <= 1}
+                    className="rounded-full border border-[#dce5f6] px-4 py-2 text-sm font-semibold text-[#001A6E] disabled:opacity-50"
                   >
-                    <div className="flex gap-0.5 mb-3">
-                      {[...Array(5)].map((_, i) => (
+                    {locale === "en" ? "السابق" : "Previous"}
+                  </button>
+                  <span className="text-sm text-gray-500">
+                    {locale === "en"
+                      ? `صفحة ${clinicRatingsPage} من ${clinicRatingsTotalPages}`
+                      : `Page ${clinicRatingsPage} of ${clinicRatingsTotalPages}`}
+                  </span>
+                  <button
+                    onClick={() =>
+                      setClinicRatingsPage((prev) =>
+                        Math.min(clinicRatingsTotalPages, prev + 1),
+                      )
+                    }
+                    disabled={clinicRatingsPage >= clinicRatingsTotalPages}
+                    className="rounded-full border border-[#dce5f6] px-4 py-2 text-sm font-semibold text-[#001A6E] disabled:opacity-50"
+                  >
+                    {locale === "en" ? "التالي" : "Next"}
+                  </button>
+                </div>
+              )}
+
+              <div className="mt-10 border-t border-[#e6ecf6] pt-8">
+                <h3 className="text-lg font-bold text-[#001A6E] mb-4">
+                  {locale === "en" ? "قيّم هذه العيادة" : "Rate this clinic"}
+                </h3>
+                <div className="mx-auto flex max-w-xl flex-col items-center gap-4">
+                  <div className="flex items-center gap-1">
+                    {[1, 2, 3, 4, 5].map((value) => (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => setClinicRatingValue(value)}
+                        className="transition-transform hover:scale-110"
+                      >
                         <Star
-                          key={i}
-                          className={`w-4 h-4 ${i < Math.round(review.rating)
-                              ? "text-yellow-400 fill-yellow-400"
-                              : "text-gray-200"
+                          className={`h-6 w-6 ${value <= clinicRatingValue
+                              ? "text-[#f7b731] fill-[#f7b731]"
+                              : "text-[#d7deef]"
                             }`}
                         />
-                      ))}
-                    </div>
-                    <div className="mb-3 flex items-center gap-3">
-                      <div className="h-10 w-10 overflow-hidden rounded-full bg-[#eaf0fb]">
-                        {review.patient_photo ? (
-                          <img
-                            src={review.patient_photo}
-                            alt={review.patient_name || "Patient"}
-                            className="h-full w-full object-cover"
-                          />
-                        ) : null}
-                      </div>
-                      <p className="text-xs font-semibold text-gray-500">
-                        {review.patient_name ||
-                          (locale === "en" ? "مريض" : "Patient")}
-                      </p>
-                    </div>
-                    {review.comment ? (
-                      <p className="text-gray-600 text-sm leading-relaxed">
-                        &quot;{review.comment}&quot;
-                      </p>
-                    ) : (
-                      <p className="text-gray-400 text-sm">
-                        {locale === "en" ? "بدون تعليق" : "No comment"}
-                      </p>
-                    )}
+                      </button>
+                    ))}
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {clinicRatingsTotalPages > 1 && (
-            <div className="mt-8 flex items-center justify-center gap-4">
-              <button
-                onClick={() =>
-                  setClinicRatingsPage((prev) => Math.max(1, prev - 1))
-                }
-                disabled={clinicRatingsPage <= 1}
-                className="rounded-full border border-[#dce5f6] px-4 py-2 text-sm font-semibold text-[#001A6E] disabled:opacity-50"
-              >
-                {locale === "en" ? "السابق" : "Previous"}
-              </button>
-              <span className="text-sm text-gray-500">
-                {locale === "en"
-                  ? `صفحة ${clinicRatingsPage} من ${clinicRatingsTotalPages}`
-                  : `Page ${clinicRatingsPage} of ${clinicRatingsTotalPages}`}
-              </span>
-              <button
-                onClick={() =>
-                  setClinicRatingsPage((prev) =>
-                    Math.min(clinicRatingsTotalPages, prev + 1),
-                  )
-                }
-                disabled={clinicRatingsPage >= clinicRatingsTotalPages}
-                className="rounded-full border border-[#dce5f6] px-4 py-2 text-sm font-semibold text-[#001A6E] disabled:opacity-50"
-              >
-                {locale === "en" ? "التالي" : "Next"}
-              </button>
-            </div>
-          )}
-
-          <div className="mt-10 border-t border-[#e6ecf6] pt-8">
-            <h3 className="text-lg font-bold text-[#001A6E] mb-4">
-              {locale === "en" ? "قيّم هذه العيادة" : "Rate this clinic"}
-            </h3>
-            <div className="mx-auto flex max-w-xl flex-col items-center gap-4">
-              <div className="flex items-center gap-1">
-                {[1, 2, 3, 4, 5].map((value) => (
+                  <textarea
+                    value={clinicRatingComment}
+                    onChange={(event) => setClinicRatingComment(event.target.value)}
+                    placeholder={
+                      locale === "en"
+                        ? "اكتب تعليقك هنا"
+                        : "Write your comment (optional)"
+                    }
+                    rows={3}
+                    className="w-full rounded-2xl border border-[#dce5f6] px-4 py-3 text-sm text-gray-600 outline-none focus:border-[#001A6E]"
+                  />
+                  {clinicRatingSubmitError ? (
+                    <p className="text-sm text-red-600">
+                      {clinicRatingSubmitError}
+                    </p>
+                  ) : null}
+                  {clinicRatingSubmitSuccess ? (
+                    <p className="text-sm text-green-600">
+                      {clinicRatingSubmitSuccess}
+                    </p>
+                  ) : null}
                   <button
-                    key={value}
-                    type="button"
-                    onClick={() => setClinicRatingValue(value)}
-                    className="transition-transform hover:scale-110"
+                    onClick={handleClinicRatingSubmit}
+                    disabled={clinicRatingSubmitting}
+                    className="rounded-2xl bg-[#001A6E] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-blue-900/10 transition-colors hover:bg-[#162f80] disabled:cursor-not-allowed disabled:opacity-70"
                   >
-                    <Star
-                      className={`h-6 w-6 ${value <= clinicRatingValue
-                          ? "text-[#f7b731] fill-[#f7b731]"
-                          : "text-[#d7deef]"
-                        }`}
-                    />
+                    {clinicRatingSubmitting
+                      ? locale === "en"
+                        ? "جاري الإرسال..."
+                        : "Submitting..."
+                      : locale === "en"
+                        ? "إرسال التقييم"
+                        : "Submit rating"}
                   </button>
-                ))}
+                </div>
               </div>
-              <textarea
-                value={clinicRatingComment}
-                onChange={(event) => setClinicRatingComment(event.target.value)}
-                placeholder={
-                  locale === "en"
-                    ? "اكتب تعليقك هنا"
-                    : "Write your comment (optional)"
-                }
-                rows={3}
-                className="w-full rounded-2xl border border-[#dce5f6] px-4 py-3 text-sm text-gray-600 outline-none focus:border-[#001A6E]"
-              />
-              {clinicRatingSubmitError ? (
-                <p className="text-sm text-red-600">
-                  {clinicRatingSubmitError}
-                </p>
-              ) : null}
-              {clinicRatingSubmitSuccess ? (
-                <p className="text-sm text-green-600">
-                  {clinicRatingSubmitSuccess}
-                </p>
-              ) : null}
-              <button
-                onClick={handleClinicRatingSubmit}
-                disabled={clinicRatingSubmitting}
-                className="rounded-2xl bg-[#001A6E] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-blue-900/10 transition-colors hover:bg-[#162f80] disabled:cursor-not-allowed disabled:opacity-70"
-              >
-                {clinicRatingSubmitting
-                  ? locale === "en"
-                    ? "جاري الإرسال..."
-                    : "Submitting..."
-                  : locale === "en"
-                    ? "إرسال التقييم"
-                    : "Submit rating"}
-              </button>
-            </div>
-          </div>
+            </>
+          )}
         </div>
       </div>
     </div>

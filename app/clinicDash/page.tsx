@@ -32,6 +32,8 @@ import {
   NewBookingToast,
   ConnectionPill,
 } from "./components/ui/LiveBookingAlert";
+import { useLocale } from "@/lib/hooks";
+import { t } from "@/i18n";
 
 // ── Data-fetching helpers ─────────────────────────────────────────────────────
 
@@ -104,8 +106,8 @@ async function deleteStaffById(id: string | number): Promise<void> {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function formatRefreshTime(date: Date) {
-  return date.toLocaleTimeString("ar-EG", {
+function formatRefreshTime(date: Date, locale: string) {
+  return date.toLocaleTimeString(locale === "ar" ? "ar-EG" : "en-US", {
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",
@@ -118,6 +120,8 @@ export default function ClinicDashPage() {
   const [stats, setStats] = useState<ClinicMyStats | null>(null);
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [pending, setPending] = useState<PendingStaffMember[]>([]);
+  const locale = useLocale();
+  const isRtl = locale === "ar";
 
   const [statsLoading, setStatsLoading] = useState(true);
   const [staffLoading, setStaffLoading] = useState(true);
@@ -263,7 +267,7 @@ export default function ClinicDashPage() {
       : null;
 
   return (
-    <div className="space-y-6" dir="rtl">
+    <div className="space-y-6" dir={isRtl ? "rtl" : "ltr"}>
       {/* ── Page header ──────────────────────────────────────────────────────── */}
       <div
         className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4"
@@ -273,22 +277,22 @@ export default function ClinicDashPage() {
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-teal-500 animate-pulse" />
             <p className="text-xs text-teal-600 dark:text-teal-400 font-semibold uppercase tracking-wider">
-              لوحة التحكم
+              {t("clinicDash.controlPanel", locale)}
             </p>
             <ConnectionPill connected={streamConnected} />
           </div>
           <h1 className="text-2xl font-bold text-(--text-primary) mt-1">
             {stats?.clinic_name
-              ? `مرحباً، ${stats.clinic_name} 👋`
-              : "لوحة تحكم العيادة"}
+              ? t("clinicDash.welcomeClinic", locale).replace("{name}", stats.clinic_name)
+              : t("clinicDash.clinicDashboard", locale)}
           </h1>
           <p className="text-sm text-(--text-secondary) mt-0.5">
-            إدارة أطباء العيادة وإحصاءاتها بصورة شاملة
+            {t("clinicDash.manageDesc", locale)}
           </p>
           {lastRefreshed && (
             <p className="text-[11px] text-(--text-secondary) mt-1 opacity-60 flex items-center gap-1">
               <Activity size={10} />
-              آخر تحديث: {formatRefreshTime(lastRefreshed)}
+              {t("clinicDash.lastUpdated", locale)}: {formatRefreshTime(lastRefreshed, locale)}
             </p>
           )}
         </div>
@@ -303,14 +307,14 @@ export default function ClinicDashPage() {
               size={14}
               className={isSpinning || statsLoading ? "animate-spin" : ""}
             />
-            تحديث
+            {t("clinicDash.refresh", locale)}
           </button>
           <button
             onClick={() => setIsBookingModalOpen(true)}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-[#1F2B6C] text-[#1F2B6C] bg-transparent text-sm font-semibold hover:bg-[#1F2B6C] hover:text-white transition shadow-sm"
           >
             <CalendarCheck size={15} />
-            حجز جديد
+            {t("clinicDash.newBooking", locale)}
           </button>
           <button
             id="open-create-staff-modal"
@@ -318,7 +322,7 @@ export default function ClinicDashPage() {
             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-teal-500 text-white text-sm font-semibold hover:bg-teal-600 transition shadow-sm hover:shadow-md hover:-translate-y-px"
           >
             <Plus size={15} />
-            إضافة طبيب
+            {t("clinicDash.addDoctor", locale)}
           </button>
         </div>
       </div>
@@ -326,12 +330,12 @@ export default function ClinicDashPage() {
       {/* ── Stats cards — always 4 cards in 2×2 on mobile, 4×1 on xl ─────────── */}
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
         <StatsCard
-          title="إجمالي الأطباء"
+          title={t("clinicDash.totalDoctors", locale)}
           value={statsLoading ? "—" : doctorsCount}
           icon={<Users size={18} strokeWidth={2} className="text-white" />}
           iconBg="bg-teal-500"
           chartColor="#14b8a6"
-          badge={doctorsCount > 0 ? `${doctorsCount} طبيب` : undefined}
+          badge={doctorsCount > 0 ? `${doctorsCount} ${t("clinicDash.doctorSuffix", locale)}` : undefined}
           badgeColor="teal"
           data={
             stats?.monthly_bookings
@@ -342,7 +346,7 @@ export default function ClinicDashPage() {
         />
 
         <StatsCard
-          title="إجمالي الحجوزات"
+          title={t("clinicDash.totalBookings", locale)}
           value={statsLoading && syncedTotalBookings === null ? "—" : bookingsCount}
           icon={
             <CalendarCheck size={18} strokeWidth={2} className="text-white" />
@@ -356,9 +360,9 @@ export default function ClinicDashPage() {
           }
           badge={
             newBookingsCount > 0
-              ? `+${newBookingsCount} جديد الآن`
+              ? `+${newBookingsCount} ${t("clinicDash.newNow", locale).replace("{count}", String(newBookingsCount))}`
               : confirmedRate !== null
-              ? `${confirmedRate}% مؤكدة`
+              ? `${confirmedRate}% ${locale === "ar" ? "مؤكدة" : "confirmed"}`
               : undefined
           }
           badgeColor={
@@ -374,19 +378,19 @@ export default function ClinicDashPage() {
         />
 
         <StatsCard
-          title="طلبات معلقة"
+          title={t("clinicDash.pendingRequests", locale)}
           value={statsLoading ? "—" : pendingCount}
-          subtitle="بانتظار التوثيق"
+          subtitle={t("clinicDash.waitingVerification", locale)}
           icon={<Clock size={18} strokeWidth={2} className="text-white" />}
           iconBg="bg-amber-500"
           chartColor="#f59e0b"
-          badge={pendingCount > 0 ? "يحتاج مراجعة" : "لا يوجد"}
+          badge={pendingCount > 0 ? t("clinicDash.needsReview", locale) : t("clinicDash.none", locale)}
           badgeColor={pendingCount > 0 ? "amber" : "green"}
           delay={160}
         />
 
         <StatsCard
-          title="إجمالي الحسابات"
+          title={t("clinicDash.totalAccounts", locale)}
           value={statsLoading ? "—" : totalStaffCount}
           icon={
             <Stethoscope size={18} strokeWidth={2} className="text-white" />
@@ -417,7 +421,7 @@ export default function ClinicDashPage() {
                   : "text-(--text-secondary) hover:text-(--text-primary)"
               }`}
             >
-              جميع الأطباء
+              {t("clinicDash.allDoctors", locale)}
               {staff.filter((member) => isDoctorStaffRecord(member)).length > 0 && (
                 <span className="mr-2 text-xs bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400 rounded-full px-1.5 py-0.5">
                   {staff.filter((member) => isDoctorStaffRecord(member)).length}
@@ -433,7 +437,7 @@ export default function ClinicDashPage() {
                   : "text-(--text-secondary) hover:text-(--text-primary)"
               }`}
             >
-              طلبات معلقة
+              {t("clinicDash.pendingTab", locale)}
               {pending.length > 0 && (
                 <span className="mr-2 text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-full px-1.5 py-0.5">
                   {pending.length}
@@ -451,7 +455,7 @@ export default function ClinicDashPage() {
             className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400 text-sm font-semibold hover:bg-teal-500/20 transition"
           >
             <Plus size={14} />
-            إضافة طبيب
+            {t("clinicDash.addDoctor", locale)}
           </button>
         </div>
 
@@ -464,10 +468,10 @@ export default function ClinicDashPage() {
                   <Search size={24} className="text-(--text-secondary)" />
                 </div>
                 <p className="text-(--text-secondary) text-sm font-medium">
-                  لا توجد نتائج لـ &quot;{searchParams.get("q")}&quot;
+                  {t("clinicDash.noResults", locale).replace("{query}", searchParams.get("q") ?? "")}
                 </p>
                 <p className="text-(--text-secondary) text-xs opacity-60">
-                  جرّب اسماً مختلفاً
+                  {t("clinicDash.tryDifferentName", locale)}
                 </p>
               </div>
             ) : (

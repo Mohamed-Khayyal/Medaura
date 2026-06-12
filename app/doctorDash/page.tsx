@@ -11,6 +11,8 @@ import DepartmentsChart from "./components/charts/DepartmentsChart";
 import PatientsTable from "./features/patient/PatientTaple";
 import AppointmentsTable from "./features/appointments/AppointmentsTable";
 import ProviderBookingModal from "@/app/components/ui/ProviderBookingModal";
+import { useLocale } from "@/lib/hooks";
+import { t } from "@/i18n";
 
 import React, { useEffect, useMemo, useState } from "react";
 import { Calendar, User, Plus } from "lucide-react";
@@ -81,6 +83,8 @@ function Dashboard({ childern }: { childern: React.ReactNode }) {
   const [dashboardData, setDashboardData] = useState<DashboardApiData | null>(
     null,
   );
+  const locale = useLocale();
+  const isRtl = locale === "ar";
 
   const weeklyData = [
     { date: "2026-01-25", exixiting: 40, new: 20 },
@@ -145,7 +149,7 @@ function Dashboard({ childern }: { childern: React.ReactNode }) {
           {/* Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-2 gap-5">
             <StatsCard
-              title="المواعيد"
+              title={t("doctorDash.appointments", locale)}
               value={appointmentCard?.value ?? 0}
               percentage={appointmentCard?.percentage ?? 0}
               icon={
@@ -164,7 +168,7 @@ function Dashboard({ childern }: { childern: React.ReactNode }) {
               }
             />
             <StatsCard
-              title="إجمالي المرضى"
+              title={t("doctorDash.totalPatients", locale)}
               value={patientCard?.value ?? 0}
               percentage={patientCard?.percentage ?? 0}
               icon={<User size={18} strokeWidth={2} className="text-white" />}
@@ -208,13 +212,13 @@ function Dashboard({ childern }: { childern: React.ReactNode }) {
           {/* Appointments */}
           <div className="grid grid-cols-1 gap-5">
             <div className="flex justify-between items-center bg-(--card-bg) p-4 rounded-2xl shadow-[var(--shadow-soft)] border border-(--card-border)">
-              <h2 className="text-lg font-bold text-(--text-primary)">الحجوزات</h2>
+              <h2 className="text-lg font-bold text-(--text-primary)">{t("doctorDash.bookings", locale)}</h2>
               <button
                 onClick={() => setIsBookingModalOpen(true)}
                 className="flex items-center gap-2 bg-[#1F2B6C] hover:bg-[#151F52] text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors"
               >
                 <Plus size={16} />
-                حجز جديد
+                {t("doctorDash.newBooking", locale)}
               </button>
             </div>
             <AppointmentsTable appointments={dashboardData?.appointments?.slice(0, 5)} />

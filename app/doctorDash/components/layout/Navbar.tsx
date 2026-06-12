@@ -1,19 +1,30 @@
 "use client";
 
-import { Sun, Moon, Bell, Search, LogOut, X, Menu } from "lucide-react";
-import { useState, useRef, useEffect, useContext } from "react";
+import { Bell, Search, LogOut, X, Menu, Globe } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { DashboardThemeContext } from "../../../providers/DashboardThemeProvider";
 import { useAuth } from "@/context/AuthContext";
+import { useLocale } from "@/lib/hooks";
+import { t } from "@/i18n";
 
 function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
-  const { darkMode, toggleTheme } = useContext(DashboardThemeContext);
   const { logout, user } = useAuth();
-  const fullName = (user?.profile?.full_name as string) || "د.محمد إسماعيل";
-  const specialist = (user?.profile?.specialist as string) || "طبيب قلب";
+  const locale = useLocale();
+  const fullName = (user?.profile?.full_name as string) || (locale === "ar" ? "د.محمد إسماعيل" : "Dr. Mohamed Ismail");
+  const specialist = (user?.profile?.specialist as string) || (locale === "ar" ? "طبيب قلب" : "Cardiologist");
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
+
+  const toggleLocale = () => {
+    const next = locale === "en" ? "ar" : "en";
+    try {
+      localStorage.setItem("locale", next);
+    } catch {}
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("localeChange", { detail: next }));
+    }
+  };
 
   useEffect(() => {
     async function loadNotifications() {
@@ -111,29 +122,8 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
     };
   }, [query, router]);
 
-  const toggleThemes = () => {
-    // const next = !darkMode;
-    toggleTheme();
-  };
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  const handleThemeChange = () => {
-    setIsTransitioning(true);
-    toggleTheme();
-
-    setTimeout(() => {
-      setIsTransitioning(false);
-    }, 400);
-  };
   return (
     <>
-      {isTransitioning && (
-        <div className="fixed inset-0 bg-black/10 backdrop-blur-sm z-999 pointer-events-none transition-opacity duration-200" />
-      )}
       <header className="w-full sticky top-0 z-50 backdrop-blur-md bg-(--background)/80 border-b border-(--card-border)">
         <div className="mx-auto max-w-[1400px] px-4 sm:px-8 py-3">
           <div className="flex items-center justify-between gap-3">
@@ -181,8 +171,8 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
                   role="combobox"
                   aria-expanded={query.length > 0}
                   aria-controls="nav-search-list"
-                  placeholder="Search patients, doctors, appointments..."
-                  dir="ltr"
+                  placeholder={t("dashboard.header.searchPlaceholder", locale)}
+                  dir={locale === "ar" ? "rtl" : "ltr"}
                   className="w-full pl-10 pr-4 py-2 rounded-2xl border border-(--input-border) bg-(--input-bg) text-sm text-(--text-primary) placeholder:text-(--text-secondary) focus:outline-none focus:ring-2 focus:ring-[color:var(--primary)]/40"
                 />
                 <Search
@@ -222,40 +212,14 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
             </div>
 
             <div className="flex items-center gap-2 sm:gap-3">
+              {/* Language Switcher */}
               <button
-                onClick={handleThemeChange}
-                title={
-                  darkMode ? "Switch to light mode" : "Switch to dark mode"
-                }
-                aria-pressed={darkMode}
-                className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center rounded-2xl border border-(--card-border) bg-(--card-bg) hover:bg-(--semi-card-bg) transition cursor-pointer"
+                onClick={toggleLocale}
+                title={locale === "en" ? "Change to Arabic" : "تغيير إلى الإنجليزية"}
+                className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center rounded-2xl border border-(--card-border) bg-(--card-bg) hover:bg-(--semi-card-bg) transition cursor-pointer text-[13px] font-bold text-(--text-primary) gap-1"
               >
-                <span className="sr-only">Toggle theme</span>
-                <div className="relative w-4.5 h-4.5">
-                  {/* Sun */}
-                  <Sun
-                    size={18}
-                    className={`absolute inset-0 transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] drop-shadow-[0_0_6px_rgba(255,255,255,0.3)] animate-spin [animation-duration:5s] opacity-80
-                        ${
-                          darkMode
-                            ? "opacity-100 rotate-0 scale-100 "
-                            : "opacity-0 rotate-90 scale-50 hidden"
-                        }
-                    `}
-                  />
-
-                  {/* Moon */}
-                  <Moon
-                    size={18}
-                    className={`absolute inset-0 transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] drop-shadow-[0_0_6px_rgba(255,255,255,0.3)] animate-bounce [animation-duration:.8s] opacity-80 
-                        ${
-                          darkMode
-                            ? "opacity-0 -rotate-90 scale-50 hidden"
-                            : "opacity-100 rotate-0 scale-100"
-                        }
-                    `}
-                  />
-                </div>
+                <Globe size={16} />
+                <span className="text-[11px] uppercase">{locale === "en" ? "ar" : "en"}</span>
               </button>
 
               <div className="relative" ref={notifRef}>
@@ -271,15 +235,15 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
                   <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full" />
                 )}
                 {notifOpen && (
-                  <div className="absolute left-[-100px] sm:-left-2 mt-2 w-[300px] sm:w-96 max-w-[calc(100vw-2rem)] bg-(--card-bg) border border-(--card-border) rounded-2xl shadow-[var(--shadow-soft)] p-3 z-40 backdrop-blur-md transform origin-top-left transition-all duration-150 ease-out">
+                  <div className="absolute mt-2 w-[300px] sm:w-96 max-w-[calc(100vw-2rem)] bg-(--card-bg) border border-(--card-border) rounded-2xl shadow-[var(--shadow-soft)] p-3 z-40 backdrop-blur-md transform origin-top-left transition-all duration-150 ease-out" style={{[locale === 'ar' ? 'left' : 'right']: locale === 'ar' ? '0' : '-8px', position: 'absolute'}}>
                     <div className="flex items-center justify-between px-2">
-                      <h4 className="font-semibold">Notifications</h4>
+                      <h4 className="font-semibold text-(--text-primary) text-sm">{t("dashboard.header.notifications", locale)}</h4>
                       <div className="flex items-center gap-2">
                         <button
                           onClick={handleMarkAllRead}
                           className="text-xs text-slate-500 hover:text-slate-700"
                         >
-                          Mark all read
+                          {t("dashboard.header.markAllRead", locale)}
                         </button>
                         <button
                           onClick={() => setNotifOpen(false)}
@@ -293,7 +257,7 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
                     <div className="mt-3 max-h-64 overflow-auto">
                       {notifications.length === 0 && (
                         <div className="px-3 py-4 text-sm text-slate-500">
-                          You're all caught up
+                          {t("dashboard.header.noNotifications", locale)}
                         </div>
                       )}
 
@@ -351,7 +315,7 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
                         onClick={() => setNotifications([])}
                         className="text-xs text-red-500"
                       >
-                        Clear all
+                        {locale === "ar" ? "مسح الكل" : "Clear all"}
                       </button>
                       <button
                         onClick={() => {
@@ -360,7 +324,7 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
                         }}
                         className="text-xs text-slate-500 hover:text-indigo-600 font-semibold cursor-pointer"
                       >
-                        View all
+                        {t("dashboard.header.viewAllNotifications", locale)}
                       </button>
                     </div>
                   </div>
@@ -383,7 +347,7 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
                 </button>
 
                 {profileOpen && (
-                  <div className="absolute left-[-40px] sm:left-0 top-full mt-2 w-48 bg-white/90 dark:bg-slate-900/80 border border-slate-100 dark:border-slate-800 rounded-2xl shadow-xl p-2 z-50 backdrop-blur-sm transform origin-top-left transition-all duration-150">
+                  <div className="absolute mt-2 w-48 bg-white/90 dark:bg-slate-900/80 border border-slate-100 dark:border-slate-800 rounded-2xl shadow-xl p-2 z-50 backdrop-blur-sm transform origin-top-left transition-all duration-150" style={{[locale === 'ar' ? 'left' : 'right']: locale === 'ar' ? '0' : '-10px', position: 'absolute'}}>
                     <div className="flex items-center gap-3 px-3 py-2">
                       <img
                         src={avatarSrc}
@@ -410,7 +374,7 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
                       className="w-full flex items-center gap-2 px-3 py-2 mt-2 text-red-600 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg"
                     >
                       <LogOut size={16} />
-                      <span>Logout</span>
+                      <span>{t("dashboard.header.signOut", locale)}</span>
                     </button>
                   </div>
                 )}

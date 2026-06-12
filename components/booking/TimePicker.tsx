@@ -18,6 +18,18 @@ interface TimePickerProps {
   error?: string;
 }
 
+function formatTo12Hour(timeStr?: string): string {
+  if (!timeStr) return "";
+  const parts = timeStr.trim().split(":");
+  if (parts.length < 2) return timeStr;
+  let hours = parseInt(parts[0], 10);
+  const minutes = parts[1];
+  if (isNaN(hours)) return timeStr;
+  hours = hours % 12;
+  if (hours === 0) hours = 12;
+  return `${hours}:${minutes}`;
+}
+
 export default function TimePicker({
   onSelect,
   onClose,
@@ -68,8 +80,8 @@ export default function TimePicker({
         {loading ? (
           <p className="py-10 text-center font-semibold text-[#001A6E]">
             {locale === "en"
-              ? "جاري تحميل المواعيد..."
-              : "Loading available times..."}
+              ? "Loading available times..."
+              : "جاري تحميل المواعيد..."}
           </p>
         ) : error ? (
           <p className="py-10 text-center font-semibold text-red-600">
@@ -78,14 +90,16 @@ export default function TimePicker({
         ) : slots.length === 0 ? (
           <p className="py-10 text-center font-semibold text-gray-500">
             {locale === "en"
-              ? "لا توجد مواعيد متاحة لهذا اليوم."
-              : "No available times for this date."}
+              ? "No available times for this date."
+              : "لا توجد مواعيد متاحة لهذا اليوم."}
           </p>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {slots.map((slot) => {
               const isSelected = selectedTime === slot.from;
-              const label = slot.to ? `${slot.from} - ${slot.to}` : slot.from;
+              const from12 = formatTo12Hour(slot.from);
+              const to12 = slot.to ? formatTo12Hour(slot.to) : "";
+              const label = to12 ? `${from12} - ${to12}` : from12;
 
               return (
                 <button

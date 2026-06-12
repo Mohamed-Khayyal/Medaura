@@ -19,6 +19,7 @@ import TimePicker from "@/components/booking/TimePicker";
 import ValidationModal from "@/components/booking/ValidationModal";
 import { t } from "@/i18n";
 import Swal from "sweetalert2";
+import { useAuth } from "@/context/AuthContext";
 
 const RATINGS_PAGE_SIZE = 4;
 
@@ -338,9 +339,25 @@ function formatWorkingDays(value: string, locale: string) {
   return parts.join(separator);
 }
 
+function formatTo12Hour(timeStr?: string): string {
+  if (!timeStr) return "";
+  const parts = timeStr.trim().split(":");
+  if (parts.length < 2) return timeStr;
+  let hours = parseInt(parts[0], 10);
+  const minutes = parts[1];
+  if (isNaN(hours)) return timeStr;
+  hours = hours % 12;
+  if (hours === 0) hours = 12;
+  return `${hours}:${minutes}`;
+}
+
 export default function BookingPage() {
   const params = useParams();
   const router = useRouter();
+  const { user, isAuthenticated } = useAuth();
+  const isNotPatient = isAuthenticated && user?.user_type?.toLowerCase() !== "patient";
+  const canRateAndSeeReviews = isAuthenticated && user?.user_type?.toLowerCase() === "patient";
+  const [redirectToLogin, setRedirectToLogin] = useState(false);
 
   const clinicId = params.id as string;
   const staffId = params.doctorId as string;
@@ -525,6 +542,10 @@ export default function BookingPage() {
 
   useEffect(() => {
     if (!staffId) return;
+    if (!canRateAndSeeReviews) {
+      setStaffRatingsLoading(false);
+      return;
+    }
     let active = true;
 
     async function loadStaffRatings() {
@@ -577,7 +598,7 @@ export default function BookingPage() {
     return () => {
       active = false;
     };
-  }, [staffId, staffRatingsPage, staffRatingsRefreshKey]);
+  }, [staffId, staffRatingsPage, staffRatingsRefreshKey, canRateAndSeeReviews]);
 
   const doctorName = staff?.full_name || staff?.name || "";
   const doctorSpecialty = staff?.specialist || staff?.role_title || "";
@@ -722,6 +743,19 @@ export default function BookingPage() {
   };
 
   const handleBookingClick = async () => {
+    if (!isAuthenticated) {
+      setValidationModalData({
+        type: "warning",
+        title: locale === "en" ? "Please Log In" : "يرجى تسجيل الدخول",
+        message: locale === "en"
+          ? "Please log in first to complete your booking."
+          : "يرجى تسجيل الدخول أولاً لإتمام الحجز.",
+      });
+      setShowValidationModal(true);
+      setRedirectToLogin(true);
+      return;
+    }
+
     if (!canBeBooked) {
       setValidationModalData({
         type: "warning",
@@ -918,45 +952,49 @@ export default function BookingPage() {
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap gap-3">
-                    <button
-                      onClick={() => setShowDatePicker(true)}
-                      className="flex items-center gap-2 rounded-xl border border-[#dce5f6] px-4 py-2 text-sm font-semibold text-gray-500 transition-colors hover:bg-[#f4f7ff]"
-                    >
-                      <Calendar className="w-4 h-4 text-[#001A6E]" />
-                      {displayedDate || t("booking.datePlaceholder", locale)}
-                    </button>
-                    <button
-                      onClick={openTimePicker}
-                      className="flex items-center gap-2 rounded-xl border border-[#dce5f6] px-4 py-2 text-sm font-semibold text-gray-500 transition-colors hover:bg-[#f4f7ff]"
-                    >
-                      <Clock className="w-4 h-4 text-[#001A6E]" />
-                      {selectedTime || t("booking.timePlaceholder", locale)}
-                    </button>
-                  </div>
+                  {!isNotPatient && (
+                    <>
+                      <div className="flex flex-wrap gap-3">
+                        <button
+                          onClick={() => setShowDatePicker(true)}
+                          className="flex items-center gap-2 rounded-xl border border-[#dce5f6] px-4 py-2 text-sm font-semibold text-gray-500 transition-colors hover:bg-[#f4f7ff]"
+                        >
+                          <Calendar className="w-4 h-4 text-[#001A6E]" />
+                          {displayedDate || t("booking.datePlaceholder", locale)}
+                        </button>
+                        <button
+                          onClick={openTimePicker}
+                          className="flex items-center gap-2 rounded-xl border border-[#dce5f6] px-4 py-2 text-sm font-semibold text-gray-500 transition-colors hover:bg-[#f4f7ff]"
+                        >
+                          <Clock className="w-4 h-4 text-[#001A6E]" />
+                          {selectedTime ? formatTo12Hour(selectedTime) : t("booking.timePlaceholder", locale)}
+                        </button>
+                      </div>
 
-                  <div className="flex flex-col sm:flex-row gap-4 pt-2">
-                    <button
-                      onClick={handleBookingClick}
-                      disabled={isBooking}
-                      className="flex-1 rounded-2xl bg-[#001A6E] py-4 font-bold text-white shadow-lg shadow-blue-900/10 transition-colors hover:bg-[#162f80] disabled:cursor-not-allowed disabled:opacity-70"
-                    >
-                      {isBooking
-                        ? locale === "en"
-                          ? "جاري الحجز..."
-                          : "Booking..."
-                        : t("booking.bookNow", locale)}
-                    </button>
-                    <a
-                      href={getWhatsAppUrl(staff?.phone || clinicProfile?.phone || "")}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 hover:bg-emerald-700 px-8 py-4 font-bold text-white transition-colors shadow-lg shadow-emerald-900/10 cursor-pointer text-center"
-                    >
-                      <MessageSquare className="w-5 h-5" />
-                      <span>{locale === "en" ? "ارسال رساله" : "Send Message"}</span>
-                    </a>
-                  </div>
+                      <div className="flex flex-col sm:flex-row gap-4 pt-2">
+                        <button
+                          onClick={handleBookingClick}
+                          disabled={isBooking}
+                          className="flex-1 rounded-2xl bg-[#001A6E] py-4 font-bold text-white shadow-lg shadow-blue-900/10 transition-colors hover:bg-[#162f80] disabled:cursor-not-allowed disabled:opacity-70"
+                        >
+                          {isBooking
+                            ? locale === "en"
+                              ? "جاري الحجز..."
+                              : "Booking..."
+                            : t("booking.bookNow", locale)}
+                        </button>
+                        <a
+                          href={getWhatsAppUrl(staff?.phone || clinicProfile?.phone || "")}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 hover:bg-emerald-700 px-8 py-4 font-bold text-white transition-colors shadow-lg shadow-emerald-900/10 cursor-pointer text-center"
+                        >
+                          <MessageSquare className="w-5 h-5" />
+                          <span>{locale === "en" ? "ارسال رساله" : "Send Message"}</span>
+                        </a>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -1045,155 +1083,159 @@ export default function BookingPage() {
             </div>
           </div>
 
-          <div className="mt-6">
-            {staffRatingsLoading ? (
-              <p className="text-center text-[#001A6E]">
-                {locale === "en"
-                  ? "جاري تحميل التقييمات..."
-                  : "Loading ratings..."}
-              </p>
-            ) : staffRatingsError ? (
-              <p className="text-center text-red-600">{staffRatingsError}</p>
-            ) : staffRatings.length === 0 ? (
-              <p className="text-center text-gray-400">
-                {locale === "en" ? "لا توجد تقييمات بعد." : "No reviews yet."}
-              </p>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
-                {staffRatings.map((review) => (
-                  <div
-                    key={review.rating_id}
-                    className="bg-linear-to-br from-blue-50 to-white border border-blue-100 p-6 rounded-3xl shadow-sm hover:shadow-md transition-shadow text-left"
+          {canRateAndSeeReviews && (
+            <>
+              <div className="mt-6">
+                {staffRatingsLoading ? (
+                  <p className="text-center text-[#001A6E]">
+                    {locale === "en"
+                      ? "جاري تحميل التقييمات..."
+                      : "Loading ratings..."}
+                  </p>
+                ) : staffRatingsError ? (
+                  <p className="text-center text-red-600">{staffRatingsError}</p>
+                ) : staffRatings.length === 0 ? (
+                  <p className="text-center text-gray-400">
+                    {locale === "en" ? "لا توجد تقييمات بعد." : "No reviews yet."}
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+                    {staffRatings.map((review) => (
+                      <div
+                        key={review.rating_id}
+                        className="bg-linear-to-br from-blue-50 to-white border border-blue-100 p-6 rounded-3xl shadow-sm hover:shadow-md transition-shadow text-left"
+                      >
+                        <div className="flex gap-0.5 mb-3">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`w-4 h-4 ${
+                                i < Math.round(review.rating)
+                                  ? "text-yellow-400 fill-yellow-400"
+                                  : "text-gray-200"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        <div className="mb-3 flex items-center gap-3">
+                          <div className="h-10 w-10 overflow-hidden rounded-full bg-[#eaf0fb]">
+                            {review.patient_photo ? (
+                              <img
+                                src={review.patient_photo}
+                                alt={review.patient_name || "Patient"}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : null}
+                          </div>
+                          <p className="text-xs font-semibold text-gray-500">
+                            {review.patient_name ||
+                              (locale === "en" ? "مريض" : "Patient")}
+                          </p>
+                        </div>
+                        {review.comment ? (
+                          <p className="text-gray-600 text-sm leading-relaxed">
+                            &quot;{review.comment}&quot;
+                          </p>
+                        ) : (
+                          <p className="text-gray-400 text-sm">
+                            {locale === "en" ? "بدون تعليق" : "No comment"}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {staffRatingsTotalPages > 1 && (
+                <div className="mt-8 flex items-center justify-center gap-4">
+                  <button
+                    onClick={() =>
+                      setStaffRatingsPage((prev) => Math.max(1, prev - 1))
+                    }
+                    disabled={staffRatingsPage <= 1}
+                    className="rounded-full border border-[#dce5f6] px-4 py-2 text-sm font-semibold text-[#001A6E] disabled:opacity-50"
                   >
-                    <div className="flex gap-0.5 mb-3">
-                      {[...Array(5)].map((_, i) => (
+                    {locale === "en" ? "السابق" : "Previous"}
+                  </button>
+                  <span className="text-sm text-gray-500">
+                    {locale === "en"
+                      ? `صفحة ${staffRatingsPage} من ${staffRatingsTotalPages}`
+                      : `Page ${staffRatingsPage} of ${staffRatingsTotalPages}`}
+                  </span>
+                  <button
+                    onClick={() =>
+                      setStaffRatingsPage((prev) =>
+                        Math.min(staffRatingsTotalPages, prev + 1),
+                      )
+                    }
+                    disabled={staffRatingsPage >= staffRatingsTotalPages}
+                    className="rounded-full border border-[#dce5f6] px-4 py-2 text-sm font-semibold text-[#001A6E] disabled:opacity-50"
+                  >
+                    {locale === "en" ? "التالي" : "Next"}
+                  </button>
+                </div>
+              )}
+
+              <div className="mt-10 border-t border-[#e6ecf6] pt-8 text-center">
+                <h3 className="text-lg font-bold text-[#001A6E] mb-4">
+                  {locale === "en" ? "قيّم هذا الطبيب" : "Rate this doctor"}
+                </h3>
+                <div className="mx-auto flex max-w-xl flex-col items-center gap-4">
+                  <div className="flex items-center gap-1">
+                    {[1, 2, 3, 4, 5].map((value) => (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => setStaffRatingValue(value)}
+                        className="transition-transform hover:scale-110"
+                      >
                         <Star
-                          key={i}
-                          className={`w-4 h-4 ${
-                            i < Math.round(review.rating)
-                              ? "text-yellow-400 fill-yellow-400"
-                              : "text-gray-200"
+                          className={`h-6 w-6 ${
+                            value <= staffRatingValue
+                              ? "text-[#f7b731] fill-[#f7b731]"
+                              : "text-[#d7deef]"
                           }`}
                         />
-                      ))}
-                    </div>
-                    <div className="mb-3 flex items-center gap-3">
-                      <div className="h-10 w-10 overflow-hidden rounded-full bg-[#eaf0fb]">
-                        {review.patient_photo ? (
-                          <img
-                            src={review.patient_photo}
-                            alt={review.patient_name || "Patient"}
-                            className="h-full w-full object-cover"
-                          />
-                        ) : null}
-                      </div>
-                      <p className="text-xs font-semibold text-gray-500">
-                        {review.patient_name ||
-                          (locale === "en" ? "مريض" : "Patient")}
-                      </p>
-                    </div>
-                    {review.comment ? (
-                      <p className="text-gray-600 text-sm leading-relaxed">
-                        &quot;{review.comment}&quot;
-                      </p>
-                    ) : (
-                      <p className="text-gray-400 text-sm">
-                        {locale === "en" ? "بدون تعليق" : "No comment"}
-                      </p>
-                    )}
+                      </button>
+                    ))}
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {staffRatingsTotalPages > 1 && (
-            <div className="mt-8 flex items-center justify-center gap-4">
-              <button
-                onClick={() =>
-                  setStaffRatingsPage((prev) => Math.max(1, prev - 1))
-                }
-                disabled={staffRatingsPage <= 1}
-                className="rounded-full border border-[#dce5f6] px-4 py-2 text-sm font-semibold text-[#001A6E] disabled:opacity-50"
-              >
-                {locale === "en" ? "السابق" : "Previous"}
-              </button>
-              <span className="text-sm text-gray-500">
-                {locale === "en"
-                  ? `صفحة ${staffRatingsPage} من ${staffRatingsTotalPages}`
-                  : `Page ${staffRatingsPage} of ${staffRatingsTotalPages}`}
-              </span>
-              <button
-                onClick={() =>
-                  setStaffRatingsPage((prev) =>
-                    Math.min(staffRatingsTotalPages, prev + 1),
-                  )
-                }
-                disabled={staffRatingsPage >= staffRatingsTotalPages}
-                className="rounded-full border border-[#dce5f6] px-4 py-2 text-sm font-semibold text-[#001A6E] disabled:opacity-50"
-              >
-                {locale === "en" ? "التالي" : "Next"}
-              </button>
-            </div>
-          )}
-
-          <div className="mt-10 border-t border-[#e6ecf6] pt-8 text-center">
-            <h3 className="text-lg font-bold text-[#001A6E] mb-4">
-              {locale === "en" ? "قيّم هذا الطبيب" : "Rate this doctor"}
-            </h3>
-            <div className="mx-auto flex max-w-xl flex-col items-center gap-4">
-              <div className="flex items-center gap-1">
-                {[1, 2, 3, 4, 5].map((value) => (
+                  <textarea
+                    value={staffRatingComment}
+                    onChange={(event) => setStaffRatingComment(event.target.value)}
+                    placeholder={
+                      locale === "en"
+                        ? "اكتب تعليقك هنا (اختياري)"
+                        : "Write your comment (optional)"
+                    }
+                    rows={3}
+                    className="w-full rounded-2xl border border-[#dce5f6] px-4 py-3 text-sm text-gray-600 outline-none focus:border-[#001A6E]"
+                  />
+                  {staffRatingSubmitError ? (
+                    <p className="text-sm text-red-600">{staffRatingSubmitError}</p>
+                  ) : null}
+                  {staffRatingSubmitSuccess ? (
+                    <p className="text-sm text-green-600">
+                      {staffRatingSubmitSuccess}
+                    </p>
+                  ) : null}
                   <button
-                    key={value}
-                    type="button"
-                    onClick={() => setStaffRatingValue(value)}
-                    className="transition-transform hover:scale-110"
+                    onClick={handleStaffRatingSubmit}
+                    disabled={staffRatingSubmitting}
+                    className="rounded-2xl bg-[#001A6E] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-blue-900/10 transition-colors hover:bg-[#162f80] disabled:cursor-not-allowed disabled:opacity-70"
                   >
-                    <Star
-                      className={`h-6 w-6 ${
-                        value <= staffRatingValue
-                          ? "text-[#f7b731] fill-[#f7b731]"
-                          : "text-[#d7deef]"
-                      }`}
-                    />
+                    {staffRatingSubmitting
+                      ? locale === "en"
+                        ? "جاري الإرسال..."
+                        : "Submitting..."
+                      : locale === "en"
+                        ? "إرسال التقييم"
+                        : "Submit rating"}
                   </button>
-                ))}
+                </div>
               </div>
-              <textarea
-                value={staffRatingComment}
-                onChange={(event) => setStaffRatingComment(event.target.value)}
-                placeholder={
-                  locale === "en"
-                    ? "اكتب تعليقك هنا (اختياري)"
-                    : "Write your comment (optional)"
-                }
-                rows={3}
-                className="w-full rounded-2xl border border-[#dce5f6] px-4 py-3 text-sm text-gray-600 outline-none focus:border-[#001A6E]"
-              />
-              {staffRatingSubmitError ? (
-                <p className="text-sm text-red-600">{staffRatingSubmitError}</p>
-              ) : null}
-              {staffRatingSubmitSuccess ? (
-                <p className="text-sm text-green-600">
-                  {staffRatingSubmitSuccess}
-                </p>
-              ) : null}
-              <button
-                onClick={handleStaffRatingSubmit}
-                disabled={staffRatingSubmitting}
-                className="rounded-2xl bg-[#001A6E] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-blue-900/10 transition-colors hover:bg-[#162f80] disabled:cursor-not-allowed disabled:opacity-70"
-              >
-                {staffRatingSubmitting
-                  ? locale === "en"
-                    ? "جاري الإرسال..."
-                    : "Submitting..."
-                  : locale === "en"
-                    ? "إرسال التقييم"
-                    : "Submit rating"}
-              </button>
-            </div>
-          </div>
+            </>
+          )}
         </div>
 
         {showDatePicker && (
@@ -1228,7 +1270,12 @@ export default function BookingPage() {
             type={validationModalData.type}
             title={validationModalData.title}
             message={validationModalData.message}
-            onClose={() => setShowValidationModal(false)}
+            onClose={() => {
+              setShowValidationModal(false);
+              if (redirectToLogin) {
+                router.push("/login");
+              }
+            }}
           />
         )}
       </div>

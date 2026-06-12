@@ -5,6 +5,7 @@ import Sidebar from "./components/layout/Sidebar";
 import Navbar from "./components/layout/Navbar";
 import DashboardThemeProvider from "../providers/DashboardThemeProvider";
 import RouteGuard from "@/components/auth/RouteGuard";
+import { useLocale } from "@/lib/hooks";
 
 export default function DashboardLayout({
   children,
@@ -12,6 +13,8 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const locale = useLocale();
+  const isRtl = locale === "ar";
 
   return (
     <RouteGuard allowedRoles={["doctor", "staff"]}>
@@ -19,6 +22,7 @@ export default function DashboardLayout({
         <div
           className="min-h-screen flex bg-(--background) transition-all duration-700 ease-in-out"
           data-theme-dashboard
+          dir={isRtl ? "rtl" : "ltr"}
         >
           {/* Sidebar */}
           <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />

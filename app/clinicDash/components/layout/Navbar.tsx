@@ -1,10 +1,11 @@
 "use client";
 
-import { Sun, Moon, Bell, Search, LogOut, X, Menu } from "lucide-react";
-import { useState, useRef, useEffect, useContext, useCallback } from "react";
+import { Bell, Search, LogOut, X, Menu, Globe } from "lucide-react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { DashboardThemeContext } from "../../../providers/DashboardThemeProvider";
 import { useAuth } from "@/context/AuthContext";
+import { useLocale } from "@/lib/hooks";
+import { t } from "@/i18n";
 
 type NotificationItem = {
   id: string;
@@ -24,9 +25,9 @@ type NotificationResponseItem = {
 };
 
 function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
-  const { darkMode, toggleTheme } = useContext(DashboardThemeContext);
   const { logout, user } = useAuth();
-  const clinicName = (user?.profile?.name as string) || "عيادتي";
+  const locale = useLocale();
+  const clinicName = (user?.profile?.name as string) || (locale === "ar" ? "عيادتي" : "My Clinic");
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
@@ -40,7 +41,16 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
   const notifRef = useRef<HTMLDivElement | null>(null);
   const profileRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
-  const [isTransitioning, setIsTransitioning] = useState(false);
+
+  const toggleLocale = () => {
+    const next = locale === "en" ? "ar" : "en";
+    try {
+      localStorage.setItem("locale", next);
+    } catch {}
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("localeChange", { detail: next }));
+    }
+  };
 
   // Debounced URL update so page.tsx can read ?q= and filter
   const pushSearch = useCallback(
@@ -109,12 +119,6 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
     };
   }, []);
 
-  const handleThemeChange = () => {
-    setIsTransitioning(true);
-    toggleTheme();
-    setTimeout(() => setIsTransitioning(false), 400);
-  };
-
   const markAllRead = () =>
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
 
@@ -122,9 +126,6 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
 
   return (
     <>
-      {isTransitioning && (
-        <div className="fixed inset-0 bg-black/10 backdrop-blur-sm z-[999] pointer-events-none transition-opacity duration-200" />
-      )}
       <header className="w-full sticky top-0 z-50 backdrop-blur-md bg-(--background)/80 border-b border-(--card-border)">
         <div className="mx-auto max-w-[1400px] px-4 sm:px-8 py-3">
           <div className="flex items-center justify-between gap-3">
@@ -145,8 +146,8 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
                   id="clinic-nav-search"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder="ابحث عن طبيب، موعد..."
-                  dir="rtl"
+                  placeholder={t("dashboard.header.searchPlaceholder", locale)}
+                  dir={locale === "ar" ? "rtl" : "ltr"}
                   className="w-full pr-10 pl-4 py-2 rounded-2xl border border-(--input-border) bg-(--input-bg) text-sm text-(--text-primary) placeholder:text-(--text-secondary) focus:outline-none focus:ring-2 focus:ring-teal-500/40"
                 />
                 <Search
@@ -158,32 +159,14 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
 
             {/* Right controls */}
             <div className="flex items-center gap-2 sm:gap-3">
-              {/* Theme toggle */}
+              {/* Language Switcher */}
               <button
-                onClick={handleThemeChange}
-                title={darkMode ? "الوضع الفاتح" : "الوضع الداكن"}
-                aria-pressed={darkMode}
-                className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center rounded-2xl border border-(--card-border) bg-(--card-bg) hover:bg-(--semi-card-bg) transition cursor-pointer"
+                onClick={toggleLocale}
+                title={locale === "en" ? "Change to Arabic" : "تغيير إلى الإنجليزية"}
+                className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center rounded-2xl border border-(--card-border) bg-(--card-bg) hover:bg-(--semi-card-bg) transition cursor-pointer text-[13px] font-bold text-(--text-primary) gap-1"
               >
-                <span className="sr-only">Toggle theme</span>
-                <div className="relative w-[18px] h-[18px]">
-                  <Sun
-                    size={18}
-                    className={`absolute inset-0 transition-all duration-500 ${
-                      darkMode
-                        ? "opacity-100 rotate-0 scale-100"
-                        : "opacity-0 rotate-90 scale-50 pointer-events-none"
-                    }`}
-                  />
-                  <Moon
-                    size={18}
-                    className={`absolute inset-0 transition-all duration-500 ${
-                      darkMode
-                        ? "opacity-0 -rotate-90 scale-50 pointer-events-none"
-                        : "opacity-100 rotate-0 scale-100"
-                    }`}
-                  />
-                </div>
+                <Globe size={16} />
+                <span className="text-[11px] uppercase">{locale === "en" ? "ar" : "en"}</span>
               </button>
 
               {/* Notifications */}
@@ -201,10 +184,10 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
                 </button>
 
                 {notifOpen && (
-                  <div className="absolute left-[-80px] sm:left-0 mt-2 w-[300px] sm:w-80 max-w-[calc(100vw-2rem)] bg-(--card-bg) border border-(--card-border) rounded-2xl shadow-[var(--shadow-soft)] p-3 z-40 backdrop-blur-md">
+                  <div className="absolute mt-2 w-[300px] sm:w-80 max-w-[calc(100vw-2rem)] bg-(--card-bg) border border-(--card-border) rounded-2xl shadow-[var(--shadow-soft)] p-3 z-40 backdrop-blur-md" style={{[locale === 'ar' ? 'left' : 'right']: 0, position: 'absolute'}}>
                     <div className="flex items-center justify-between px-2 mb-2">
                       <h4 className="font-semibold text-(--text-primary) text-sm">
-                        الإشعارات
+                        {t("dashboard.header.notifications", locale)}
                       </h4>
                       <div className="flex items-center gap-2">
                         {unreadCount > 0 && (
@@ -212,7 +195,7 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
                             onClick={markAllRead}
                             className="text-xs text-teal-600 hover:text-teal-700"
                           >
-                            تحديد الكل كمقروء
+                            {t("dashboard.header.markAllRead", locale)}
                           </button>
                         )}
                         <button
@@ -227,7 +210,7 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
                     <div className="max-h-60 overflow-auto space-y-1">
                       {notifications.length === 0 ? (
                         <p className="px-3 py-4 text-sm text-(--text-secondary) text-center">
-                          لا توجد إشعارات جديدة
+                          {t("dashboard.header.noNotifications", locale)}
                         </p>
                       ) : (
                         notifications.map((n) => (
@@ -292,7 +275,7 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
                 </button>
 
                 {profileOpen && (
-                  <div className="absolute left-[-20px] sm:left-0 top-full mt-2 w-48 sm:w-52 bg-(--card-bg) border border-(--card-border) rounded-2xl shadow-[var(--shadow-soft)] p-2 z-50 backdrop-blur-sm">
+                  <div className="absolute mt-2 w-48 sm:w-52 bg-(--card-bg) border border-(--card-border) rounded-2xl shadow-[var(--shadow-soft)] p-2 z-50 backdrop-blur-sm" style={{[locale === 'ar' ? 'left' : 'right']: 0, position: 'absolute'}}>
                     <div className="flex items-center gap-3 px-3 py-2">
                       <img
                         src={avatarSrc}
@@ -306,7 +289,7 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
                           {clinicName}
                         </div>
                         <div className="text-xs text-teal-600 mt-0.5">
-                          عيادة
+                          {t("dashboard.header.clinic", locale)}
                         </div>
                       </div>
                     </div>
@@ -319,7 +302,7 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
                       className="w-full flex items-center gap-2 px-3 py-2 mt-1 text-red-600 hover:bg-(--hover-bg) rounded-xl transition text-sm"
                     >
                       <LogOut size={15} />
-                      <span>تسجيل الخروج</span>
+                      <span>{t("dashboard.header.signOut", locale)}</span>
                     </button>
                   </div>
                 )}

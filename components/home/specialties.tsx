@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { t } from "@/i18n";
 import { motion } from "framer-motion";
+import { useLocale } from "@/lib/hooks";
 
 type SpecialtyCatalogItem = {
   title: string;
@@ -114,20 +115,11 @@ function getDoctorsFromPayload(payload: unknown): DoctorApiItem[] {
 }
 
 const Specialties = () => {
-  const [locale, setLocale] = useState("ar");
+  const locale = useLocale();
   const [specialtyCounts, setSpecialtyCounts] = useState<
     Record<string, number>
   >({});
   const iconClassName = "h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8";
-
-  useEffect(() => {
-    function onLocale(e: any) {
-      setLocale(e?.detail || "ar");
-    }
-    window.addEventListener("localeChange", onLocale as EventListener);
-    return () =>
-      window.removeEventListener("localeChange", onLocale as EventListener);
-  }, []);
 
   useEffect(() => {
     const controller = new AbortController();

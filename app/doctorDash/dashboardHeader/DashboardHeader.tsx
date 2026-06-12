@@ -15,26 +15,23 @@ import {
 } from "date-fns";
 import { Calendar } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useLocale } from "@/lib/hooks";
 
 type DateRange = {
   from?: Date;
   to?: Date;
 };
 
-const WEEK_LABELS = ["س", "ح", "ن", "ث", "ر", "خ", "ج"];
-const MONTHS = [
-  "يناير",
-  "فبراير",
-  "مارس",
-  "أبريل",
-  "مايو",
-  "يونيو",
-  "يوليو",
-  "أغسطس",
-  "سبتمبر",
-  "أكتوبر",
-  "نوفمبر",
-  "ديسمبر",
+const WEEK_LABELS_AR = ["س", "ح", "ن", "ث", "ر", "خ", "ج"];
+const WEEK_LABELS_EN = ["Sa", "Su", "Mo", "Tu", "We", "Th", "Fr"];
+
+const MONTHS_AR = [
+  "يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو",
+  "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر",
+];
+const MONTHS_EN = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
 ];
 
 export default function DashboardHeader({
@@ -44,6 +41,11 @@ export default function DashboardHeader({
   range: DateRange;
   setRange: (value: DateRange | undefined) => void;
 }) {
+  const locale = useLocale();
+  const isRtl = locale === "ar";
+  const WEEK_LABELS = isRtl ? WEEK_LABELS_AR : WEEK_LABELS_EN;
+  const MONTHS = isRtl ? MONTHS_AR : MONTHS_EN;
+
   const [open, setOpen] = useState(false);
   const [viewDate, setViewDate] = useState(() => range?.from ?? new Date());
   const [pendingRange, setPendingRange] = useState<DateRange>(range ?? {});
@@ -131,14 +133,14 @@ export default function DashboardHeader({
   };
 
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between" dir={isRtl ? "rtl" : "ltr"}>
       <div className="flex flex-col gap-3 w-full sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-0.5">
           <h2 className="text-base sm:text-lg font-semibold text-(--text-primary)">
-            نظرة عامة
+            {isRtl ? "نظرة عامة" : "Overview"}
           </h2>
           <p className="text-[11px] text-(--text-secondary)">
-            متابعة الأداء والزيارات اليومية
+            {isRtl ? "متابعة الأداء والزيارات اليومية" : "Track performance and daily visits"}
           </p>
         </div>
 
@@ -151,7 +153,7 @@ export default function DashboardHeader({
             <span className="text-[11px] text-(--text-primary) truncate max-w-[180px] sm:max-w-none">
               {range?.from && range?.to
                 ? `${format(range.from, "dd MMM yyyy")} - ${format(range.to, "dd MMM yyyy")}`
-                : "إختر التاريخ"}
+                : (isRtl ? "إختر التاريخ" : "Choose date")}
             </span>
             <Calendar size={16} />
           </button>
@@ -163,7 +165,7 @@ export default function DashboardHeader({
               />
               <div
                 className="fixed inset-0 z-50 flex items-center justify-center px-4"
-                dir="rtl"
+                dir={isRtl ? "rtl" : "ltr"}
               >
                 <div
                   ref={modalRef}
@@ -173,9 +175,9 @@ export default function DashboardHeader({
                     <button
                       onClick={() => setViewDate(addMonths(viewDate, -1))}
                       className="h-7 w-7 rounded-full border border-(--card-border) hover:bg-(--hover-bg) transition"
-                      aria-label="الشهر السابق"
+                      aria-label={isRtl ? "الشهر السابق" : "Previous month"}
                     >
-                      ◀
+                      {isRtl ? "◀" : "◀"}
                     </button>
                     <div className="text-xs font-semibold text-(--text-primary)">
                       {MONTHS[monthStart.getMonth()]} {monthStart.getFullYear()}
@@ -183,7 +185,7 @@ export default function DashboardHeader({
                     <button
                       onClick={() => setViewDate(addMonths(viewDate, 1))}
                       className="h-7 w-7 rounded-full border border-(--card-border) hover:bg-(--hover-bg) transition"
-                      aria-label="الشهر التالي"
+                      aria-label={isRtl ? "الشهر التالي" : "Next month"}
                     >
                       ▶
                     </button>
@@ -232,7 +234,7 @@ export default function DashboardHeader({
                       }}
                       className="px-3 py-1.5 text-xs rounded-xl border border-(--card-border) hover:bg-(--hover-bg) transition"
                     >
-                      إلغاء
+                      {isRtl ? "إلغاء" : "Cancel"}
                     </button>
                     <button
                       onClick={() => {
@@ -241,7 +243,7 @@ export default function DashboardHeader({
                       }}
                       className="px-3 py-1.5 text-xs rounded-xl bg-[#0f1b3d] text-white hover:bg-[#162a5a] transition"
                     >
-                      تطبيق
+                      {isRtl ? "تطبيق" : "Apply"}
                     </button>
                   </div>
                 </div>

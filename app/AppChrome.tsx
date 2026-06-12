@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Navbar from "@/components/nav/nav";
 import Footer from "@/components/footer/footer";
+import { useLocale } from "@/lib/hooks";
 
 type ClientLocation = {
   city?: string | null;
@@ -125,6 +126,15 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
       window.fetch = originalFetch;
     };
   }, []);
+
+  const locale = useLocale();
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const isRtl = locale === "ar";
+    document.documentElement.dir = isRtl ? "rtl" : "ltr";
+    document.documentElement.lang = locale;
+  }, [locale]);
+
   const pathname = usePathname();
   const isDashboardRoute =
     pathname.startsWith("/dashboard") ||

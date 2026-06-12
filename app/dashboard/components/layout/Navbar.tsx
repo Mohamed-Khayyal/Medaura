@@ -9,6 +9,7 @@ import {
   ChevronDown,
   CheckCheck,
   RefreshCw,
+  Globe,
 } from "lucide-react";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { formatDistanceToNow } from "date-fns";
@@ -16,15 +17,28 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import type { Notification } from "@/lib/types/api";
 import { fetchNotificationsClient } from "@/lib/utils/fetchNotifications";
+import { useLocale } from "@/lib/hooks";
+import { t } from "@/i18n";
 
 function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
   const { logout, user } = useAuth();
+  const locale = useLocale();
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const adminName =
-    (user?.profile?.full_name as string) || user?.email?.split("@")[0] || "Admin";
+    (user?.profile?.full_name as string) || user?.email?.split("@")[0] || t("dashboard.header.admin", locale);
   const adminEmail = user?.email || "";
+
+  const toggleLocale = () => {
+    const next = locale === "en" ? "ar" : "en";
+    try {
+      localStorage.setItem("locale", next);
+    } catch {}
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("localeChange", { detail: next }));
+    }
+  };
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [notificationsLoading, setNotificationsLoading] = useState(false);
   const [notificationsError, setNotificationsError] = useState<string | null>(null);
@@ -196,7 +210,7 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search patients, doctors..."
+              placeholder={t("dashboard.header.searchPlaceholder", locale)}
               className="w-full pl-9 pr-4 py-2 rounded-xl border border-[#e6eaf0] bg-[#f6f8fb] text-sm text-[#0f1b3d] placeholder-[#a0aab8] focus:outline-none focus:ring-2 focus:ring-[#1f6feb]/30 focus:border-[#1f6feb] transition"
             />
           </form>
@@ -223,7 +237,7 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
                     ref={searchInputRef}
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Search..."
+                    placeholder={t("dashboard.header.searchPlaceholder", locale)}
                     className="flex-1 py-1 text-sm text-[#0f1b3d] placeholder-[#a0aab8] focus:outline-none bg-transparent"
                   />
                   {query && (
@@ -235,6 +249,17 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
               </div>
             )}
           </div>
+
+          {/* Language Switcher */}
+          <button
+            type="button"
+            onClick={toggleLocale}
+            className="inline-flex h-9 px-3 items-center gap-1.5 rounded-xl border border-[#e6eaf0] bg-white text-xs font-semibold text-[#0f1b3d] hover:bg-[#f1f4f9] transition"
+            title={locale === "en" ? "Change to Arabic" : "تغيير إلى الإنجليزية"}
+          >
+            <Globe size={14} className="text-[#5e6b85]" />
+            <span className="uppercase">{locale === "en" ? "ar" : "en"}</span>
+          </button>
 
           {/* Notifications */}
           <div className="relative flex-shrink-0" ref={notifRef}>
@@ -255,11 +280,11 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
             </button>
 
             {notifOpen && (
-              <div className="absolute ltr:right-[-80px] rtl:left-[-80px] sm:ltr:right-0 sm:rtl:left-0 mt-2 w-[300px] sm:w-96 max-w-[calc(100vw-2rem)] bg-white border border-[#e6eaf0] rounded-2xl shadow-2xl z-50 overflow-hidden">
+              <div className="absolute ltr:right-0 rtl:left-0 sm:ltr:right-0 sm:rtl:left-0 mt-2 w-[300px] sm:w-96 max-w-[calc(100vw-2rem)] bg-white border border-[#e6eaf0] rounded-2xl shadow-2xl z-50 overflow-hidden" style={{[locale === 'ar' ? 'left' : 'right']: 0}}>
                 {/* Header */}
                 <div className="flex items-center justify-between px-4 py-3 border-b border-[#e6eaf0]">
                   <div className="flex items-center gap-2">
-                    <h4 className="text-sm font-semibold text-[#0f1b3d]">Notifications</h4>
+                    <h4 className="text-sm font-semibold text-[#0f1b3d]">{t("dashboard.header.notifications", locale)}</h4>
                     {unreadCount > 0 && (
                       <span className="px-1.5 py-0.5 bg-[#1f6feb] text-white text-[10px] font-bold rounded-full">
                         {unreadCount}
@@ -272,13 +297,13 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
                         onClick={markAllRead}
                         className="inline-flex items-center gap-1 text-xs text-[#1f6feb] hover:text-[#1b5bd7] px-2 py-1 rounded-lg hover:bg-[#f1f4f9] transition"
                       >
-                        <CheckCheck size={12} /> All read
+                        <CheckCheck size={12} /> {t("dashboard.header.allRead", locale)}
                       </button>
                     )}
                     <button
                       onClick={loadNotifications}
                       className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-[#5e6b85] hover:bg-[#f1f4f9] transition"
-                      aria-label="Refresh notifications"
+                      aria-label={t("dashboard.header.refresh", locale)}
                     >
                       <RefreshCw size={13} />
                     </button>
@@ -295,7 +320,7 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
                 <div className="max-h-72 overflow-y-auto">
                   {notificationsLoading && (
                     <div className="flex items-center justify-center py-8 text-sm text-[#5e6b85]">
-                      <RefreshCw size={16} className="animate-spin mr-2" /> Loading...
+                      <RefreshCw size={16} className="animate-spin mr-2" /> {t("dashboard.header.loading", locale)}
                     </div>
                   )}
                   {!notificationsLoading && notificationsError && (
@@ -306,7 +331,7 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
                   {!notificationsLoading && !notificationsError && notifications.length === 0 && (
                     <div className="flex flex-col items-center py-8 text-sm text-[#5e6b85]">
                       <Bell size={28} className="mb-2 text-[#d8dee7]" />
-                      You&apos;re all caught up!
+                      {t("dashboard.header.noNotifications", locale)}
                     </div>
                   )}
                   {!notificationsLoading &&
@@ -354,7 +379,7 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
                     }}
                     className="w-full text-center text-xs text-[#1f6feb] hover:text-[#1b5bd7] font-medium py-1 transition"
                   >
-                    View all notifications →
+                    {t("dashboard.header.viewAllNotifications", locale)} →
                   </button>
                 </div>
               </div>
@@ -393,7 +418,7 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
             </button>
 
             {profileOpen && (
-              <div className="absolute ltr:right-[-20px] rtl:left-[-20px] sm:ltr:right-0 sm:rtl:left-0 top-full mt-2 w-48 sm:w-52 bg-white border border-[#e6eaf0] rounded-2xl shadow-xl z-50 overflow-hidden">
+              <div className="absolute ltr:right-0 rtl:left-0 sm:ltr:right-0 sm:rtl:left-0 top-full mt-2 w-48 sm:w-52 bg-white border border-[#e6eaf0] rounded-2xl shadow-xl z-50 overflow-hidden" style={{[locale === 'ar' ? 'left' : 'right']: 0}}>
                 {/* Profile header */}
                 <div className="flex items-center gap-3 px-4 py-3 bg-[#f6f8fb] border-b border-[#e6eaf0]">
                   {avatarSrc && avatarSrc !== "/images/blank-profile-picture.png" ? (
@@ -416,7 +441,7 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
                     className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-xl transition"
                   >
                     <LogOut size={15} />
-                    <span>Sign out</span>
+                    <span>{t("dashboard.header.signOut", locale)}</span>
                   </button>
                 </div>
               </div>

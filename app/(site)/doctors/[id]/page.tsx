@@ -9,6 +9,7 @@ import TimePicker from "@/components/booking/TimePicker";
 import ValidationModal from "@/components/booking/ValidationModal";
 import { t } from "@/i18n";
 import Swal from "sweetalert2";
+import { useAuth } from "@/context/AuthContext";
 
 const DOCTOR_FALLBACK_IMAGE = "/images/blank-profile-picture.png";
 const API_BASE_URL = "/api";
@@ -286,10 +287,26 @@ function RatingStars({
   );
 }
 
+function formatTo12Hour(timeStr?: string): string {
+  if (!timeStr) return "";
+  const parts = timeStr.trim().split(":");
+  if (parts.length < 2) return timeStr;
+  let hours = parseInt(parts[0], 10);
+  const minutes = parts[1];
+  if (isNaN(hours)) return timeStr;
+  hours = hours % 12;
+  if (hours === 0) hours = 12;
+  return `${hours}:${minutes}`;
+}
+
 export default function DoctorProfilePage() {
   const params = useParams();
   const router = useRouter();
   const doctorId = params.id;
+  const { user, isAuthenticated } = useAuth();
+  const isNotPatient = isAuthenticated && user?.user_type?.toLowerCase() !== "patient";
+  const canRateAndSeeReviews = isAuthenticated && user?.user_type?.toLowerCase() === "patient";
+  const [redirectToLogin, setRedirectToLogin] = useState(false);
 
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
@@ -435,6 +452,10 @@ export default function DoctorProfilePage() {
 
   useEffect(() => {
     if (!doctorId) return;
+    if (!canRateAndSeeReviews) {
+      setDoctorRatingsLoading(false);
+      return;
+    }
     let active = true;
 
     async function loadDoctorRatings() {
@@ -486,7 +507,7 @@ export default function DoctorProfilePage() {
     return () => {
       active = false;
     };
-  }, [doctorId, doctorRatingsPage, doctorRatingsRefreshKey]);
+  }, [doctorId, doctorRatingsPage, doctorRatingsRefreshKey, canRateAndSeeReviews]);
 
   const doctorName = doctor?.full_name || "";
   const doctorSpecialist = doctor?.specialist || "";
@@ -604,6 +625,19 @@ export default function DoctorProfilePage() {
   };
 
   const handleBookingClick = async () => {
+    if (!isAuthenticated) {
+      setValidationModalData({
+        type: "warning",
+        title: locale === "en" ? "Please Log In" : "يرجى تسجيل الدخول",
+        message: locale === "en"
+          ? "Please log in first to complete your booking."
+          : "يرجى تسجيل الدخول أولاً لإتمام الحجز.",
+      });
+      setShowValidationModal(true);
+      setRedirectToLogin(true);
+      return;
+    }
+
     if (!canBeBooked) {
       setValidationModalData({
         type: "warning",
@@ -723,7 +757,7 @@ export default function DoctorProfilePage() {
           {t("booking.back", locale)}
         </button>
 
-        <div className="grid gap-12 lg:grid-cols-[1.2fr_0.8fr]">
+        <div className={`grid gap-12 ${isNotPatient ? "grid-cols-1" : "lg:grid-cols-[1.2fr_0.8fr]"}`}>
           <section className="space-y-10">
             <div className="flex flex-col sm:flex-row gap-8 items-start">
               <div className="w-40 h-40 relative rounded-3xl overflow-hidden shadow-md shrink-0 bg-gray-50">
@@ -826,58 +860,60 @@ export default function DoctorProfilePage() {
             </section>
           </section>
 
-          <aside className="lg:sticky lg:top-32">
-            <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm">
-              <h2 className="text-xl font-bold text-[#001A6E] mb-6">
-                {t("booking.bookNow", locale)}
-              </h2>
+          {!isNotPatient && (
+            <aside className="lg:sticky lg:top-32">
+              <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm">
+                <h2 className="text-xl font-bold text-[#001A6E] mb-6">
+                  {t("booking.bookNow", locale)}
+                </h2>
 
-              <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    onClick={() => setShowDatePicker(true)}
+                    className="flex items-center gap-2 text-sm text-gray-500 border border-gray-100 px-4 py-2 rounded-xl hover:bg-gray-50 transition-colors"
+                  >
+                    <Calendar className="w-4 h-4 text-[#001A6E]" />
+                    {displayedDate || t("booking.datePlaceholder", locale)}
+                  </button>
+                  <button
+                    onClick={openTimePicker}
+                    className="flex items-center gap-2 text-sm text-gray-500 border border-gray-100 px-4 py-2 rounded-xl hover:bg-gray-50 transition-colors"
+                  >
+                    <Clock className="w-4 h-4 text-[#001A6E]" />
+                    {selectedTime ? formatTo12Hour(selectedTime) : t("booking.timePlaceholder", locale)}
+                  </button>
+                </div>
+
                 <button
-                  onClick={() => setShowDatePicker(true)}
-                  className="flex items-center gap-2 text-sm text-gray-500 border border-gray-100 px-4 py-2 rounded-xl hover:bg-gray-50 transition-colors"
+                  onClick={handleBookingClick}
+                  disabled={isBooking || !canBeBooked}
+                  className="mt-6 w-full bg-[#001A6E] text-white py-4 rounded-2xl font-bold hover:bg-[#001250] transition-colors shadow-lg shadow-blue-900/10 disabled:cursor-not-allowed disabled:opacity-70"
                 >
-                  <Calendar className="w-4 h-4 text-[#001A6E]" />
-                  {displayedDate || t("booking.datePlaceholder", locale)}
+                  {isBooking ? "Booking..." : t("booking.bookNow", locale)}
                 </button>
-                <button
-                  onClick={openTimePicker}
-                  className="flex items-center gap-2 text-sm text-gray-500 border border-gray-100 px-4 py-2 rounded-xl hover:bg-gray-50 transition-colors"
-                >
-                  <Clock className="w-4 h-4 text-[#001A6E]" />
-                  {selectedTime || t("booking.timePlaceholder", locale)}
-                </button>
+
+                {doctor?.phone && (
+                  <a
+                    href={getWhatsAppUrl(doctor.phone)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-3 w-full bg-emerald-600 hover:bg-emerald-700 text-white py-4 rounded-2xl font-bold transition-colors shadow-lg shadow-emerald-900/10 flex items-center justify-center gap-2 cursor-pointer text-center"
+                  >
+                    <MessageSquare className="w-5 h-5" />
+                    <span>{locale === "en" ? "ارسال رساله" : "Send Message"}</span>
+                  </a>
+                )}
+
+                {(doctor.work_from || doctor.work_to) && (
+                  <p className="mt-4 text-xs text-gray-400">
+                    {t("booking.workingHours", locale)} {doctor.work_from || ""}
+                    {doctor.work_from && doctor.work_to ? " - " : ""}
+                    {doctor.work_to || ""}
+                  </p>
+                )}
               </div>
-
-              <button
-                onClick={handleBookingClick}
-                disabled={isBooking || !canBeBooked}
-                className="mt-6 w-full bg-[#001A6E] text-white py-4 rounded-2xl font-bold hover:bg-[#001250] transition-colors shadow-lg shadow-blue-900/10 disabled:cursor-not-allowed disabled:opacity-70"
-              >
-                {isBooking ? "Booking..." : t("booking.bookNow", locale)}
-              </button>
-
-              {doctor?.phone && (
-                <a
-                  href={getWhatsAppUrl(doctor.phone)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-3 w-full bg-emerald-600 hover:bg-emerald-700 text-white py-4 rounded-2xl font-bold transition-colors shadow-lg shadow-emerald-900/10 flex items-center justify-center gap-2 cursor-pointer text-center"
-                >
-                  <MessageSquare className="w-5 h-5" />
-                  <span>{locale === "en" ? "ارسال رساله" : "Send Message"}</span>
-                </a>
-              )}
-
-              {(doctor.work_from || doctor.work_to) && (
-                <p className="mt-4 text-xs text-gray-400">
-                  {t("booking.workingHours", locale)} {doctor.work_from || ""}
-                  {doctor.work_from && doctor.work_to ? " - " : ""}
-                  {doctor.work_to || ""}
-                </p>
-              )}
-            </div>
-          </aside>
+            </aside>
+          )}
         </div>
 
         <section className="mt-12 rounded-3xl border border-gray-100 bg-white p-6 shadow-sm">
@@ -906,155 +942,159 @@ export default function DoctorProfilePage() {
             </div>
           </div>
 
-          <div>
-            {doctorRatingsLoading ? (
-              <p className="text-center text-[#001A6E]">
-                {locale === "en" ? "جاري تحميل التقييمات..." : "Loading ratings..."}
-              </p>
-            ) : doctorRatingsError ? (
-              <p className="text-center text-red-600">{doctorRatingsError}</p>
-            ) : doctorRatings.length === 0 ? (
-              <p className="text-center text-gray-400">
-                {locale === "en"
-                  ? "لا توجد تقييمات بعد."
-                  : "No reviews yet."}
-              </p>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
-                {doctorRatings.map((review) => (
-                  <div
-                    key={review.rating_id}
-                    className="bg-linear-to-br from-blue-50 to-white border border-blue-100 p-6 rounded-3xl shadow-sm hover:shadow-md transition-shadow text-right"
+          {canRateAndSeeReviews && (
+            <>
+              <div>
+                {doctorRatingsLoading ? (
+                  <p className="text-center text-[#001A6E]">
+                    {locale === "en" ? "جاري تحميل التقييمات..." : "Loading ratings..."}
+                  </p>
+                ) : doctorRatingsError ? (
+                  <p className="text-center text-red-600">{doctorRatingsError}</p>
+                ) : doctorRatings.length === 0 ? (
+                  <p className="text-center text-gray-400">
+                    {locale === "en"
+                      ? "لا توجد تقييمات بعد."
+                      : "No reviews yet."}
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+                    {doctorRatings.map((review) => (
+                      <div
+                        key={review.rating_id}
+                        className="bg-linear-to-br from-blue-50 to-white border border-blue-100 p-6 rounded-3xl shadow-sm hover:shadow-md transition-shadow text-right"
+                      >
+                        <div className="flex gap-0.5 mb-3">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`w-4 h-4 ${i < Math.round(review.rating)
+                                  ? "text-yellow-400 fill-yellow-400"
+                                  : "text-gray-200"
+                                }`}
+                            />
+                          ))}
+                        </div>
+                        <div className="mb-3 flex items-center justify-end gap-3">
+                          <p className="text-xs font-semibold text-gray-500">
+                            {review.patient_name ||
+                              (locale === "en" ? "مريض" : "Patient")}
+                          </p>
+                          <div className="h-10 w-10 overflow-hidden rounded-full bg-[#eaf0fb]">
+                            {review.patient_photo ? (
+                              <img
+                                src={review.patient_photo}
+                                alt={review.patient_name || "Patient"}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : null}
+                          </div>
+                        </div>
+                        {review.comment ? (
+                          <p className="text-gray-600 text-sm leading-relaxed">
+                            &quot;{review.comment}&quot;
+                          </p>
+                        ) : (
+                          <p className="text-gray-400 text-sm">
+                            {locale === "en" ? "بدون تعليق" : "No comment"}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {doctorRatingsTotalPages > 1 && (
+                <div className="mt-8 flex items-center justify-center gap-4">
+                  <button
+                    onClick={() =>
+                      setDoctorRatingsPage((prev) => Math.max(1, prev - 1))
+                    }
+                    disabled={doctorRatingsPage <= 1}
+                    className="rounded-full border border-[#dce5f6] px-4 py-2 text-sm font-semibold text-[#001A6E] disabled:opacity-50"
                   >
-                    <div className="flex gap-0.5 mb-3">
-                      {[...Array(5)].map((_, i) => (
+                    {locale === "en" ? "السابق" : "Previous"}
+                  </button>
+                  <span className="text-sm text-gray-500">
+                    {locale === "en"
+                      ? `صفحة ${doctorRatingsPage} من ${doctorRatingsTotalPages}`
+                      : `Page ${doctorRatingsPage} of ${doctorRatingsTotalPages}`}
+                  </span>
+                  <button
+                    onClick={() =>
+                      setDoctorRatingsPage((prev) =>
+                        Math.min(doctorRatingsTotalPages, prev + 1),
+                      )
+                    }
+                    disabled={doctorRatingsPage >= doctorRatingsTotalPages}
+                    className="rounded-full border border-[#dce5f6] px-4 py-2 text-sm font-semibold text-[#001A6E] disabled:opacity-50"
+                  >
+                    {locale === "en" ? "التالي" : "Next"}
+                  </button>
+                </div>
+              )}
+
+              <div className="mt-10 border-t border-[#e6ecf6] pt-8 text-center">
+                <h3 className="text-lg font-bold text-[#001A6E] mb-4">
+                  {locale === "en" ? "قيّم هذا الطبيب" : "Rate this doctor"}
+                </h3>
+                <div className="mx-auto flex max-w-xl flex-col items-center gap-4">
+                  <div className="flex items-center gap-1">
+                    {[1, 2, 3, 4, 5].map((value) => (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => setDoctorRatingValue(value)}
+                        className="transition-transform hover:scale-110"
+                      >
                         <Star
-                          key={i}
-                          className={`w-4 h-4 ${i < Math.round(review.rating)
-                              ? "text-yellow-400 fill-yellow-400"
-                              : "text-gray-200"
+                          className={`h-6 w-6 ${value <= doctorRatingValue
+                              ? "text-[#f7b731] fill-[#f7b731]"
+                              : "text-[#d7deef]"
                             }`}
                         />
-                      ))}
-                    </div>
-                    <div className="mb-3 flex items-center justify-end gap-3">
-                      <p className="text-xs font-semibold text-gray-500">
-                        {review.patient_name ||
-                          (locale === "en" ? "مريض" : "Patient")}
-                      </p>
-                      <div className="h-10 w-10 overflow-hidden rounded-full bg-[#eaf0fb]">
-                        {review.patient_photo ? (
-                          <img
-                            src={review.patient_photo}
-                            alt={review.patient_name || "Patient"}
-                            className="h-full w-full object-cover"
-                          />
-                        ) : null}
-                      </div>
-                    </div>
-                    {review.comment ? (
-                      <p className="text-gray-600 text-sm leading-relaxed">
-                        &quot;{review.comment}&quot;
-                      </p>
-                    ) : (
-                      <p className="text-gray-400 text-sm">
-                        {locale === "en" ? "بدون تعليق" : "No comment"}
-                      </p>
-                    )}
+                      </button>
+                    ))}
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {doctorRatingsTotalPages > 1 && (
-            <div className="mt-8 flex items-center justify-center gap-4">
-              <button
-                onClick={() =>
-                  setDoctorRatingsPage((prev) => Math.max(1, prev - 1))
-                }
-                disabled={doctorRatingsPage <= 1}
-                className="rounded-full border border-[#dce5f6] px-4 py-2 text-sm font-semibold text-[#001A6E] disabled:opacity-50"
-              >
-                {locale === "en" ? "السابق" : "Previous"}
-              </button>
-              <span className="text-sm text-gray-500">
-                {locale === "en"
-                  ? `صفحة ${doctorRatingsPage} من ${doctorRatingsTotalPages}`
-                  : `Page ${doctorRatingsPage} of ${doctorRatingsTotalPages}`}
-              </span>
-              <button
-                onClick={() =>
-                  setDoctorRatingsPage((prev) =>
-                    Math.min(doctorRatingsTotalPages, prev + 1),
-                  )
-                }
-                disabled={doctorRatingsPage >= doctorRatingsTotalPages}
-                className="rounded-full border border-[#dce5f6] px-4 py-2 text-sm font-semibold text-[#001A6E] disabled:opacity-50"
-              >
-                {locale === "en" ? "التالي" : "Next"}
-              </button>
-            </div>
-          )}
-
-          <div className="mt-10 border-t border-[#e6ecf6] pt-8 text-center">
-            <h3 className="text-lg font-bold text-[#001A6E] mb-4">
-              {locale === "en" ? "قيّم هذا الطبيب" : "Rate this doctor"}
-            </h3>
-            <div className="mx-auto flex max-w-xl flex-col items-center gap-4">
-              <div className="flex items-center gap-1">
-                {[1, 2, 3, 4, 5].map((value) => (
+                  <textarea
+                    value={doctorRatingComment}
+                    onChange={(event) => setDoctorRatingComment(event.target.value)}
+                    placeholder={
+                      locale === "en"
+                        ? "اكتب تعليقك هنا (اختياري)"
+                        : "Write your comment (optional)"
+                    }
+                    rows={3}
+                    className="w-full rounded-2xl border border-[#dce5f6] px-4 py-3 text-sm text-gray-600 outline-none focus:border-[#001A6E]"
+                  />
+                  {doctorRatingSubmitError ? (
+                    <p className="text-sm text-red-600">
+                      {doctorRatingSubmitError}
+                    </p>
+                  ) : null}
+                  {doctorRatingSubmitSuccess ? (
+                    <p className="text-sm text-green-600">
+                      {doctorRatingSubmitSuccess}
+                    </p>
+                  ) : null}
                   <button
-                    key={value}
-                    type="button"
-                    onClick={() => setDoctorRatingValue(value)}
-                    className="transition-transform hover:scale-110"
+                    onClick={handleDoctorRatingSubmit}
+                    disabled={doctorRatingSubmitting}
+                    className="rounded-2xl bg-[#001A6E] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-blue-900/10 transition-colors hover:bg-[#162f80] disabled:cursor-not-allowed disabled:opacity-70"
                   >
-                    <Star
-                      className={`h-6 w-6 ${value <= doctorRatingValue
-                          ? "text-[#f7b731] fill-[#f7b731]"
-                          : "text-[#d7deef]"
-                        }`}
-                    />
+                    {doctorRatingSubmitting
+                      ? locale === "en"
+                        ? "جاري الإرسال..."
+                        : "Submitting..."
+                      : locale === "en"
+                        ? "إرسال التقييم"
+                        : "Submit rating"}
                   </button>
-                ))}
+                </div>
               </div>
-              <textarea
-                value={doctorRatingComment}
-                onChange={(event) => setDoctorRatingComment(event.target.value)}
-                placeholder={
-                  locale === "en"
-                    ? "اكتب تعليقك هنا (اختياري)"
-                    : "Write your comment (optional)"
-                }
-                rows={3}
-                className="w-full rounded-2xl border border-[#dce5f6] px-4 py-3 text-sm text-gray-600 outline-none focus:border-[#001A6E]"
-              />
-              {doctorRatingSubmitError ? (
-                <p className="text-sm text-red-600">
-                  {doctorRatingSubmitError}
-                </p>
-              ) : null}
-              {doctorRatingSubmitSuccess ? (
-                <p className="text-sm text-green-600">
-                  {doctorRatingSubmitSuccess}
-                </p>
-              ) : null}
-              <button
-                onClick={handleDoctorRatingSubmit}
-                disabled={doctorRatingSubmitting}
-                className="rounded-2xl bg-[#001A6E] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-blue-900/10 transition-colors hover:bg-[#162f80] disabled:cursor-not-allowed disabled:opacity-70"
-              >
-                {doctorRatingSubmitting
-                  ? locale === "en"
-                    ? "جاري الإرسال..."
-                    : "Submitting..."
-                  : locale === "en"
-                    ? "إرسال التقييم"
-                    : "Submit rating"}
-              </button>
-            </div>
-          </div>
+            </>
+          )}
         </section>
 
         {showDatePicker && (
@@ -1089,7 +1129,12 @@ export default function DoctorProfilePage() {
             type={validationModalData.type}
             title={validationModalData.title}
             message={validationModalData.message}
-            onClose={() => setShowValidationModal(false)}
+            onClose={() => {
+              setShowValidationModal(false);
+              if (redirectToLogin) {
+                router.push("/login");
+              }
+            }}
           />
         )}
       </div>

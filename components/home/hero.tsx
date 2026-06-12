@@ -2,12 +2,13 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Search, ShieldCheck, Stethoscope, Users } from "lucide-react";
+import { ShieldCheck, Stethoscope, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import { t } from "@/i18n";
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
+import { useLocale } from "@/lib/hooks";
 
-const API_URL = "http://127.0.0.1:3001/api/user/stats";
+const API_URL = "/api/user/stats";
 
 type StatsData = {
   totalDoctors: number;
@@ -25,6 +26,7 @@ async function getAdminStats() {
 
   return response.json();
 }
+
 const stats = (locale: string, statsData: StatsData) => [
   {
     value: `+${statsData.totalPatients}`,
@@ -43,8 +45,37 @@ const stats = (locale: string, statsData: StatsData) => [
   },
 ];
 
+// framer-motion variants for robust animation state management
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: { staggerChildren: 0.12 },
+  },
+};
+
+const itemVariants: Variants = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.4 } },
+};
+
+const titleVariants: Variants = {
+  hidden: { opacity: 0, x: -40 },
+  show: { opacity: 1, x: 0, transition: { duration: 0.5 } },
+};
+
+const descVariants: Variants = {
+  hidden: { opacity: 0, x: -30 },
+  show: { opacity: 1, x: 0, transition: { duration: 0.5 } },
+};
+
+const imageVariants: Variants = {
+  hidden: { opacity: 0, x: 80, scale: 1.05 },
+  show: { opacity: 1, x: 0, scale: 1, transition: { duration: 0.9, ease: "easeOut" } },
+};
+
 export default function Hero() {
-  const [locale, setLocale] = useState("ar");
+  const locale = useLocale();
   const [statsData, setStatsData] = useState<StatsData>({
     totalDoctors: 0,
     totalPatients: 0,
@@ -66,25 +97,11 @@ export default function Hero() {
     loadStats();
   }, []);
 
-  useEffect(() => {
-    function onLocale(e: any) {
-      setLocale(e?.detail || "ar");
-    }
-    window.addEventListener("localeChange", onLocale as EventListener);
-    return () =>
-      window.removeEventListener("localeChange", onLocale as EventListener);
-  }, []);
-
   return (
     <motion.section
       initial="hidden"
       animate="show"
-      variants={{
-        hidden: {},
-        show: {
-          transition: { staggerChildren: 0.12 },
-        },
-      }}
+      variants={containerVariants}
       className="relative overflow-hidden rounded-4xl bg-[#f4f7ff] px-4 pb-8 pt-20 sm:px-8 sm:pt-24"
     >
       {/* Animated Background Glow */}
@@ -112,18 +129,14 @@ export default function Hero() {
           {/* LEFT */}
           <div className="space-y-6 text-[#0f1a4f]">
             <motion.p
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
+              variants={itemVariants}
               className="inline-flex items-center rounded-full border border-[#c8d4ff] bg-white px-4 py-2 text-sm font-semibold text-[#2a4fcf]"
             >
               {t("hero.trusted", locale)}
             </motion.p>
 
             <motion.h1
-              initial={{ opacity: 0, x: -40 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
+              variants={titleVariants}
               className="text-3xl font-extrabold leading-tight sm:text-4xl lg:text-5xl"
             >
               {t("hero.title", locale)}
@@ -133,18 +146,14 @@ export default function Hero() {
             </motion.h1>
 
             <motion.p
-              initial={{ opacity: 0, x: -30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 }}
+              variants={descVariants}
               className="max-w-xl text-sm leading-7 text-[#4a5b88] sm:text-base"
             >
               {t("hero.description", locale)}
             </motion.p>
 
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
+              variants={itemVariants}
               className="flex flex-wrap gap-3"
             >
               <Link
@@ -165,9 +174,7 @@ export default function Hero() {
 
           {/* IMAGE */}
           <motion.div
-            initial={{ opacity: 0, x: 80, scale: 1.05 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            transition={{ duration: 0.9, ease: "easeOut" }}
+            variants={imageVariants}
             className="mx-auto w-full max-w-md"
           >
             <motion.div
@@ -190,18 +197,13 @@ export default function Hero() {
 
         {/* STATS */}
         <motion.div
-          initial="hidden"
-          animate="show"
-          variants={{
-            show: { transition: { staggerChildren: 0.12 } },
-          }}
+          variants={containerVariants}
           className="mt-8 grid gap-4 rounded-3xl border border-[#d6e0ff] bg-white/95 p-4 sm:grid-cols-3 sm:p-5"
         >
           {stats(locale, statsData).map((stat) => (
             <motion.div
               key={stat.label}
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
+              variants={itemVariants}
               whileHover={{ scale: 1.05 }}
               className="flex items-center gap-3 rounded-2xl bg-[#f7f9ff] px-4 py-3"
             >
@@ -216,35 +218,6 @@ export default function Hero() {
           ))}
         </motion.div>
 
-        {/* SEARCH */}
-        <div className="mt-6 rounded-3xl border border-[#d7e1ff] bg-white p-4 sm:p-5">
-          <div className="grid gap-3 md:grid-cols-[1fr_1fr_1fr_auto] md:items-center">
-            <select className="h-12 rounded-2xl border border-[#d6e0ff] px-4 text-sm text-[#0f1a4f] outline-none focus:border-[#1c4fe0]">
-              <option>{t("hero.select.specialty", locale)}</option>
-              <option>Cardiology</option>
-              <option>Pediatrics</option>
-              <option>Dermatology</option>
-            </select>
-
-            <select className="h-12 rounded-2xl border border-[#d6e0ff] px-4 text-sm text-[#0f1a4f] outline-none focus:border-[#1c4fe0]">
-              <option>{t("hero.select.city", locale)}</option>
-              <option>{t("hero.options.cairo", locale)}</option>
-              <option>{t("hero.options.alexandria", locale)}</option>
-              <option>{t("hero.options.giza", locale)}</option>
-            </select>
-
-            <select className="h-12 rounded-2xl border border-[#d6e0ff] px-4 text-sm text-[#0f1a4f] outline-none focus:border-[#1c4fe0]">
-              <option>{t("hero.select.visitType", locale)}</option>
-              <option>{t("hero.options.inClinic", locale)}</option>
-              <option>{t("hero.options.online", locale)}</option>
-            </select>
-
-            <button className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-[#1c3faa] px-6 text-sm font-bold text-white transition hover:bg-[#162f80]">
-              <Search className="h-4 w-4" />
-              {t("hero.search", locale)}
-            </button>
-          </div>
-        </div>
       </div>
     </motion.section>
   );

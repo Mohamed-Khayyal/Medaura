@@ -10,6 +10,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
+import { useLocale } from "@/lib/hooks";
 
 const BEST_DOCTORS_API_URL = "/api/doctors/best?limit=5";
 
@@ -73,18 +74,10 @@ function getBestDoctorProfileHref(doctor: BestDoctor) {
 }
 
 export default function BestDoctors() {
-  const [locale, setLocale] = useState("ar");
+  const locale = useLocale();
   const [bestDoctorsData, setBestDoctorsData] = useState<BestDoctor[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  useEffect(() => {
-    function onLocale(event: Event) {
-      setLocale((event as CustomEvent<string>).detail || "ar");
-    }
-    window.addEventListener("localeChange", onLocale as EventListener);
-    return () =>
-      window.removeEventListener("localeChange", onLocale as EventListener);
-  }, []);
 
   useEffect(() => {
     const controller = new AbortController();

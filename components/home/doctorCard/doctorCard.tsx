@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { t } from "@/i18n";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { useAuth } from "@/context/AuthContext";
 
 type DoctorCardProps = {
   id: string | number;
@@ -36,6 +37,8 @@ export default function DoctorCard({
 }: DoctorCardProps) {
   const router = useRouter();
   const [locale, setLocale] = useState("ar");
+  const { user, isAuthenticated } = useAuth();
+  const isNotPatient = isAuthenticated && user?.user_type?.toLowerCase() !== "patient";
 
   useEffect(() => {
     function onLocale(event: Event) {
@@ -130,7 +133,7 @@ export default function DoctorCard({
         transition={{ duration: 0.25 }}
         className="mt-4 w-full rounded-xl bg-[#1c3faa] py-2.5 text-sm font-bold text-white transition hover:bg-[#162f80]"
       >
-        {t("doctorCard.bookNow", locale)}
+        {isNotPatient ? t("doctorCard.viewProfile", locale) : t("doctorCard.bookNow", locale)}
       </motion.button>
     </motion.article>
   );

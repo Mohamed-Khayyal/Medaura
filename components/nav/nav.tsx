@@ -273,7 +273,7 @@ const Navbar: FC = () => {
                           strokeWidth={1.8}
                         />
                         <span className="text-[14px] font-bold text-[#0f1a4f]">
-                          الإشعارات
+                          {t("dashboard.header.notifications", locale)}
                         </span>
                         {unreadCount > 0 && (
                           <span className="rounded-full bg-red-600 px-1.5 py-0.5 text-[10px] font-bold text-white">
@@ -288,7 +288,7 @@ const Navbar: FC = () => {
                         }}
                         className="text-[11px] font-semibold text-[#0f1a4f] opacity-60 transition hover:opacity-100"
                       >
-                        تحديث
+                        {t("dashboard.header.refresh", locale)}
                       </button>
                     </div>
 
@@ -317,7 +317,7 @@ const Navbar: FC = () => {
                         <div className="flex flex-col items-center gap-2 px-4 py-8 text-center">
                           <Bell className="h-10 w-10 text-gray-200" />
                           <p className="text-[13px] text-gray-400">
-                            لا توجد إشعارات
+                            {t("dashboard.header.noNotifications", locale)}
                           </p>
                         </div>
                       ) : (
@@ -367,7 +367,7 @@ const Navbar: FC = () => {
                         }}
                         className="flex w-full items-center justify-center gap-1.5 rounded-xl py-2 text-[13px] font-semibold text-[#0f1a4f] transition hover:bg-[#dde4f8]"
                       >
-                        عرض جميع الإشعارات
+                        {t("dashboard.header.viewAllNotifications", locale)}
                         <ChevronRight className="h-3.5 w-3.5" />
                       </button>
                     </div>
@@ -444,7 +444,7 @@ const Navbar: FC = () => {
                           className="h-4 w-4 text-[#0f1a4f]"
                           strokeWidth={1.8}
                         />
-                        الملف الشخصي
+                        {t("nav.profile", locale)}
                       </Link>
                       <button
                         type="button"
@@ -455,7 +455,7 @@ const Navbar: FC = () => {
                         className="flex w-full items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-red-600 transition hover:bg-red-50"
                       >
                         <LogOut className="h-4 w-4" strokeWidth={1.8} />
-                        تسجيل الخروج
+                        {t("nav.logout", locale)}
                       </button>
                     </div>
                   </div>
@@ -551,7 +551,7 @@ const Navbar: FC = () => {
                 className="flex items-center gap-3 rounded-xl px-4 py-2.5 text-[15px] font-medium text-[#0f1a4f] transition hover:bg-[#d9e3ff]"
               >
                 <User className="h-5 w-5" strokeWidth={1.8} />
-                الملف الشخصي
+                {t("nav.profile", locale)}
               </Link>
               <button
                 type="button"
@@ -562,7 +562,7 @@ const Navbar: FC = () => {
                 className="flex items-center gap-3 rounded-xl px-4 py-2.5 text-[15px] font-medium text-red-600 transition hover:bg-red-50"
               >
                 <LogOut className="h-5 w-5" strokeWidth={1.8} />
-                تسجيل الخروج
+                {t("nav.logout", locale)}
               </button>
             </div>
           )}
