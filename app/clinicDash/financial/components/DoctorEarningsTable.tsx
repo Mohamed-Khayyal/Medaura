@@ -184,9 +184,9 @@ export default function DoctorEarningsTable({
         <table className="w-full text-sm min-w-[1050px]" dir="rtl">
           <thead>
             <tr className="border-b border-(--card-border)">
-              {cols.map((col) => (
+              {cols.map((col, i) => (
                 <th
-                  key={col.label}
+                  key={`${col.label}-${i}`}
                   className={`px-4 py-3 text-xs font-semibold text-(--text-secondary) uppercase tracking-wide whitespace-nowrap ${col.align ?? "text-right"}`}
                 >
                   {col.key ? (
