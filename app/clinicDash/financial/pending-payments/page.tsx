@@ -44,31 +44,8 @@ export default function PendingPaymentsPage() {
     setError(null);
     try {
       const params = new URLSearchParams();
-      if (f.period && f.period !== "custom") {
-        const today = new Date();
-        const fmt = (d: Date) => d.toISOString().slice(0, 10);
-        let dateFrom, dateTo;
-        switch (f.period) {
-          case "today": dateFrom = fmt(today); dateTo = fmt(today); break;
-          case "week": {
-            const s = new Date(today); s.setDate(today.getDate() - 6);
-            dateFrom = fmt(s); dateTo = fmt(today); break;
-          }
-          case "month": {
-            const s = new Date(today.getFullYear(), today.getMonth(), 1);
-            dateFrom = fmt(s); dateTo = fmt(today); break;
-          }
-          case "year": {
-            const s = new Date(today.getFullYear(), 0, 1);
-            dateFrom = fmt(s); dateTo = fmt(today); break;
-          }
-        }
-        if (dateFrom) params.set("date_from", dateFrom);
-        if (dateTo)   params.set("date_to",   dateTo);
-      } else {
-        if (f.dateFrom) params.set("date_from", f.dateFrom);
-        if (f.dateTo)   params.set("date_to",   f.dateTo);
-      }
+      // We intentionally IGNORE date_from and date_to to fetch all completed appointments
+      // without date limits, as per the plan logic. We only apply doctor and specialty filters.
       if (f.doctorId)   params.set("doctor_id",  String(f.doctorId));
       if (f.specialist) params.set("specialist",  f.specialist);
 
