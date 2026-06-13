@@ -19,6 +19,8 @@ import {
   Calendar,
 } from "lucide-react";
 import type { Prescription } from "@/lib/types/api";
+import { useLocale } from "@/lib/hooks";
+import { t } from "@/i18n";
 
 interface BookingDetail {
   booking_id: number;
@@ -120,6 +122,8 @@ export default function PatientDetails() {
   const params = useParams();
   const router = useRouter();
   const bookingId = params?.id as string;
+  const locale = useLocale();
+  const isRtl = locale === "ar";
 
   const [booking, setBooking] = useState<BookingDetail | null>(null);
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
@@ -130,6 +134,30 @@ export default function PatientDetails() {
     "pending" | "accepted" | "rejected" | null
   >(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [statusUpdating, setStatusUpdating] = useState(false);
+
+  const handleUpdateStatus = async (nextStatus: string) => {
+    if (!bookingId) return;
+    setStatusUpdating(true);
+    try {
+      const response = await fetch(`/api/book/${bookingId}/status`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: nextStatus }),
+      });
+      const result = await response.json();
+      if (!response.ok || result.success === false) {
+        alert(result.error || (isRtl ? "فشل تحديث حالة الحجز" : "Failed to update booking status"));
+        return;
+      }
+      setBooking((prev) => prev ? { ...prev, status: nextStatus } : null);
+    } catch {
+      alert(isRtl ? "حدث خطأ في الاتصال" : "Connection error");
+    } finally {
+      setStatusUpdating(false);
+    }
+  };
 
   // Prescription modal
   const [showForm, setShowForm] = useState(false);
@@ -257,6 +285,9 @@ export default function PatientDetails() {
         return;
       }
 
+      // Update local booking status to completed
+      setBooking((prev) => prev ? { ...prev, status: "completed" } : null);
+
       setFormSuccess(true);
       setTimeout(() => {
         setShowForm(false);
@@ -320,21 +351,71 @@ export default function PatientDetails() {
                   حجز #{booking.booking_id}
                 </h2>
               </div>
-              <span
-                className={`px-3 py-1 text-sm rounded-full font-semibold ${
-                  booking.status === "confirmed"
-                    ? "bg-green-100 text-green-700"
-                    : booking.status === "pending"
-                      ? "bg-amber-100 text-amber-700"
-                      : "bg-gray-100 text-gray-600"
-                }`}
-              >
-                {booking.status === "confirmed"
-                  ? "مؤكد"
-                  : booking.status === "pending"
-                    ? "قيد الانتظار"
-                    : booking.status}
-              </span>
+              <div className="flex items-center gap-2">
+                {booking.status === "pending" && (
+                  <>
+                    <button
+                      onClick={() => handleUpdateStatus("confirmed")}
+                      disabled={statusUpdating}
+                      className="px-3 py-1 text-xs rounded-xl bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 transition disabled:opacity-60 font-semibold cursor-pointer flex items-center gap-1"
+                    >
+                      {statusUpdating && <Loader2 size={12} className="animate-spin" />}
+                      {isRtl ? "تأكيد الدفع" : "Confirm Payment"}
+                    </button>
+                    <button
+                      onClick={() => handleUpdateStatus("rejected")}
+                      disabled={statusUpdating}
+                      className="px-3 py-1 text-xs rounded-xl bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 transition disabled:opacity-60 font-semibold cursor-pointer"
+                    >
+                      {isRtl ? "رفض" : "Reject"}
+                    </button>
+                  </>
+                )}
+
+                {booking.status === "confirmed" && (
+                  <>
+                    <button
+                      onClick={() => handleUpdateStatus("completed")}
+                      disabled={statusUpdating}
+                      className="px-3 py-1 text-xs rounded-xl bg-teal-50 text-teal-700 border border-teal-200 hover:bg-teal-100 transition disabled:opacity-60 font-semibold cursor-pointer flex items-center gap-1"
+                    >
+                      {statusUpdating && <Loader2 size={12} className="animate-spin" />}
+                      {isRtl ? "إكمال الكشف" : "Complete Visit"}
+                    </button>
+                    <button
+                      onClick={() => handleUpdateStatus("cancelled")}
+                      disabled={statusUpdating}
+                      className="px-3 py-1 text-xs rounded-xl bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 transition disabled:opacity-60 font-semibold cursor-pointer"
+                    >
+                      {isRtl ? "إلغاء" : "Cancel"}
+                    </button>
+                  </>
+                )}
+
+                <span
+                  className={`px-3 py-1 text-sm rounded-full font-semibold ${
+                    booking.status === "completed"
+                      ? "bg-green-100 text-green-700"
+                      : booking.status === "confirmed"
+                        ? "bg-blue-100 text-blue-700"
+                        : booking.status === "pending"
+                          ? "bg-amber-100 text-amber-700"
+                          : "bg-red-100 text-red-700"
+                  }`}
+                >
+                  {booking.status === "completed"
+                    ? (isRtl ? "مكتمل" : "Completed")
+                    : booking.status === "confirmed"
+                      ? (isRtl ? "مؤكد" : "Confirmed")
+                      : booking.status === "pending"
+                        ? (isRtl ? "قيد الانتظار" : "Pending")
+                        : booking.status === "cancelled"
+                          ? (isRtl ? "ملغي" : "Cancelled")
+                          : booking.status === "rejected"
+                            ? (isRtl ? "مرفوض" : "Rejected")
+                            : booking.status}
+                </span>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

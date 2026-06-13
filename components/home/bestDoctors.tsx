@@ -113,12 +113,10 @@ export default function BestDoctors() {
     fetchBestDoctors();
 
     return () => controller.abort();
-  }, []);
-  
-  const prevRef = useRef(null);
-  const nextRef = useRef(null);
+  }, [locale]);
   return (
     <motion.section
+      key={locale}
       initial={{ opacity: 0, y: 60 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.2 }}
@@ -146,14 +144,14 @@ export default function BestDoctors() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.3 }}
         transition={{ duration: 0.7, delay: 0.1 }}
-        className={`mb-8 flex justify-between`}
+        className="mb-8 flex flex-wrap items-center justify-between gap-4"
       >
-        <div className="flex items-center justify-between gap-4">
-          <div ref={nextRef}  className="flex items-center gap-4 rounded-full border border-[#d1ddff] px-3 py-2 text-sm font-semibold text-[#001a6e] transition hover:bg-[#f4f7ff] cursor-pointer">
-            <ChevronRight />
-          </div>
-          <div ref={prevRef}  className="flex items-center gap-4 rounded-full border border-[#d1ddff] px-3 py-2 text-sm font-semibold text-[#001a6e] transition hover:bg-[#f4f7ff] cursor-pointer">
+        <div className="flex items-center justify-between gap-4" dir="ltr">
+          <div className="best-doctors-prev flex items-center gap-4 rounded-full border border-[#d1ddff] px-3 py-2 text-sm font-semibold text-[#001a6e] transition hover:bg-[#f4f7ff] cursor-pointer">
             <ChevronLeft />
+          </div>
+          <div className="best-doctors-next flex items-center gap-4 rounded-full border border-[#d1ddff] px-3 py-2 text-sm font-semibold text-[#001a6e] transition hover:bg-[#f4f7ff] cursor-pointer">
+            <ChevronRight />
           </div>
         </div>
         <Link
@@ -170,13 +168,16 @@ export default function BestDoctors() {
       </motion.div>
 
       <div className=" w-full overflow-hidden">
-        {loading &&
-          Array.from({ length: 3 }).map((_, i) => (
-            <div
-              key={i}
-              className="h-[420px] animate-pulse rounded-3xl border border-[#d9e3ff] bg-[#f5f8ff]"
-            />
-          ))}
+        {loading && (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div
+                key={i}
+                className="h-[420px] animate-pulse rounded-3xl border border-[#d9e3ff] bg-[#f5f8ff]"
+              />
+            ))}
+          </div>
+        )}
 
         {!loading && error && (
           <p className="col-span-full text-center text-sm font-semibold text-red-600">
@@ -185,6 +186,8 @@ export default function BestDoctors() {
         )}
         <div className="w-full overflow-hidden">
           <Swiper
+            key={locale}
+            dir={locale === "ar" ? "rtl" : "ltr"}
             spaceBetween={20}
             modules={[Navigation]}
             breakpoints={{
@@ -193,14 +196,8 @@ export default function BestDoctors() {
               1024: { slidesPerView: 3 },
             }}
             navigation={{
-              prevEl: prevRef.current,
-              nextEl: nextRef.current,
-            }}
-            onBeforeInit={(swiper) => {
-              // @ts-ignore
-              swiper.params.navigation.prevEl = prevRef.current;
-              // @ts-ignore
-              swiper.params.navigation.nextEl = nextRef.current;
+              prevEl: ".best-doctors-prev",
+              nextEl: ".best-doctors-next",
             }}
           >
             {!loading &&

@@ -10,8 +10,8 @@ type GeoLocation = {
 };
 
 type ApiClinic = {
-  clinic_id?: number;
-  id?: number;
+  clinic_id?: string | number;
+  id?: string | number;
   name?: string;
   location?: string;
   phone?: string;
@@ -23,7 +23,7 @@ type ApiClinic = {
 };
 
 type ClinicCardData = {
-  clinic_id: number;
+  clinic_id: string | number;
   name: string;
   location: string;
   phone: string;

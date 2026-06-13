@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   ChevronLeft,
+  ChevronRight,
   HeartPulse,
   Bone,
   Baby,
@@ -36,6 +37,21 @@ type DoctorApiItem = {
 };
 
 const SPECIALTIES_API_URL = "/api/doctors/list";
+
+const SPECIALTY_TRANSLATION_KEYS: Record<string, string> = {
+  "مخ واعصاب": "authPage.doctor.specialties.neurology",
+  "عظام": "authPage.doctor.specialties.orthopedics",
+  "الأورام": "authPage.doctor.specialties.oncology",
+  "طب الأذن والأنف والحنجرة": "authPage.doctor.specialties.ent",
+  "طب العيون": "authPage.doctor.specialties.ophthalmology",
+  "قلب و اوعية دموية": "authPage.doctor.specialties.cardiology",
+  "صدر و جهاز تنفسي": "authPage.doctor.specialties.pulmonology",
+  "كلى": "authPage.doctor.specialties.nephrology",
+  "اسنان": "authPage.doctor.specialties.dentistry",
+  "اطفال و حديثي الولادة": "authPage.doctor.specialties.pediatrics",
+  "جلدية": "authPage.doctor.specialties.dermatology",
+  "نسا و توليد": "authPage.doctor.specialties.gynecology",
+};
 
 const SPECIALTY_CATALOG: SpecialtyCatalogItem[] = [
   { title: "مخ واعصاب", Icon: Brain },
@@ -170,6 +186,7 @@ const Specialties = () => {
 
   return (
     <motion.section
+      key={locale}
       initial="hidden"
       whileInView="show"
       viewport={{ once: true, amount: 0.2 }}
@@ -209,7 +226,7 @@ const Specialties = () => {
           className="inline-flex items-center gap-2 rounded-full border border-[#d1ddff] px-4 py-2 text-sm font-semibold text-[#001a6e] transition hover:bg-[#f4f7ff]"
         >
           {t("specialties.viewAll", locale)}
-          <ChevronLeft size={18} />
+          {locale === "ar" ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
         </Link>
       </motion.div>
 
@@ -251,7 +268,9 @@ const Specialties = () => {
                   <Icon className={iconClassName} />
                 </motion.div>
 
-                <h3 className="text-sm font-bold text-[#0f1a4f]">{item.title}</h3>
+                <h3 className="text-sm font-bold text-[#0f1a4f]">
+                  {t(SPECIALTY_TRANSLATION_KEYS[item.title] || item.title, locale)}
+                </h3>
 
                 <p className="mt-1 text-xs text-[#4f66a7]">
                   {item.doctors} {t("specialties.doctors", locale)}

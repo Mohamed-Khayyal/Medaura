@@ -164,6 +164,32 @@ export default function TodayAppointmentsTaple() {
     }
   };
 
+  const handleUpdateStatus = async (bookingId: number, nextStatus: string) => {
+    setActionLoading(bookingId);
+    try {
+      const response = await fetch(`/api/book/${bookingId}/status`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: nextStatus }),
+      });
+      const result = await response.json();
+      if (!response.ok || result.success === false) {
+        alert(result.error || (isRtl ? "فشل تحديث حالة الحجز" : "Failed to update booking status"));
+        return;
+      }
+      setData((prev) =>
+        prev.map((b) =>
+          b.id === bookingId ? { ...b, status: nextStatus, rawStatus: nextStatus } : b
+        )
+      );
+    } catch {
+      alert(t("doctorDashPages.todayAppointments.connectionError", locale));
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const openPrescriptionModal = (bookingId: number, patientName: string) => {
     setPrescriptionModal({ open: true, bookingId, patientName });
     setPrescriptionForm({
@@ -229,6 +255,15 @@ export default function TodayAppointmentsTaple() {
         setPrescriptionError(result.error || t("doctorDashPages.todayAppointments.prescriptionError", locale));
         return;
       }
+
+      // Update local state status to completed
+      setData((prev) =>
+        prev.map((b) =>
+          b.id === prescriptionModal.bookingId
+            ? { ...b, status: "completed", rawStatus: "completed" }
+            : b
+        )
+      );
 
       setPrescriptionSuccess(true);
       setTimeout(() => {
@@ -353,6 +388,46 @@ export default function TodayAppointmentsTaple() {
                     </div>
 
                     <div className="mt-3 grid gap-2">
+                      {booking.rawStatus === "pending" && (
+                        <div className="grid grid-cols-2 gap-2">
+                          <button
+                            onClick={() => handleUpdateStatus(booking.id, "confirmed")}
+                            disabled={actionLoading === booking.id}
+                            className="flex items-center justify-center gap-1.5 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-xs text-green-700 transition hover:bg-green-100 disabled:opacity-60 font-semibold cursor-pointer"
+                          >
+                            {actionLoading === booking.id && <Loader2 size={12} className="animate-spin" />}
+                            {isRtl ? "تأكيد الدفع" : "Confirm Payment"}
+                          </button>
+                          <button
+                            onClick={() => handleUpdateStatus(booking.id, "rejected")}
+                            disabled={actionLoading === booking.id}
+                            className="flex items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700 transition hover:bg-red-100 disabled:opacity-60 font-semibold cursor-pointer"
+                          >
+                            {isRtl ? "رفض" : "Reject"}
+                          </button>
+                        </div>
+                      )}
+
+                      {booking.rawStatus === "confirmed" && (
+                        <div className="grid grid-cols-2 gap-2">
+                          <button
+                            onClick={() => handleUpdateStatus(booking.id, "completed")}
+                            disabled={actionLoading === booking.id}
+                            className="flex items-center justify-center gap-1.5 rounded-lg border border-teal-200 bg-teal-50 px-3 py-2 text-xs text-teal-700 transition hover:bg-teal-100 disabled:opacity-60 font-semibold cursor-pointer"
+                          >
+                            {actionLoading === booking.id && <Loader2 size={12} className="animate-spin" />}
+                            {isRtl ? "إكمال الكشف" : "Complete Visit"}
+                          </button>
+                          <button
+                            onClick={() => handleUpdateStatus(booking.id, "cancelled")}
+                            disabled={actionLoading === booking.id}
+                            className="flex items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700 transition hover:bg-red-100 disabled:opacity-60 font-semibold cursor-pointer"
+                          >
+                            {isRtl ? "إلغاء" : "Cancel"}
+                          </button>
+                        </div>
+                      )}
+
                       {booking.rawStatus === "confirmed" &&
                         (!booking.prescriptionAccess ||
                           booking.prescriptionAccess === "rejected") && (
@@ -483,6 +558,51 @@ export default function TodayAppointmentsTaple() {
                         {/* Actions */}
                         <td className="py-4">
                           <div className="flex items-center justify-center gap-2">
+                            {/* Status transitions */}
+                            {p.rawStatus === "pending" && (
+                              <>
+                                <button
+                                  onClick={() => handleUpdateStatus(p.id, "confirmed")}
+                                  disabled={actionLoading === p.id}
+                                  className="flex items-center gap-1 px-2.5 py-1 text-xs rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition border border-green-200 disabled:opacity-60 cursor-pointer font-medium"
+                                  title={isRtl ? "تأكيد الدفع" : "Confirm Payment"}
+                                >
+                                  {actionLoading === p.id && <Loader2 size={12} className="animate-spin" />}
+                                  <span>{isRtl ? "تأكيد الدفع" : "Confirm Payment"}</span>
+                                </button>
+                                <button
+                                  onClick={() => handleUpdateStatus(p.id, "rejected")}
+                                  disabled={actionLoading === p.id}
+                                  className="flex items-center gap-1 px-2.5 py-1 text-xs rounded-lg bg-red-50 text-red-700 hover:bg-red-100 transition border border-red-200 disabled:opacity-60 cursor-pointer font-medium"
+                                  title={isRtl ? "رفض" : "Reject"}
+                                >
+                                  <span>{isRtl ? "رفض" : "Reject"}</span>
+                                </button>
+                              </>
+                            )}
+
+                            {p.rawStatus === "confirmed" && (
+                              <>
+                                <button
+                                  onClick={() => handleUpdateStatus(p.id, "completed")}
+                                  disabled={actionLoading === p.id}
+                                  className="flex items-center gap-1 px-2.5 py-1 text-xs rounded-lg bg-teal-50 text-teal-700 hover:bg-teal-100 transition border border-teal-200 disabled:opacity-60 cursor-pointer font-medium"
+                                  title={isRtl ? "إكمال الكشف" : "Complete Visit"}
+                                >
+                                  {actionLoading === p.id && <Loader2 size={12} className="animate-spin" />}
+                                  <span>{isRtl ? "إكمال الكشف" : "Complete Visit"}</span>
+                                </button>
+                                <button
+                                  onClick={() => handleUpdateStatus(p.id, "cancelled")}
+                                  disabled={actionLoading === p.id}
+                                  className="flex items-center gap-1 px-2.5 py-1 text-xs rounded-lg bg-red-50 text-red-700 hover:bg-red-100 transition border border-red-200 disabled:opacity-60 cursor-pointer font-medium"
+                                  title={isRtl ? "إلغاء" : "Cancel"}
+                                >
+                                  <span>{isRtl ? "إلغاء" : "Cancel"}</span>
+                                </button>
+                              </>
+                            )}
+
                             {/* Request access: only if confirmed & no access yet or rejected */}
                             {p.rawStatus === "confirmed" &&
                               (!p.prescriptionAccess || p.prescriptionAccess === "rejected") && (

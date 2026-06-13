@@ -1,27 +1,19 @@
 "use client";
 
 import { CalendarCheck2, Search, UserRoundCheck } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useLocale } from "@/lib/hooks";
 import { t } from "@/i18n";
 import { motion } from "framer-motion";
 
 export default function HowItWorks() {
-  const [locale, setLocale] = useState("ar");
-
-  useEffect(() => {
-    function onLocale(e: any) {
-      setLocale(e?.detail || "ar");
-    }
-    window.addEventListener("localeChange", onLocale as EventListener);
-    return () =>
-      window.removeEventListener("localeChange", onLocale as EventListener);
-  }, []);
+  const locale = useLocale();
 
   const steps = t("howItWorks.steps", locale) as any[];
   const icons = [Search, UserRoundCheck, CalendarCheck2];
 
   return (
     <motion.section
+      key={locale}
       initial={{ opacity: 0 }}
       whileInView={{ opacity: 1 }}
       viewport={{ once: true, amount: 0.25 }}

@@ -2,21 +2,12 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useLocale } from "@/lib/hooks";
 import { t } from "@/i18n";
 import { motion } from "framer-motion";
 
 export default function SalesSection() {
-  const [locale, setLocale] = useState("ar");
-
-  useEffect(() => {
-    function onLocale(e: any) {
-      setLocale(e?.detail || "ar");
-    }
-    window.addEventListener("localeChange", onLocale as EventListener);
-    return () =>
-      window.removeEventListener("localeChange", onLocale as EventListener);
-  }, []);
+  const locale = useLocale();
 
   const offers = t("sales.offers", locale) as any[];
 

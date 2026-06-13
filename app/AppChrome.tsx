@@ -159,7 +159,7 @@ export default function AppChrome({ children }: { children: React.ReactNode }) {
   return (
     <>
       <Navbar />
-      <div className="lg:px-12 xl:px-24">{children}</div>
+      <div className="px-4 sm:px-6 lg:px-12 xl:px-24">{children}</div>
       <Footer />
       <ChatbotWidget />
     </>

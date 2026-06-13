@@ -15,7 +15,7 @@ import { useLocale } from "@/lib/hooks";
 const BEST_CLINICS_API_URL = "/api/clinic/best?limit=5";
 
 type BestClinicApiItem = {
-  clinic_id?: number;
+  clinic_id?: string | number;
   name?: string;
   location?: string;
   average_rating?: number;
@@ -23,7 +23,7 @@ type BestClinicApiItem = {
 };
 
 type BestClinic = {
-  id: number;
+  id: string | number;
   name: string;
   location: string;
   rating: number;
@@ -32,7 +32,7 @@ type BestClinic = {
 
 function mapBestClinic(clinic: BestClinicApiItem): BestClinic {
   return {
-    id: Number(clinic.clinic_id),
+    id: clinic.clinic_id !== undefined && clinic.clinic_id !== null ? String(clinic.clinic_id) : "",
     name: clinic.name || "",
     location: clinic.location || "",
     rating: Number(clinic.average_rating ?? 0),
@@ -65,6 +65,7 @@ const clinics = [
 
 export default function BestClinics() {
   const locale = useLocale();
+  const isRtl = locale === "ar";
   const [bestClinicsData, setBestClinicData] = useState<BestClinic[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -103,11 +104,10 @@ export default function BestClinics() {
     fetchBestClinics();
 
     return () => controller.abort();
-  }, []);
-   const prevRef = useRef(null);
-  const nextRef = useRef(null);
+  }, [locale]);
   return (
     <motion.section
+      key={locale}
       initial={{ opacity: 0 }}
       whileInView={{ opacity: 1 }}
       viewport={{ once: true, amount: 0.2 }}
@@ -120,15 +120,31 @@ export default function BestClinics() {
         whileInView={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
         viewport={{ once: true }}
-        className="mb-8 flex flex-wrap items-end justify-between gap-4"
+        className="mb-6"
       >
-        <div>
-          <h2 className="text-2xl font-extrabold text-[#001a6e] sm:text-3xl">
-            {t("bestClinics.title", locale)}
-          </h2>
-          <p className="mt-2 text-sm text-[#6d7da7]">
-            {t("bestClinics.description", locale)}
-          </p>
+        <h2 className="text-2xl font-extrabold text-[#001a6e] sm:text-3xl">
+          {t("bestClinics.title", locale)}
+        </h2>
+        <p className="mt-2 text-sm text-[#6d7da7]">
+          {t("bestClinics.description", locale)}
+        </p>
+      </motion.div>
+
+      {/* CONTROLS ROW */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        viewport={{ once: true }}
+        className="mb-8 flex flex-wrap items-center justify-between gap-4"
+      >
+        <div className="flex items-center gap-4" dir="ltr">
+          <div className="best-clinics-prev flex items-center gap-4 rounded-full border border-[#d1ddff] px-3 py-2 text-sm font-semibold text-[#001a6e] transition hover:bg-[#f4f7ff] cursor-pointer">
+            <ChevronLeft />
+          </div>
+          <div className="best-clinics-next flex items-center gap-4 rounded-full border border-[#d1ddff] px-3 py-2 text-sm font-semibold text-[#001a6e] transition hover:bg-[#f4f7ff] cursor-pointer">
+            <ChevronRight />
+          </div>
         </div>
 
         <Link
@@ -137,22 +153,6 @@ export default function BestClinics() {
         >
           {t("bestClinics.viewClinics", locale)}
         </Link>
-      </motion.div>
-      <motion.div
-        initial={{ opacity: 0, y: 40 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        viewport={{ once: true }}
-        className={`mb-8 flex flex-wrap items-end justify-center `}
-      >
-      <div className="flex items-center gap-4">
-          <div ref={nextRef}  className="flex items-center gap-4 rounded-full border border-[#d1ddff] px-3 py-2 text-sm font-semibold text-[#001a6e] transition hover:bg-[#f4f7ff] cursor-pointer">
-            <ChevronRight />
-          </div>
-          <div ref={prevRef}  className="flex items-center gap-4 rounded-full border border-[#d1ddff] px-3 py-2 text-sm font-semibold text-[#001a6e] transition hover:bg-[#f4f7ff] cursor-pointer">
-            <ChevronLeft />
-          </div>
-        </div>
       </motion.div>
 
       {/* CARDS */}
@@ -171,6 +171,8 @@ export default function BestClinics() {
         className="">
         <div className="w-full overflow-hidden">
           <Swiper
+            key={locale}
+            dir={locale === "ar" ? "rtl" : "ltr"}
             spaceBetween={20}
             modules={[Navigation]}
             breakpoints={{
@@ -179,14 +181,8 @@ export default function BestClinics() {
               1024: { slidesPerView: 3 },
             }}
             navigation={{
-              prevEl: prevRef.current,
-              nextEl: nextRef.current,
-            }}
-            onBeforeInit={(swiper) => {
-              // @ts-ignore
-              swiper.params.navigation.prevEl = prevRef.current;
-              // @ts-ignore
-              swiper.params.navigation.nextEl = nextRef.current;
+              prevEl: ".best-clinics-prev",
+              nextEl: ".best-clinics-next",
             }}
           >
             {bestClinicsData.map((clinic) => (
@@ -224,19 +220,28 @@ export default function BestClinics() {
 
                   {/* CONTENT */}
                   <div className="space-y-3 p-5">
-                    <h3 className="text-lg font-extrabold text-[#102155]">
+                    <h3 className="text-lg font-extrabold text-[#102155] truncate">
                       {bestClinicsData.length > 0 ? clinic.name : clinic.name}
                     </h3>
 
-                    <p className="inline-flex items-center gap-2 text-sm text-[#5a6f9f]">
-                      <MapPin className="h-4 w-4" />
-                      {clinic.location}
+                    <p className="inline-flex items-center gap-2 text-sm text-[#5a6f9f] w-full">
+                      <MapPin className="h-4 w-4 shrink-0" />
+                      <span className="truncate">{clinic.location}</span>
                     </p>
 
-                    <p className="inline-flex items-center gap-1 rounded-full bg-[#fff4d9] px-3 py-1 text-sm font-semibold text-[#875900]">
-                      <Star className="h-4 w-4 fill-current" />
-                      {clinic.rating}
-                    </p>
+                    <div className="flex items-center justify-between gap-4 pt-2">
+                      <p className="inline-flex items-center gap-1 rounded-full bg-[#fff4d9] px-3 py-1 text-sm font-semibold text-[#875900]">
+                        <Star className="h-4 w-4 fill-current" />
+                        {clinic.rating}
+                      </p>
+
+                      <Link
+                        href={getClinicProfileHref(clinic)}
+                        className="rounded-full bg-[#001a6e] hover:bg-[#102155] px-4 py-1.5 text-xs font-semibold text-white transition-all shadow-sm cursor-pointer"
+                      >
+                        {isRtl ? "عرض الملف" : "View Profile"}
+                      </Link>
+                    </div>
                   </div>
                 </motion.article>
               </SwiperSlide>

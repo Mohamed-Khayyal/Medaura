@@ -117,7 +117,7 @@ export default function Hero() {
           scale: [1, 1.1, 1],
         }}
         transition={{ duration: 6, repeat: Infinity }}
-        className="absolute -top-40 left-1/2 w-125 h-125 -translate-x-1/2 rounded-full bg-[#1c3faa]/10 blur-3xl"
+        className="absolute -top-40 left-1/2 w-96 h-96 sm:w-[500px] sm:h-[500px] -translate-x-1/2 rounded-full bg-[#1c3faa]/10 blur-3xl"
       />
 
       <div className="absolute inset-0 z-0">
@@ -207,7 +207,7 @@ export default function Hero() {
                   alt="Doctor"
                   width={640}
                   height={780}
-                  className="h-105 w-full object-cover"
+                  className="h-80 sm:h-96 md:h-[420px] w-full object-cover"
                 />
               </div>
             </motion.div>

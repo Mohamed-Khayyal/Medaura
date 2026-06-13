@@ -7,6 +7,7 @@ import { t } from "@/i18n";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
+import { useLocale } from "@/lib/hooks";
 
 type DoctorCardProps = {
   id: string | number;
@@ -19,6 +20,21 @@ type DoctorCardProps = {
   imageSrc?: string;
   isFromHome?: boolean;
   profileHref?: string;
+};
+
+const SPECIALTY_TRANSLATION_KEYS: Record<string, string> = {
+  "مخ واعصاب": "authPage.doctor.specialties.neurology",
+  "عظام": "authPage.doctor.specialties.orthopedics",
+  "الأورام": "authPage.doctor.specialties.oncology",
+  "طب الأذن والأنف والحنجرة": "authPage.doctor.specialties.ent",
+  "طب العيون": "authPage.doctor.specialties.ophthalmology",
+  "قلب و اوعية دموية": "authPage.doctor.specialties.cardiology",
+  "صدر و جهاز تنفسي": "authPage.doctor.specialties.pulmonology",
+  "كلى": "authPage.doctor.specialties.nephrology",
+  "اسنان": "authPage.doctor.specialties.dentistry",
+  "اطفال و حديثي الولادة": "authPage.doctor.specialties.pediatrics",
+  "جلدية": "authPage.doctor.specialties.dermatology",
+  "نسا و توليد": "authPage.doctor.specialties.gynecology",
 };
 
 const DOCTOR_FALLBACK_IMAGE = "/images/blank-profile-picture.png";
@@ -36,18 +52,9 @@ export default function DoctorCard({
   profileHref,
 }: DoctorCardProps) {
   const router = useRouter();
-  const [locale, setLocale] = useState("ar");
+  const locale = useLocale();
   const { user, isAuthenticated } = useAuth();
   const isNotPatient = isAuthenticated && user?.user_type?.toLowerCase() !== "patient";
-
-  useEffect(() => {
-    function onLocale(event: Event) {
-      setLocale((event as CustomEvent<string>).detail || "ar");
-    }
-    window.addEventListener("localeChange", onLocale as EventListener);
-    return () =>
-      window.removeEventListener("localeChange", onLocale as EventListener);
-  }, []);
 
   const handleBookNow = () => {
     if (profileHref) {
@@ -95,7 +102,7 @@ export default function DoctorCard({
       <h4 className="text-base font-extrabold text-[#001a6e]">{name}</h4>
 
       <p className="mt-1 text-sm text-[#53679f]">
-        {t("doctorCard.consultant", locale)} {specialty}
+        {t("doctorCard.consultant", locale)} {t(SPECIALTY_TRANSLATION_KEYS[specialty] || specialty, locale)}
       </p>
 
       <motion.div
@@ -113,7 +120,7 @@ export default function DoctorCard({
             {t("doctorCard.sessionFee", locale)}
           </p>
           <p className="font-bold">
-            {price} {locale === "en" ? "ج.م" : "EGP"}
+            {price} {locale === "en" ? "EGP" : "ج.م"}
           </p>
         </div>
         <div>
