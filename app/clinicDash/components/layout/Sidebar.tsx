@@ -11,6 +11,7 @@ import {
   ChevronRight,
   DollarSign,
   CheckSquare,
+  PieChart,
 } from "lucide-react";
 import { useLocale } from "@/lib/hooks";
 import { t } from "@/i18n";
@@ -67,6 +68,12 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
           text: locale === "ar" ? "تأكيد المدفوعات" : "Confirm Payments",
           icon: <CheckSquare size={16} />,
           href: "/clinicDash/financial/pending-payments",
+          exact: false,
+        },
+        {
+          text: locale === "ar" ? "توزيع الأرباح" : "Earnings Distribution",
+          icon: <PieChart size={16} />,
+          href: "/clinicDash/financial/earnings-distribution",
           exact: false,
         },
         {
