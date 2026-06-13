@@ -51,8 +51,78 @@ export default function PendingAppointmentsTable({ records, loading, onMarkPayme
   }
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm" dir="rtl">
+    <>
+      {/* ── Mobile: card grid ─────────────────────────────────────────────── */}
+      <div className="sm:hidden grid grid-cols-1 gap-3">
+        {records.map((r) => {
+          const st = STATUS_CONFIG[r.paymentStatus];
+          return (
+            <div key={String(r.bookingId)} className={`rounded-2xl border border-(--card-border) bg-(--card-bg) p-4 space-y-3 ${r.paymentStatus === "cancelled" ? "opacity-50" : ""}`}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-semibold text-(--text-primary)">{r.patientName}</p>
+                  <p className="text-xs text-(--text-secondary) mt-0.5">{r.doctorName} • {r.specialist}</p>
+                </div>
+                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border ${st.className}`}>
+                  {st.icon}
+                  {st.label}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div>
+                  <p className="text-(--text-secondary) mb-0.5">التاريخ</p>
+                  <p className="font-medium text-(--text-primary)">{r.bookingDate} {r.bookingFrom !== "—" ? r.bookingFrom : ""}</p>
+                </div>
+                <div>
+                  <p className="text-(--text-secondary) mb-0.5">رسوم الكشف</p>
+                  <p className="font-medium text-(--text-primary)">{formatCurrency(r.consultationFee)}</p>
+                </div>
+                <div>
+                  <p className="text-(--text-secondary) mb-0.5">حصة الطبيب</p>
+                  <p className="font-medium text-amber-500">{r.paymentStatus !== "cancelled" ? formatCurrency(r.doctorShare) : "—"}</p>
+                </div>
+                <div>
+                  <p className="text-(--text-secondary) mb-0.5">حصة العيادة</p>
+                  <p className="font-medium text-teal-500">{r.paymentStatus !== "cancelled" ? formatCurrency(r.clinicShare) : "—"}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 pt-2 border-t border-(--card-border)">
+                {r.paymentStatus !== "paid" && r.paymentStatus !== "cancelled" && (
+                  <>
+                    <button
+                      onClick={() => onMarkPayment(r.bookingId, "paid")}
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-emerald-500 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 transition-colors"
+                    >
+                      <CheckCircle size={13} />
+                      تأكيد
+                    </button>
+                    <button
+                      onClick={() => onMarkPayment(r.bookingId, "cancelled")}
+                      className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-rose-500 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 transition-colors"
+                    >
+                      <XCircle size={13} />
+                      إلغاء
+                    </button>
+                  </>
+                )}
+                {(r.paymentStatus === "paid" || r.paymentStatus === "cancelled") && (
+                  <button
+                    onClick={() => onMarkPayment(r.bookingId, "pending")}
+                    className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-(--text-secondary) bg-(--semi-card-bg) hover:bg-(--hover-bg) border border-(--card-border) transition-colors"
+                  >
+                    <RotateCcw size={13} />
+                    إعادة
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* ── Desktop: table ─────────────────────────────────────────────────── */}
+      <div className="hidden sm:block overflow-x-auto">
+        <table className="w-full text-sm" dir="rtl">
         <thead>
           <tr className="border-b border-(--card-border) text-(--text-secondary) text-xs">
             <th className="text-right py-3 px-3 font-semibold">المريض</th>
@@ -155,6 +225,7 @@ export default function PendingAppointmentsTable({ records, loading, onMarkPayme
           })}
         </tbody>
       </table>
-    </div>
+      </div>
+    </>
   );
 }
