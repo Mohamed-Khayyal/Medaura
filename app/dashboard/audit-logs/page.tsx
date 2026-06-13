@@ -1271,7 +1271,7 @@ function ExpandedDetail({ log, role }: { log: AuditLog; role: string }) {
                 )}
                 {loc.country && (
                   <InfoRow label="Country" value={safeDecode(loc.country)} />
-                )}
+                )} 
               </>
             ) : (
               <p className="text-[#a0aab8]">No location data</p>
