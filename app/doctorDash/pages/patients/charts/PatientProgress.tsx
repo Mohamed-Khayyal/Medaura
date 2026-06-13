@@ -44,7 +44,7 @@ const chartData = useMemo(() => {
   }));
 }, [monthsRange, dataMap]);
   return (
-    <div className="bg-(--card-bg) rounded-xl shadow-sm">
+    <div className="min-w-0 overflow-hidden rounded-xl bg-(--card-bg) shadow-sm">
       
       <div className="flex flex-col gap-4 border-b-2 border-(--card-border) p-6 sm:flex-row sm:items-center sm:justify-between">
         <button 
@@ -77,8 +77,9 @@ const chartData = useMemo(() => {
       </div>
 
       {/* Chart */}
-      <div className="h-72 min-h-72 w-full min-w-0">
-        <ResponsiveContainer width="100%" height="100%">
+      <div className="w-full overflow-x-auto pb-2">
+        <div className="h-72 min-h-72 min-w-[680px] sm:min-w-0">
+          <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData} barCategoryGap={30} barGap={-28}>
                 <CartesianGrid strokeDasharray="0 0" vertical={false} stroke="var(--card-border)" />
 
@@ -114,7 +115,8 @@ const chartData = useMemo(() => {
                 />
 
             </BarChart>
-        </ResponsiveContainer>
+          </ResponsiveContainer>
+        </div>
       </div>
     </div>
   )

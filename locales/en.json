@@ -12,7 +12,6 @@
     "profile": "Profile",
     "logout": "Logout"
   },
-
   "hero": {
     "trusted": "Trusted healthcare platform",
     "title": "Your health starts here",
@@ -40,19 +39,16 @@
     },
     "search": "Search"
   },
-
   "bestDoctors": {
     "title": "Most booked doctors",
     "subtitle": "Top doctors with strong ratings and verified clinical experience.",
     "viewAll": "View all"
   },
-
   "bestClinics": {
     "title": "Best clinics",
     "description": "Trusted clinics with high patient satisfaction and modern facilities.",
     "viewClinics": "View clinics"
   },
-
   "specialties": {
     "title": "Specialties",
     "description": "Choose the right specialty and find experienced doctors for your case.",
@@ -62,7 +58,6 @@
     "searchPlaceholder": "Search for a specialty...",
     "availableDoctors": "Available doctors in {specialty}"
   },
-
   "howItWorks": {
     "title": "How it works",
     "description": "Three simple steps to find the right doctor and schedule your visit.",
@@ -82,7 +77,6 @@
       }
     ]
   },
-
   "doctorCard": {
     "consultant": "Consultant",
     "sessionFee": "Session fee",
@@ -91,7 +85,6 @@
     "years": "years",
     "viewProfile": "View Profile"
   },
-
   "sales": {
     "label": "Offers",
     "title": "Current deals",
@@ -112,7 +105,6 @@
       }
     ]
   },
-
   "whatClientSay": {
     "title": "What clients say",
     "description": "Real feedback from patients who booked through Medaura.",
@@ -134,7 +126,6 @@
       }
     ]
   },
-
   "footer": {
     "title": "Medaura",
     "description": "Smart healthcare booking platform connecting patients with top doctors and clinics.",
@@ -159,7 +150,6 @@
     "supportHoursDefault": "Support available 24/7",
     "copyright": "Copyright 2026 Medaura. All rights reserved."
   },
-
   "auth": {
     "login": {
       "successTitle": "Logged in!",
@@ -239,6 +229,39 @@
       "ok": "OK"
     }
   },
+  "providerProfile": {
+    "loadingProfile": "Loading profile...",
+    "loadDoctorError": "Failed to load doctor profile.",
+    "loadStaffError": "Failed to load staff profile.",
+    "loadSlotsError": "Failed to load available times.",
+    "loadDoctorRatingsError": "Failed to load doctor ratings.",
+    "loadStaffRatingsError": "Failed to load staff ratings.",
+    "fullyBookedTitle": "Fully booked day",
+    "fullyBookedMessage": "Sorry, all booking times on this day are fully booked. Please choose another date.",
+    "bookingInProgress": "Booking...",
+    "bookingFailedTitle": "Could not complete booking",
+    "bookingFailedMessage": "Something went wrong while creating the booking.",
+    "loginRequiredTitle": "Please log in",
+    "loginRequiredMessage": "Please log in first to complete your booking.",
+    "noBio": "No biography is available.",
+    "currency": "EGP",
+    "workingDays": "Working days: {days}",
+    "loadingRatings": "Loading ratings...",
+    "noReviews": "No reviews yet.",
+    "patient": "Patient",
+    "noComment": "No comment",
+    "previous": "Previous",
+    "next": "Next",
+    "pageOf": "Page {page} of {total}",
+    "rateDoctor": "Rate this doctor",
+    "rateStaff": "Rate this staff member",
+    "commentPlaceholder": "Write your comment (optional)",
+    "selectRating": "Please select a rating from 1 to 5.",
+    "ratingSubmitted": "Rating submitted successfully.",
+    "submitRatingError": "Failed to submit rating.",
+    "submitting": "Submitting...",
+    "submitRating": "Submit rating"
+  },
   "doctors": {
     "title": "Doctors",
     "notFound": "Sorry, the doctors page is currently unavailable.",
@@ -312,7 +335,73 @@
     "appointments": "Appointments",
     "totalPatients": "Total Patients",
     "bookings": "Bookings",
-    "newBooking": "New Booking"
+    "newBooking": "New Booking",
+    "showAll": "Show All",
+    "patientStats": "Patient Statistics",
+    "newPatients": "New Patients",
+    "oldPatients": "Old Patients",
+    "totalPatientsCount": "Total Patients: {count}",
+    "noData": "No data yet",
+    "noDataDesc": "Statistics will appear once new records are available.",
+    "appointmentRequests": "Appointment Requests",
+    "allAppointments": "All Appointments",
+    "noRequests": "No booking requests at the moment",
+    "newRequestsDesc": "New requests will appear as they arrive.",
+    "todayAppointments": "Today's Appointments",
+    "noTodayAppointments": "No appointments for today",
+    "noTodayAppointmentsDesc": "New appointments will appear here automatically.",
+    "patientReport": "Patient Reports",
+    "noReports": "No reports available yet",
+    "noReportsDesc": "Patient reports will appear here once uploaded.",
+    "defaultReportDesc": "Patient report",
+    "patientRegistry": "Patient Registry",
+    "noPatientsYet": "No patient records yet",
+    "firstPatientDesc": "Add your first record to display it here.",
+    "lastVisit": "Last Visit",
+    "departments": "Departments",
+    "diagnosis": "Diagnosis",
+    "patientName": "Patient Name",
+    "ongoingExam": "Ongoing Exam",
+    "visit": "Visit",
+    "consultation": "Consultation",
+    "emergency": "Emergency",
+    "male": "Male",
+    "female": "Female",
+    "gender": "Gender",
+    "visitType": "Visit Type",
+    "doctor": "Doctor",
+    "status": "Status",
+    "patientId": "Patient ID",
+    "dateAndTime": "Date & Time",
+    "latestAppointments": "Latest Appointments",
+    "noAppointments": "No appointments yet",
+    "noAppointmentsDesc": "New bookings will appear here as soon as they are added.",
+    "showingPatients": "Showing {page} - {totalPages} of {total} patients",
+    "patientVisits": "Patient Visits",
+    "allPatients": "All Patients",
+    "sinceLastWeek": "since last week",
+    "printReport": "Print / Save PDF",
+    "medicalReport": "Medical Report",
+    "clinicName": "Medaura Medical Center",
+    "reportId": "Report ID",
+    "date": "Date",
+    "patient": "Patient",
+    "symptoms": "Symptoms",
+    "medication": "Medication",
+    "tests": "Tests",
+    "notes": "Notes",
+    "authorizedSignature": "Authorized Signature",
+    "loadingReport": "Loading report details...",
+    "prescriptionNumber": "Prescription #",
+    "createdDate": "Created Date",
+    "visitDate": "Visit Date",
+    "loadingPrescriptions": "Loading prescriptions...",
+    "prescriptionsTitle": "Medical Prescriptions",
+    "prescriptionsDesc": "List of all medical prescriptions written by you",
+    "searchPrescriptionsPlaceholder": "Search by patient name, diagnosis, or medication...",
+    "noPrescriptions": "No prescriptions written yet",
+    "noPrescriptionsDesc": "Prescriptions will appear here once written from the bookings list",
+    "prescriptionsCount": "{count} Prescriptions"
   },
   "clinicDash": {
     "controlPanel": "Control Panel",
@@ -565,7 +654,9 @@
       "colDiagnosis": "Diagnosis",
       "colPatient": "Patient Name",
       "colGender": "Gender",
-      "lastVisit": "Last Visit"
+      "lastVisit": "Last Visit",
+      "colAge": "Age",
+      "searchPlaceholder": "Search by patient name or phone..."
     },
     "todayAppointments": {
       "title": "Booking List",
@@ -987,15 +1078,28 @@
     "statusRejected": "Rejected"
   },
   "settingsPage": {
+    "editProfile": "Edit Profile",
     "loadingSettings": "Loading settings...",
+    "loadingData": "Loading your profile...",
     "manageAccount": "Manage Account & Permissions",
     "settingsTitle": "Settings",
     "manageDesc": "Manage your profile and create new supervisor accounts for the platform.",
     "systemAdmin": "System Admin (Admin)",
     "fullName": "Full Name",
+    "phone": "Phone",
+    "gender": "Gender",
+    "yearsExperience": "Years of experience",
+    "verificationStatus": "Verification status",
+    "verified": "Verified",
+    "notVerified": "Not verified",
+    "workHoursLocation": "Working hours and location",
+    "consultationPrice": "Consultation fee:",
+    "personalInfo": "Personal information",
+    "email": "Email",
+    "address": "Address",
     "fullNamePlaceholder": "Enter your full name...",
     "saving": "Saving...",
-    "saveChanges": "Save Changes",
+    "saveChanges": "Save changes",
     "changePassword": "Change Password",
     "currentPassword": "Current Password",
     "newPassword": "New Password",
@@ -1012,10 +1116,15 @@
     "enterFullName": "Please enter the full name",
     "ok": "OK",
     "fillAllFields": "Please fill in all required fields",
+    "minChars": "Password must be at least 8 characters",
     "minPassword": "Password must be at least 8 characters",
     "passwordMismatch": "The new password and confirmation do not match",
+    "passwordChanged": "Password changed successfully",
+    "changeFailedTitle": "Password change failed",
+    "changeError": "An error occurred while changing the password",
+    "failedChange": "Failed to change password",
     "successTitle": "Success",
-    "profileUpdated": "Profile updated successfully",
+    "profileUpdated": "Profile updated successfully.",
     "great": "Great",
     "failedUpdate": "Update Failed",
     "failedPassword": "Password Change Failed",
@@ -1025,6 +1134,137 @@
     "creationFailed": "Creation Failed",
     "errorOccurred": "An error occurred",
     "fullNameLabel": "Full Name",
-    "fullNameNewPlaceholder": "Enter the new admin's full name..."
+    "fullNameNewPlaceholder": "Enter the new admin's full name...",
+    "ratings": "ratings",
+    "sun": "Sunday",
+    "mon": "Monday",
+    "tue": "Tuesday",
+    "wed": "Wednesday",
+    "thu": "Thursday",
+    "fri": "Friday",
+    "sat": "Saturday",
+    "genderMale": "Male",
+    "genderFemale": "Female",
+    "genderOther": "Other",
+    "genderNotSpecified": "Not specified",
+    "professionalLicence": "Professional Licence Document",
+    "licenceDoc": "Licence Document",
+    "viewLicenceDoc": "View Licence Document",
+    "photo": "Photo",
+    "consultationPriceField": "Consultation Fee",
+    "specialty": "Specialist (Specialty)",
+    "chooseSpecialty": "Choose specialty...",
+    "bio": "Bio",
+    "workDays": "Work days",
+    "workFrom": "Work from",
+    "workTo": "Work to",
+    "location": "Location",
+    "locationPlaceholder": "Cairo",
+    "latitude": "Latitude",
+    "longitude": "Longitude",
+    "licenceUploadDesc": "Upload your medical licence as an image or PDF. This is optional — you can add or update it at any time.",
+    "chooseFile": "Choose PDF or image file",
+    "remove": "Remove",
+    "cancel": "Cancel",
+    "close": "Close",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "doctorPhotoAlt": "Doctor profile photo",
+    "loadingMap": "Loading map...",
+    "updateProfileError": "Failed to update profile"
+  },
+  "pendingPage": {
+    "title": "Medaura",
+    "logout": "Logout",
+    "goToProfile": "Complete Profile Data",
+    "goToDocuments": "Upload Verification Documents",
+    "footerNote": "If you have any questions, please contact technical support",
+    "staff": {
+      "badge": "Awaiting Clinic Approval",
+      "title": "Awaiting Clinic Approval",
+      "subtitle": "Your account has been registered successfully! Joining a clinic requires approval from the clinic administrator.",
+      "infoText": "The clinic administrator will review and approve your request shortly. You will be able to access the dashboard once your request is accepted.",
+      "step1": "Account created successfully ✓",
+      "step2": "Awaiting clinic admin review",
+      "step3": "Receive approval and access the dashboard"
+    },
+    "doctor": {
+      "badge": "Awaiting Administration Approval",
+      "title": "Awaiting Administration Approval",
+      "subtitle": "Your request as a doctor has been registered successfully. Verifying your credentials requires review by the administration team.",
+      "infoText": "The Medaura administration team is reviewing your documents and professional credentials for verification. You will be notified once the review is complete.",
+      "step1": "Professional credentials submitted ✓",
+      "step2": "Document review by the administration team",
+      "step3": "Receive accreditation and access the dashboard"
+    },
+    "clinic": {
+      "badge": "Awaiting Administration Approval",
+      "title": "Awaiting Clinic Accreditation",
+      "subtitle": "Your clinic has been registered successfully! It requires administration approval before you can start accepting appointments.",
+      "infoText": "The Medaura administration team is reviewing and verifying your clinic's details. You will be able to use the clinic dashboard once approved.",
+      "step1": "Clinic details registered successfully ✓",
+      "step2": "Request review by the administration team",
+      "step3": "Receive accreditation and manage the clinic"
+    },
+    "default": {
+      "badge": "Pending",
+      "title": "Awaiting Approval",
+      "subtitle": "Your account is under review.",
+      "infoText": "Please wait while your account is being reviewed.",
+      "step1": "Account created ✓",
+      "step2": "Reviewing request",
+      "step3": "Access the platform"
+    }
+  },
+  "financialPage": {
+    "title": "Financial Management",
+    "subtitle": "Track your earnings and profit shares from paid appointments",
+    "exportCsv": "Export CSV",
+    "printPdf": "Print / PDF",
+    "downloadReport": "Download Report",
+    "period": "Period",
+    "timePeriod": "Time Period",
+    "today": "Today",
+    "week": "Week",
+    "month": "Month",
+    "year": "Year",
+    "custom": "Custom",
+    "dateFrom": "From",
+    "dateTo": "To",
+    "reset": "Reset",
+    "patient": "Patient",
+    "date": "Date",
+    "consultationFee": "Consultation Fee",
+    "yourSharePct": "Your Share %",
+    "yourEarnings": "Your Earnings",
+    "status": "Status",
+    "paid": "Paid",
+    "pending": "Pending",
+    "cancelled": "Cancelled",
+    "total": "Total",
+    "appointments": "appointments",
+    "totalEarnedReceived": "Total Earnings Received",
+    "noAppointments": "No appointments in this period",
+    "noAppointmentsDesc": "Earnings and financial details will appear once bookings are completed",
+    "totalEarnings": "Total Earnings",
+    "yearlyEarnings": "Yearly Earnings",
+    "monthlyEarnings": "Monthly Earnings",
+    "todayEarnings": "Today's Earnings",
+    "pendingEarnings": "Pending Earnings",
+    "completedAppointments": "Completed Appointments",
+    "earningsDevelopment": "Earnings Development",
+    "clinicShare": "Clinic's Share",
+    "distribution": "Total Earnings Distribution",
+    "vsClinic": "Your earnings vs clinic share",
+    "last30Days": "Last 30 Days Earnings",
+    "dailySum": "Sum of your daily earnings",
+    "monthlySum": "Last 12 Months Earnings",
+    "monthlySumDesc": "Your monthly earnings over the last 12 months",
+    "earningDetails": "Appointment Earnings History",
+    "earningDetailsDesc": "List of appointments with your share details and payment status",
+    "waitingAdmin": "Awaiting admin confirmation",
+    "confirmPayment": "Confirm Payment",
+    "noPendingEarnings": "No pending earnings",
+    "pendingPayouts": "payouts pending"
   }
 }

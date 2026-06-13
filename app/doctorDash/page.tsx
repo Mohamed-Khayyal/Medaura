@@ -75,6 +75,14 @@ type DashboardApiData = {
     date: string;
     time: string;
   }[];
+  doctor?: {
+    full_name: string;
+    specialist: string;
+    rating: number;
+    total_bookings: number;
+    pending_bookings: number;
+    completed_bookings: number;
+  };
 };
 
 function Dashboard({ childern }: { childern: React.ReactNode }) {
@@ -86,15 +94,7 @@ function Dashboard({ childern }: { childern: React.ReactNode }) {
   const locale = useLocale();
   const isRtl = locale === "ar";
 
-  const weeklyData = [
-    { date: "2026-01-25", exixiting: 40, new: 20 },
-    { date: "2026-01-26", exixiting: 50, new: 30 },
-    { date: "2026-01-27", exixiting: 45, new: 25 },
-    { date: "2026-01-28", exixiting: 60, new: 35 },
-    { date: "2026-01-29", exixiting: 38, new: 22 },
-    { date: "2026-01-30", exixiting: 55, new: 28 },
-    { date: "2026-01-31", exixiting: 65, new: 32 },
-  ];
+  const weeklyData: any[] = [];
 
   useEffect(() => {
     let active = true;
@@ -139,7 +139,7 @@ function Dashboard({ childern }: { childern: React.ReactNode }) {
   const patientCard = dashboardData?.cards?.patients;
 
   return (
-    <div className="flex w-full">
+    <div className="flex w-full" dir={isRtl ? "rtl" : "ltr"}>
       <div className="flex w-full flex-col bg-(--background) min-h-screen transition-colors duration-300">
         <div className="space-y-4">
           <div className="rounded-2xl border border-(--card-border) bg-(--card-bg) shadow-[var(--shadow-soft)] px-4 py-3 sm:px-5 sm:py-4">
@@ -207,7 +207,7 @@ function Dashboard({ childern }: { childern: React.ReactNode }) {
             <PatientsTable patients={dashboardData?.patients?.slice(0, 5)} />
           </div>
           <div className="grid grid-cols-1 gap-5">
-            <ClinicsList reports={dashboardData?.reports?.slice(0, 5)} />
+            <ClinicsList reports={dashboardData?.reports?.slice(0, 5)} doctorName={dashboardData?.doctor?.full_name} />
           </div>
           {/* Appointments */}
           <div className="grid grid-cols-1 gap-5">

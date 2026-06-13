@@ -6,10 +6,14 @@ import PatientProgress from "./charts/PatientProgress";
 import PatientsTable from "./charts/PatientTaple";
 import { Download } from "lucide-react";
 import { useMemo, useState, useEffect } from "react";
+import { useLocale } from "@/lib/hooks";
+import { t } from "@/i18n";
 
 export default function PatientsStats() {
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const locale = useLocale();
+  const isRtl = locale === "ar";
 
   useEffect(() => {
     async function fetchStats() {
@@ -33,15 +37,15 @@ export default function PatientsStats() {
     if (!bookings.length) {
       return {
         stats: [
-          { title: "إجمالي المرضى", value: 0, change: 0 },
-          { title: "مرضى جدد", value: 0, change: 0 },
-          { title: "تحت العلاج", value: 0, change: 0 },
-          { title: "بدون زيارة", value: 0, change: 0 },
+          { title: t("doctorDashPages.patientsPage.totalPatients", locale), value: 0, change: 0 },
+          { title: t("doctorDashPages.patientsPage.newPatients", locale), value: 0, change: 0 },
+          { title: t("doctorDashPages.patientsPage.underTreatment", locale), value: 0, change: 0 },
+          { title: t("doctorDashPages.patientsPage.noVisits", locale), value: 0, change: 0 },
         ],
         donutData: [
-          { name: "نشط", value: 0, color: "#0B8A13" },
-          { name: "متعافى", value: 0, color: "#0F2A7A" },
-          { name: "تحت العلاج", value: 0, color: "#7B1FA2" },
+          { name: t("doctorDashPages.patientsPage.active", locale), value: 0, color: "#0B8A13" },
+          { name: t("doctorDashPages.patientsPage.recovered", locale), value: 0, color: "#0F2A7A" },
+          { name: t("doctorDashPages.patientsPage.underTreatment", locale), value: 0, color: "#7B1FA2" },
         ],
         weeklyData: Array.from({ length: 12 }, (_, i) => ({ month: i + 1, exciting: 0 })),
       };
@@ -86,7 +90,7 @@ export default function PatientsStats() {
         activeCount++;
       } else if (status === "completed") {
         recoveredCount++;
-      } else if (status === "pending") {
+      } else if (status === "pending" || status === "approved") {
         underTreatmentCount++;
       } else if (status === "cancelled" || status === "rejected") {
         noVisitsCount++;
@@ -114,67 +118,69 @@ export default function PatientsStats() {
     return {
       stats: [
         {
-          title: "إجمالي المرضى",
+          title: t("doctorDashPages.patientsPage.totalPatients", locale),
           value: totalPatients,
           change: 0,
         },
         {
-          title: "مرضى جدد",
+          title: t("doctorDashPages.patientsPage.newPatients", locale),
           value: newPatientsCount,
           change: 0,
         },
         {
-          title: "تحت العلاج",
+          title: t("doctorDashPages.patientsPage.underTreatment", locale),
           value: underTreatmentCount,
           change: 0,
         },
         {
-          title: "بدون زيارة",
+          title: t("doctorDashPages.patientsPage.noVisits", locale),
           value: noVisitsCount,
           change: 0,
         },
       ],
       donutData: [
-        { name: "نشط", value: activeCount, color: "#0B8A13" },
-        { name: "متعافى", value: recoveredCount, color: "#0F2A7A" },
-        { name: "تحت العلاج", value: underTreatmentCount, color: "#7B1FA2" },
+        { name: t("doctorDashPages.patientsPage.active", locale), value: activeCount, color: "#0B8A13" },
+        { name: t("doctorDashPages.patientsPage.recovered", locale), value: recoveredCount, color: "#0F2A7A" },
+        { name: t("doctorDashPages.patientsPage.underTreatment", locale), value: underTreatmentCount, color: "#7B1FA2" },
       ],
       weeklyData,
     };
-  }, [bookings]);
+  }, [bookings, locale]);
 
   return (
-    <div className="space-y-4 ">
+    <div className="min-w-0 space-y-4 px-2 py-3 sm:px-4 sm:py-4" dir={isRtl ? "rtl" : "ltr"}>
 
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 
-        <button className="flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg bg-(--input-bg) border border-(--input-border) hover:bg-(--input-hover)">
+        <button className="order-2 flex w-full items-center justify-center gap-2 rounded-lg border border-(--input-border) bg-(--input-bg) px-3 py-2 text-sm transition hover:bg-(--input-hover) sm:order-1 sm:w-auto">
           <Download size={16} />
-          تصدير البيانات
+          {t("doctorDashPages.patientsPage.exportData", locale)}
         </button>
 
-        <div className="text-right flex flex-col gap-3">
-          <h2 className="font-semibold text-2xl text-(--text-primary)">إدارة المرضى</h2>
+        <div className="order-1 flex min-w-0 flex-col gap-1 text-start sm:order-2">
+          <h2 className="text-xl font-semibold text-(--text-primary) sm:text-2xl">
+            {t("doctorDashPages.patientsPage.title", locale)}
+          </h2>
           <p className="text-xs text-(--text-secondary)">
-            عرض ومتابعة جميع سجلات المرضى في العيادة
+            {t("doctorDashPages.patientsPage.subtitle", locale)}
           </p>
         </div>
 
       </div>
 
       {/* Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-7">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:gap-7">
         {computedData.stats.map((item, i) => (
           <StatCard key={i} {...item} />
         ))}
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 mb-8">
-        <div className=" col-span-1">
-          <DonutChart data={computedData.donutData}  />
+      <div className="mb-6 grid min-w-0 grid-cols-1 gap-4 lg:mb-8 lg:grid-cols-3 lg:gap-8">
+        <div className="min-w-0 lg:col-span-1">
+          <DonutChart data={computedData.donutData} />
         </div>
-        <div className=" col-span-2">
-          <PatientProgress data={computedData.weeklyData}  /> 
+        <div className="min-w-0 lg:col-span-2">
+          <PatientProgress data={computedData.weeklyData} />
         </div>
       </div>
       <div>

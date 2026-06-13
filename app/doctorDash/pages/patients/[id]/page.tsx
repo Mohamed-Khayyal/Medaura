@@ -29,6 +29,7 @@ interface BookingDetail {
   prescription_access_status: "pending" | "accepted" | "rejected" | null;
   patient_name: string;
   patient_phone?: string | null;
+  patient_photo?: string | null;
   doctor_name?: string | null;
 }
 
@@ -434,9 +435,17 @@ export default function PatientDetails() {
         {/* Right: Patient info */}
         <div className="bg-(--card-bg) rounded-2xl border border-(--card-border) p-6 space-y-5 h-fit">
           <div className="text-center">
-            <div className="w-16 h-16 rounded-2xl bg-[#1F2B6C] text-white flex items-center justify-center text-2xl font-bold mx-auto mb-3">
-              {booking.patient_name?.charAt(0) || "م"}
-            </div>
+            {booking.patient_photo ? (
+              <img
+                src={booking.patient_photo}
+                alt={booking.patient_name}
+                className="w-16 h-16 rounded-2xl object-cover mx-auto mb-3"
+              />
+            ) : (
+              <div className="w-16 h-16 rounded-2xl bg-[#1F2B6C] text-white flex items-center justify-center text-2xl font-bold mx-auto mb-3">
+                {booking.patient_name?.charAt(0) || "م"}
+              </div>
+            )}
             <h3 className="font-bold text-xl text-(--text-primary)">
               {booking.patient_name}
             </h3>

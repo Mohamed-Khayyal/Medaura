@@ -3,7 +3,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Bell, RefreshCw, CheckCircle2, Clock, Check } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { ar } from "date-fns/locale";
+import { ar, enUS } from "date-fns/locale";
+import { useLocale } from "@/lib/hooks";
+import { t } from "@/i18n";
 
 interface Notification {
   id: number;
@@ -21,6 +23,8 @@ export default function DoctorNotificationsPage() {
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [filter, setFilter] = useState<"all" | "unread" | "read">("all");
+  const locale = useLocale();
+  const isRtl = locale === "ar";
 
   const loadNotifications = useCallback(async () => {
     try {
@@ -29,7 +33,7 @@ export default function DoctorNotificationsPage() {
       const res = await fetch("/api/notifications/me");
       const result = await res.json();
       if (!res.ok || !result.success) {
-        throw new Error(result.error || "فشل في تحميل الإشعارات");
+        throw new Error(result.error || t("doctorDashPages.notificationsPage.loadError", locale));
       }
       const items = Array.isArray(result.data) ? result.data : [];
       
@@ -43,11 +47,11 @@ export default function DoctorNotificationsPage() {
       );
       setNotifications(items);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "فشل في تحميل الإشعارات");
+      setError(err instanceof Error ? err.message : t("doctorDashPages.notificationsPage.loadError", locale));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [locale]);
 
   useEffect(() => {
     loadNotifications();
@@ -84,7 +88,10 @@ export default function DoctorNotificationsPage() {
 
   const formatTime = (createdAt: string) => {
     try {
-      return formatDistanceToNow(new Date(createdAt), { addSuffix: true, locale: ar });
+      return formatDistanceToNow(new Date(createdAt), { 
+        addSuffix: true, 
+        locale: locale === "ar" ? ar : enUS 
+      });
     } catch {
       return "";
     }
@@ -126,50 +133,58 @@ export default function DoctorNotificationsPage() {
   }, [notifications]);
 
   return (
-    <div className="space-y-6 text-right" dir="rtl">
+    <div className="space-y-6 text-start" dir={isRtl ? "rtl" : "ltr"}>
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-semibold text-(--text-primary)">الإشعارات</h1>
+          <h1 className="text-2xl font-semibold text-(--text-primary)">
+            {t("doctorDashPages.notificationsPage.title", locale)}
+          </h1>
           <p className="text-sm text-(--text-secondary)">
-            تابع آخر التنبيهات والطلبات والنشاطات في العيادة.
+            {t("doctorDashPages.notificationsPage.subtitle", locale)}
           </p>
         </div>
         <div className="flex items-center gap-3">
           <button
             onClick={loadNotifications}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-(--card-border) bg-(--card-bg) hover:bg-(--semi-card-bg) text-sm font-semibold text-(--text-primary) cursor-pointer"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-(--card-border) bg-(--card-bg) hover:bg-(--semi-card-bg) text-sm font-semibold text-(--text-primary) cursor-pointer transition"
           >
             <RefreshCw size={16} />
-            تحديث
+            {t("doctorDashPages.notificationsPage.refresh", locale)}
           </button>
           <button
             onClick={markAllRead}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-(--card-border) bg-(--card-bg) hover:bg-(--semi-card-bg) text-sm font-semibold text-(--text-primary) cursor-pointer"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-(--card-border) bg-(--card-bg) hover:bg-(--semi-card-bg) text-sm font-semibold text-(--text-primary) cursor-pointer transition"
           >
             <CheckCircle2 size={16} />
-            تحديد الكل كمقروء
+            {t("doctorDashPages.notificationsPage.markAllRead", locale)}
           </button>
         </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        <div className="rounded-2xl border border-(--card-border) bg-(--card-bg) p-4 flex flex-col gap-2">
-          <p className="text-sm text-(--text-secondary)">إجمالي الإشعارات</p>
+        <div className={`rounded-2xl border border-(--card-border) bg-(--card-bg) p-4 flex flex-col gap-2 ${isRtl ? "items-start" : "items-start"}`}>
+          <p className="text-sm text-(--text-secondary)">
+            {t("doctorDashPages.notificationsPage.totalNotifications", locale)}
+          </p>
           <div className="text-2xl font-bold text-(--text-primary)">
             {notifications.length}
           </div>
         </div>
         <div className="rounded-2xl border border-(--card-border) bg-(--card-bg) p-4 flex flex-col gap-2">
-          <p className="text-sm text-(--text-secondary)">غير المقروءة</p>
+          <p className="text-sm text-(--text-secondary)">
+            {t("doctorDashPages.notificationsPage.unread", locale)}
+          </p>
           <div className="text-2xl font-bold text-(--text-primary)">
             {unreadCount}
           </div>
         </div>
-        <div className="rounded-2xl border border-(--card-border) bg-(--card-bg) p-4 flex items-center justify-between">
-          <div className="flex flex-col gap-1">
-            <p className="text-sm text-(--text-secondary)">آخر نشاط</p>
+        <div className="rounded-2xl border border-(--card-border) bg-(--card-bg) p-4 flex items-center justify-between gap-4">
+          <div className="flex flex-col gap-1 text-start">
+            <p className="text-sm text-(--text-secondary)">
+              {t("doctorDashPages.notificationsPage.lastActivity", locale)}
+            </p>
             <div className="text-sm font-semibold text-(--text-primary) max-w-[180px] truncate">
-              {notifications[0]?.title || "لا توجد إشعارات حديثة"}
+              {notifications[0]?.title || t("doctorDashPages.notificationsPage.noRecentNotifications", locale)}
             </div>
           </div>
           <Bell size={24} className="text-(--text-secondary)" />
@@ -179,9 +194,9 @@ export default function DoctorNotificationsPage() {
       {/* Filter Tabs */}
       <div className="flex items-center gap-1.5 rounded-2xl bg-(--card-bg) p-1.5 border border-(--card-border) max-w-md">
         {([
-          { key: "all", label: `الكل (${notifications.length})` },
-          { key: "unread", label: `غير مقروء (${unreadCount})` },
-          { key: "read", label: `مقروء (${notifications.length - unreadCount})` },
+          { key: "all", label: `${t("doctorDashPages.notificationsPage.filterAll", locale)} (${notifications.length})` },
+          { key: "unread", label: `${t("doctorDashPages.notificationsPage.filterUnread", locale)} (${unreadCount})` },
+          { key: "read", label: `${t("doctorDashPages.notificationsPage.filterRead", locale)} (${notifications.length - unreadCount})` },
         ] as const).map((tab) => (
           <button
             key={tab.key}
@@ -191,7 +206,7 @@ export default function DoctorNotificationsPage() {
             }}
             className={`flex-1 rounded-xl py-2 text-xs font-semibold transition-all duration-200 cursor-pointer ${
               filter === tab.key
-                ? "bg-[#1f2b6c] text-white shadow-md"
+                ? "bg-[#1f2b6c] text-white shadow-md font-medium"
                 : "text-(--text-secondary) hover:bg-(--semi-card-bg)"
             }`}
           >
@@ -201,24 +216,28 @@ export default function DoctorNotificationsPage() {
       </div>
 
       <div className="rounded-2xl border border-(--card-border) bg-(--card-bg) overflow-hidden">
-        <div className="border-b border-(--card-border) px-6 py-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-(--text-primary)">جميع الإشعارات</h2>
+        <div className={`border-b border-(--card-border) px-6 py-4 flex items-center justify-between gap-4 ${isRtl ? "flex-row" : "flex-row-reverse"}`}>
+          <h2 className="text-lg font-semibold text-(--text-primary)">
+            {t("doctorDashPages.notificationsPage.allNotifications", locale)}
+          </h2>
           <span className="text-sm text-(--text-secondary)">
-            الصفحة {page} من {totalPages}
+            {t("doctorDashPages.notificationsPage.page", locale)} {page} {t("doctorDashPages.notificationsPage.of", locale)} {totalPages}
           </span>
         </div>
 
         {loading && (
-          <div className="px-6 py-8 text-sm text-(--text-secondary)">جاري التحميل...</div>
+          <div className="px-6 py-8 text-sm text-(--text-secondary) text-center">
+            {t("doctorDashPages.notificationsPage.loadingNotifications", locale)}
+          </div>
         )}
 
         {!loading && error && (
-          <div className="px-6 py-8 text-sm text-red-500">{error}</div>
+          <div className="px-6 py-8 text-sm text-red-500 text-center">{error}</div>
         )}
 
         {!loading && !error && pageNotifications.length === 0 && (
           <div className="px-6 py-8 text-sm text-(--text-secondary) text-center">
-            لا توجد إشعارات.
+            {t("doctorDashPages.notificationsPage.noNotifications", locale)}
           </div>
         )}
 
@@ -228,23 +247,23 @@ export default function DoctorNotificationsPage() {
             <div
               key={notification.id}
               className={`flex items-start gap-4 px-6 py-4 border-b border-(--card-border) last:border-b-0 transition-colors ${
-                notification.read ? "opacity-75" : "bg-(--semi-card-bg)"
+                notification.read ? "opacity-75 hover:bg-(--semi-card-bg)/30" : "bg-(--semi-card-bg) hover:bg-(--semi-card-bg)/80"
               }`}
             >
-              <div className="relative">
+              <div className="relative shrink-0">
                 <img
                   src="/images/blank-profile-picture.png"
                   alt="Notification"
                   width={44}
                   height={44}
-                  className="rounded-full"
+                  className="rounded-full object-cover"
                 />
                 {!notification.read && (
                   <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-[#1f2b6c] rounded-full ring-2 ring-white dark:ring-slate-900" />
                 )}
               </div>
-              <div className="flex-1 min-w-0 text-right">
-                <div className="flex items-center justify-between gap-4 flex-row-reverse">
+              <div className="flex-1 min-w-0 text-start">
+                <div className={`flex items-center justify-between gap-4 ${isRtl ? "flex-row" : "flex-row-reverse"}`}>
                   <h3 className="text-sm font-semibold text-(--text-primary) truncate">
                     {notification.title}
                   </h3>
@@ -252,16 +271,18 @@ export default function DoctorNotificationsPage() {
                     {formatTime(notification.created_at)}
                   </span>
                 </div>
-                <p className="mt-1 text-sm text-(--text-secondary)">
+                <p className="mt-1 text-sm text-(--text-secondary) leading-relaxed">
                   {notification.message}
                 </p>
                 {!notification.read && (
                   <button
                     onClick={() => markNotificationRead(notification.id)}
-                    className="mt-2 text-xs font-semibold text-[#1f2b6c] hover:underline flex items-center gap-1 mr-auto cursor-pointer"
+                    className={`mt-2 text-xs font-semibold text-[#1f2b6c] hover:underline flex items-center gap-1 cursor-pointer ${
+                      isRtl ? "ml-auto" : "mr-auto"
+                    }`}
                   >
                     <Check size={12} />
-                    تحديد كمقروء
+                    {t("doctorDashPages.notificationsPage.markAsRead", locale)}
                   </button>
                 )}
               </div>
@@ -269,22 +290,22 @@ export default function DoctorNotificationsPage() {
           ))}
 
         {totalPages > 1 && (
-          <div className="flex flex-wrap items-center justify-between gap-4 px-6 py-4 border-t border-(--card-border) flex-row-reverse">
+          <div className={`flex flex-wrap items-center justify-between gap-4 px-6 py-4 border-t border-(--card-border) ${isRtl ? "flex-row-reverse" : "flex-row"}`}>
             <button
               onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
               disabled={page === totalPages}
-              className="px-3 py-1.5 rounded-lg border border-(--card-border) text-sm font-semibold text-(--text-primary) disabled:opacity-50 cursor-pointer hover:bg-(--semi-card-bg)"
+              className="px-3 py-1.5 rounded-lg border border-(--card-border) text-sm font-semibold text-(--text-primary) disabled:opacity-50 cursor-pointer hover:bg-(--semi-card-bg) transition"
             >
-              التالي
+              {t("doctorDashPages.notificationsPage.next", locale)}
             </button>
             <div className="flex items-center gap-2">
               {pageNumbers.map((pageNumber) => (
                 <button
                   key={pageNumber}
                   onClick={() => setPage(pageNumber)}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-semibold border border-(--card-border) cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-lg text-sm font-semibold border border-(--card-border) cursor-pointer transition ${
                     pageNumber === page
-                      ? "bg-[#1f2b6c] text-white border-transparent"
+                      ? "bg-[#1f2b6c] text-white border-transparent shadow"
                       : "bg-(--card-bg) text-(--text-primary) hover:bg-(--semi-card-bg)"
                   }`}
                 >
@@ -295,9 +316,9 @@ export default function DoctorNotificationsPage() {
             <button
               onClick={() => setPage((prev) => Math.max(1, prev - 1))}
               disabled={page === 1}
-              className="px-3 py-1.5 rounded-lg border border-(--card-border) text-sm font-semibold text-(--text-primary) disabled:opacity-50 cursor-pointer hover:bg-(--semi-card-bg)"
+              className="px-3 py-1.5 rounded-lg border border-(--card-border) text-sm font-semibold text-(--text-primary) disabled:opacity-50 cursor-pointer hover:bg-(--semi-card-bg) transition"
             >
-              السابق
+              {t("doctorDashPages.notificationsPage.previous", locale)}
             </button>
           </div>
         )}

@@ -48,6 +48,26 @@ function parseWorkDays(workDaysString?: string): string[] | undefined {
     .filter(Boolean);
 }
 
+function getSpecialistLabel(specialist: string, locale: string) {
+  const specialties: Record<string, string> = {
+    "مخ واعصاب": "neurology",
+    عظام: "orthopedics",
+    الأورام: "oncology",
+    "طب الأذن والأنف والحنجرة": "ent",
+    "طب العيون": "ophthalmology",
+    "قلب و اوعية دموية": "cardiology",
+    "صدر و جهاز تنفسي": "pulmonology",
+    كلى: "nephrology",
+    اسنان: "dentistry",
+    "اطفال و حديثي الولادة": "pediatrics",
+    جلدية: "dermatology",
+    "نسا و توليد": "gynecology",
+  };
+  const key = specialties[specialist] || specialist.toLowerCase();
+  const translated = t(`authPage.doctor.specialties.${key}`, locale);
+  return translated.startsWith("authPage.") ? specialist : translated;
+}
+
 type ApiStaffProfile = {
   id?: number;
   staff_id?: number;
@@ -276,7 +296,7 @@ function RatingStars({
 
 function formatDisplayDate(date: string, locale: string) {
   if (!date) return "";
-  return new Intl.DateTimeFormat(locale === "en" ? "ar-EG" : "en-US", {
+  return new Intl.DateTimeFormat(locale === "ar" ? "ar-EG" : "en-US", {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -286,7 +306,7 @@ function formatDisplayDate(date: string, locale: string) {
 function formatWorkingDays(value: string, locale: string) {
   if (!value) return "";
   const dayMap =
-    locale === "en"
+    locale === "ar"
       ? {
           sun: "الاحد",
           mon: "الاثنين",
@@ -335,7 +355,7 @@ function formatWorkingDays(value: string, locale: string) {
     })
     .filter(Boolean);
 
-  const separator = locale === "en" ? "، " : ", ";
+  const separator = locale === "ar" ? "، " : ", ";
   return parts.join(separator);
 }
 
@@ -449,7 +469,7 @@ export default function BookingPage() {
           throw new Error(
             staffPayload.error ||
               staffPayload.message ||
-              "Failed to load staff",
+              t("providerProfile.loadStaffError", locale),
           );
         }
 
@@ -466,9 +486,7 @@ export default function BookingPage() {
         setProfileError(
           getErrorMessage(
             error,
-            locale === "en"
-              ? "تعذر تحميل بيانات الطبيب."
-              : "Failed to load staff profile.",
+            t("providerProfile.loadStaffError", locale),
           ),
         );
       } finally {
@@ -503,7 +521,7 @@ export default function BookingPage() {
           throw new Error(
             payload.error ||
               payload.message ||
-              "Failed to load available slots",
+              t("providerProfile.loadSlotsError", locale),
           );
         }
 
@@ -514,11 +532,9 @@ export default function BookingPage() {
           setSelectedTime("");
           Swal.fire({
             icon: "warning",
-            title: locale === "en" ? "اليوم محجوز بالكامل" : "Fully Booked Day",
-            text: locale === "en" 
-              ? "عذراً، جميع المواعيد في هذا اليوم محجوزة بالكامل. يرجى اختيار يوم آخر."
-              : "Sorry, all booking times on this day are fully booked. Please choose another date.",
-            confirmButtonText: locale === "en" ? "موافق" : "OK",
+            title: t("providerProfile.fullyBookedTitle", locale),
+            text: t("providerProfile.fullyBookedMessage", locale),
+            confirmButtonText: t("booking.validation.ok", locale),
           });
         }
       } catch (error: unknown) {
@@ -527,9 +543,7 @@ export default function BookingPage() {
         setSlotsError(
           getErrorMessage(
             error,
-            locale === "en"
-              ? "تعذر تحميل المواعيد المتاحة."
-              : "Failed to load available times.",
+            t("providerProfile.loadSlotsError", locale),
           ),
         );
       } finally {
@@ -573,7 +587,10 @@ export default function BookingPage() {
           (isRecord(payload) && payload.success === false)
         ) {
           throw new Error(
-            getPayloadMessage(payload, "Failed to load staff ratings"),
+            getPayloadMessage(
+              payload,
+              t("providerProfile.loadStaffRatingsError", locale),
+            ),
           );
         }
 
@@ -586,7 +603,10 @@ export default function BookingPage() {
       } catch (error: unknown) {
         if (!active) return;
         setStaffRatingsError(
-          getErrorMessage(error, "Failed to load staff ratings"),
+          getErrorMessage(
+            error,
+            t("providerProfile.loadStaffRatingsError", locale),
+          ),
         );
       } finally {
         if (active) setStaffRatingsLoading(false);
@@ -601,7 +621,9 @@ export default function BookingPage() {
   }, [staffId, staffRatingsPage, staffRatingsRefreshKey, canRateAndSeeReviews]);
 
   const doctorName = staff?.full_name || staff?.name || "";
-  const doctorSpecialty = staff?.specialist || staff?.role_title || "";
+  const doctorSpecialty = staff?.specialist
+    ? getSpecialistLabel(staff.specialist, locale)
+    : staff?.role_title || "";
   const clinicRating = getSafeRating(
     clinicProfile?.average_rating ??
       clinicProfile?.rating ??
@@ -686,11 +708,7 @@ export default function BookingPage() {
     setStaffRatingSubmitSuccess("");
 
     if (staffRatingValue < 1 || staffRatingValue > 5) {
-      setStaffRatingSubmitError(
-        locale === "en"
-          ? "برجاء اختيار تقييم من ١ إلى ٥."
-          : "Please select a rating from 1 to 5.",
-      );
+      setStaffRatingSubmitError(t("providerProfile.selectRating", locale));
       return;
     }
 
@@ -717,14 +735,15 @@ export default function BookingPage() {
         (isRecord(payload) && payload.success === false)
       ) {
         throw new Error(
-          getPayloadMessage(payload, "Failed to submit staff rating"),
+          getPayloadMessage(
+            payload,
+            t("providerProfile.submitRatingError", locale),
+          ),
         );
       }
 
       setStaffRatingSubmitSuccess(
-        locale === "en"
-          ? "تم إرسال التقييم بنجاح."
-          : "Rating submitted successfully.",
+        t("providerProfile.ratingSubmitted", locale),
       );
       setStaffRatingComment("");
       setStaffRatingValue(0);
@@ -734,7 +753,7 @@ export default function BookingPage() {
       setStaffRatingSubmitError(
         getErrorMessage(
           error,
-          locale === "en" ? "تعذر إرسال التقييم." : "Failed to submit rating.",
+          t("providerProfile.submitRatingError", locale),
         ),
       );
     } finally {
@@ -746,10 +765,8 @@ export default function BookingPage() {
     if (!isAuthenticated) {
       setValidationModalData({
         type: "warning",
-        title: locale === "en" ? "Please Log In" : "يرجى تسجيل الدخول",
-        message: locale === "en"
-          ? "Please log in first to complete your booking."
-          : "يرجى تسجيل الدخول أولاً لإتمام الحجز.",
+        title: t("providerProfile.loginRequiredTitle", locale),
+        message: t("providerProfile.loginRequiredMessage", locale),
       });
       setShowValidationModal(true);
       setRedirectToLogin(true);
@@ -816,7 +833,9 @@ export default function BookingPage() {
 
       if (!response.ok || payload.success === false) {
         throw new Error(
-          payload.error || payload.message || "Failed to create booking",
+          payload.error ||
+            payload.message ||
+            t("providerProfile.bookingFailedMessage", locale),
         );
       }
 
@@ -837,13 +856,10 @@ export default function BookingPage() {
     } catch (error: unknown) {
       setValidationModalData({
         type: "warning",
-        title:
-          locale === "en" ? "تعذر إتمام الحجز" : "Could not complete booking",
+        title: t("providerProfile.bookingFailedTitle", locale),
         message: getErrorMessage(
           error,
-          locale === "en"
-            ? "حدث خطأ أثناء إنشاء الحجز."
-            : "Something went wrong while creating the booking.",
+          t("providerProfile.bookingFailedMessage", locale),
         ),
       });
       setShowValidationModal(true);
@@ -856,7 +872,7 @@ export default function BookingPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p className="font-semibold text-[#001A6E]">
-          {locale === "en" ? "جاري تحميل الملف..." : "Loading profile..."}
+          {t("providerProfile.loadingProfile", locale)}
         </p>
       </div>
     );
@@ -873,22 +889,23 @@ export default function BookingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f6f8fc]">
+    <div
+      dir={locale === "ar" ? "rtl" : "ltr"}
+      className="min-h-screen bg-[#f6f8fc]"
+    >
       <div className="mx-auto max-w-6xl px-4 pb-16 pt-28 sm:px-6 lg:px-8">
         <button
           onClick={() => router.back()}
           className="mb-8 flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-bold text-[#001A6E] shadow-sm transition hover:bg-[#eef3ff]"
         >
           <ArrowRight
-            className={`w-5 h-5 ${locale === "en" ? "" : "rotate-180"}`}
+            className={`h-5 w-5 ${locale === "en" ? "rotate-180" : ""}`}
           />
           {t("booking.back", locale)}
         </button>
 
         <div className="flex flex-col gap-8 lg:flex-row">
-          <div
-            className={`flex-1 space-y-8 ${locale === "en" ? "order-1 lg:order-1" : "order-1"}`}
-          >
+          <div className="order-1 flex-1 space-y-8">
             <div className="rounded-[28px] border border-[#dce5f6] bg-white p-5 shadow-[0_18px_55px_rgba(20,45,100,0.08)] sm:p-7">
               <div className="flex flex-col items-start gap-8 md:flex-row">
                 <div className="relative h-56 w-full shrink-0 overflow-hidden rounded-3xl bg-[#eaf0fb] shadow-md md:h-52 md:w-52">
@@ -912,9 +929,10 @@ export default function BookingPage() {
                       </h1>
                       {formattedWorkingDays && (
                         <span className="text-xs font-semibold text-[#001A6E] bg-blue-50 px-3 py-1 rounded-full">
-                          {locale === "en"
-                            ? `ايام العمل: ${formattedWorkingDays}`
-                            : `Working days: ${formattedWorkingDays}`}
+                          {t("providerProfile.workingDays", locale).replace(
+                            "{days}",
+                            formattedWorkingDays,
+                          )}
                         </span>
                       )}
                     </div>
@@ -941,7 +959,7 @@ export default function BookingPage() {
                       </p>
                       <p className="font-bold text-[#001A6E]">
                         {staff.consultation_price ?? "-"}{" "}
-                        {locale === "en" ? "ج.م" : "EGP"}
+                        {t("providerProfile.currency", locale)}
                       </p>
                     </div>
                     <div className="rounded-2xl bg-[#f4f7ff] p-4">
@@ -978,9 +996,7 @@ export default function BookingPage() {
                           className="flex-1 rounded-2xl bg-[#001A6E] py-4 font-bold text-white shadow-lg shadow-blue-900/10 transition-colors hover:bg-[#162f80] disabled:cursor-not-allowed disabled:opacity-70"
                         >
                           {isBooking
-                            ? locale === "en"
-                              ? "جاري الحجز..."
-                              : "Booking..."
+                            ? t("providerProfile.bookingInProgress", locale)
                             : t("booking.bookNow", locale)}
                         </button>
                         <a
@@ -990,7 +1006,7 @@ export default function BookingPage() {
                           className="flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 hover:bg-emerald-700 px-8 py-4 font-bold text-white transition-colors shadow-lg shadow-emerald-900/10 cursor-pointer text-center"
                         >
                           <MessageSquare className="w-5 h-5" />
-                          <span>{locale === "en" ? "ارسال رساله" : "Send Message"}</span>
+                          <span>{t("booking.sendMessage", locale)}</span>
                         </a>
                       </div>
                     </>
@@ -1004,17 +1020,12 @@ export default function BookingPage() {
                 {t("booking.aboutDoctor", locale)}
               </h2>
               <p className="text-gray-500 leading-relaxed text-sm">
-                {staff.bio ||
-                  (locale === "en"
-                    ? "استشاري متخصص بخبرة واسعة في مجاله، يحرص على تقديم أفضل رعاية طبية للمرضى."
-                    : "Specialized consultant with extensive experience, focused on providing high quality medical care.")}
+                {staff.bio || t("providerProfile.noBio", locale)}
               </p>
             </section>
           </div>
 
-          <div
-            className={`lg:w-80 shrink-0 ${locale === "en" ? "order-2 lg:order-2" : "order-2"}`}
-          >
+          <div className="order-2 shrink-0 lg:w-80">
             <div className="sticky top-28 rounded-[28px] border border-[#dce5f6] bg-white p-6 shadow-[0_18px_55px_rgba(20,45,100,0.08)]">
               <h2 className="text-xl font-bold text-[#001A6E] mb-6">
                 {t("booking.clinicInfo", locale)}
@@ -1088,15 +1099,13 @@ export default function BookingPage() {
               <div className="mt-6">
                 {staffRatingsLoading ? (
                   <p className="text-center text-[#001A6E]">
-                    {locale === "en"
-                      ? "جاري تحميل التقييمات..."
-                      : "Loading ratings..."}
+                    {t("providerProfile.loadingRatings", locale)}
                   </p>
                 ) : staffRatingsError ? (
                   <p className="text-center text-red-600">{staffRatingsError}</p>
                 ) : staffRatings.length === 0 ? (
                   <p className="text-center text-gray-400">
-                    {locale === "en" ? "لا توجد تقييمات بعد." : "No reviews yet."}
+                    {t("providerProfile.noReviews", locale)}
                   </p>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
@@ -1129,7 +1138,7 @@ export default function BookingPage() {
                           </div>
                           <p className="text-xs font-semibold text-gray-500">
                             {review.patient_name ||
-                              (locale === "en" ? "مريض" : "Patient")}
+                              t("providerProfile.patient", locale)}
                           </p>
                         </div>
                         {review.comment ? (
@@ -1138,7 +1147,7 @@ export default function BookingPage() {
                           </p>
                         ) : (
                           <p className="text-gray-400 text-sm">
-                            {locale === "en" ? "بدون تعليق" : "No comment"}
+                            {t("providerProfile.noComment", locale)}
                           </p>
                         )}
                       </div>
@@ -1156,12 +1165,12 @@ export default function BookingPage() {
                     disabled={staffRatingsPage <= 1}
                     className="rounded-full border border-[#dce5f6] px-4 py-2 text-sm font-semibold text-[#001A6E] disabled:opacity-50"
                   >
-                    {locale === "en" ? "السابق" : "Previous"}
+                    {t("providerProfile.previous", locale)}
                   </button>
                   <span className="text-sm text-gray-500">
-                    {locale === "en"
-                      ? `صفحة ${staffRatingsPage} من ${staffRatingsTotalPages}`
-                      : `Page ${staffRatingsPage} of ${staffRatingsTotalPages}`}
+                    {t("providerProfile.pageOf", locale)
+                      .replace("{page}", String(staffRatingsPage))
+                      .replace("{total}", String(staffRatingsTotalPages))}
                   </span>
                   <button
                     onClick={() =>
@@ -1172,14 +1181,14 @@ export default function BookingPage() {
                     disabled={staffRatingsPage >= staffRatingsTotalPages}
                     className="rounded-full border border-[#dce5f6] px-4 py-2 text-sm font-semibold text-[#001A6E] disabled:opacity-50"
                   >
-                    {locale === "en" ? "التالي" : "Next"}
+                    {t("providerProfile.next", locale)}
                   </button>
                 </div>
               )}
 
               <div className="mt-10 border-t border-[#e6ecf6] pt-8 text-center">
                 <h3 className="text-lg font-bold text-[#001A6E] mb-4">
-                  {locale === "en" ? "قيّم هذا الطبيب" : "Rate this doctor"}
+                  {t("providerProfile.rateStaff", locale)}
                 </h3>
                 <div className="mx-auto flex max-w-xl flex-col items-center gap-4">
                   <div className="flex items-center gap-1">
@@ -1204,9 +1213,7 @@ export default function BookingPage() {
                     value={staffRatingComment}
                     onChange={(event) => setStaffRatingComment(event.target.value)}
                     placeholder={
-                      locale === "en"
-                        ? "اكتب تعليقك هنا (اختياري)"
-                        : "Write your comment (optional)"
+                      t("providerProfile.commentPlaceholder", locale)
                     }
                     rows={3}
                     className="w-full rounded-2xl border border-[#dce5f6] px-4 py-3 text-sm text-gray-600 outline-none focus:border-[#001A6E]"
@@ -1225,12 +1232,8 @@ export default function BookingPage() {
                     className="rounded-2xl bg-[#001A6E] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-blue-900/10 transition-colors hover:bg-[#162f80] disabled:cursor-not-allowed disabled:opacity-70"
                   >
                     {staffRatingSubmitting
-                      ? locale === "en"
-                        ? "جاري الإرسال..."
-                        : "Submitting..."
-                      : locale === "en"
-                        ? "إرسال التقييم"
-                        : "Submit rating"}
+                      ? t("providerProfile.submitting", locale)
+                      : t("providerProfile.submitRating", locale)}
                   </button>
                 </div>
               </div>

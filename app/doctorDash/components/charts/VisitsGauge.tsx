@@ -1,6 +1,8 @@
 "use client";
 import React from "react";
 import { Mars, Venus } from "lucide-react";
+import { useLocale } from "@/lib/hooks";
+import { t } from "@/i18n";
 
 type Props = {
   male: number;
@@ -9,6 +11,9 @@ type Props = {
 };
 
 export default function VisitsGauge({ male, female, total }: Props) {
+  const locale = useLocale();
+  const isRtl = locale === "ar";
+
   const size = 220;
   const center = size / 2;
   const outerRadius = 100;
@@ -26,14 +31,17 @@ export default function VisitsGauge({ male, female, total }: Props) {
   const femaleUnfilled = Math.round(innerCircumference - femaleFilled);
 
   return (
-    <div className="bg-(--card-bg) border border-(--card-border) h-fit rounded-2xl shadow-[var(--shadow-soft)] overflow-hidden">
+    <div 
+      className="bg-(--card-bg) border border-(--card-border) h-fit rounded-2xl shadow-[var(--shadow-soft)] overflow-hidden"
+      dir={isRtl ? "rtl" : "ltr"}
+    >
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-(--card-border) mb-4 p-4">
         <button className="w-full sm:w-auto border border-(--card-border) px-3 py-1.5 rounded-xl text-xs text-(--text-primary) font-medium cursor-pointer hover:text-white hover:bg-[color:var(--primary)] transition-colors duration-300">
-          عرض الكل
+          {t("doctorDash.showAll", locale)}
         </button>
 
         <h3 className="text-lg font-semibold text-(--text-primary)">
-          زيارات المرضى
+          {t("doctorDash.patientVisits", locale)}
         </h3>
       </div>
 
@@ -104,7 +112,7 @@ export default function VisitsGauge({ male, female, total }: Props) {
               fill="var(--text-secondary)"
               fontWeight="semibold"
             >
-              جميع المرضى
+              {t("doctorDash.allPatients", locale)}
             </text>
 
             <text
@@ -128,18 +136,18 @@ export default function VisitsGauge({ male, female, total }: Props) {
           <h3 className="text-lg font-bold text-(--text-primary)">{male}%</h3>
 
           <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
-            <div className="text-right">
-              <p className="font-semibold text-(--text-primary)">ذكر</p>
+            <div className={isRtl ? "text-right" : "text-left"}>
+              <p className="font-semibold text-(--text-primary)">{t("doctorDash.male", locale)}</p>
 
               <div className="flex items-center gap-2 font-medium">
                 <p className="text-xs text-(--text-secondary)">
-                  منذ الأسبوع الماضي
+                  {t("doctorDash.sinceLastWeek", locale)}
                 </p>
                 <span className="text-emerald-600">-15%</span>
               </div>
             </div>
 
-            <div className="w-9 h-9 rounded-full bg-[#1F6DB2] flex items-center justify-center">
+            <div className="w-9 h-9 rounded-full bg-[#1F6DB2] flex items-center justify-center shrink-0">
               <Mars size={20} strokeWidth={2} className="text-white" />
             </div>
           </div>
@@ -150,18 +158,18 @@ export default function VisitsGauge({ male, female, total }: Props) {
           <h3 className="text-lg font-bold text-(--text-primary)">{female}%</h3>
 
           <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
-            <div className="text-right">
-              <p className="font-semibold text-(--text-primary)">أنثى</p>
+            <div className={isRtl ? "text-right" : "text-left"}>
+              <p className="font-semibold text-(--text-primary)">{t("doctorDash.female", locale)}</p>
 
               <div className="flex items-center gap-2 font-medium">
                 <p className="text-xs text-(--text-secondary)">
-                  منذ الأسبوع الماضي
+                  {t("doctorDash.sinceLastWeek", locale)}
                 </p>
                 <span className="text-emerald-600">-15%</span>
               </div>
             </div>
 
-            <div className="w-9 h-9 rounded-full bg-[#6A1B9A] flex items-center justify-center">
+            <div className="w-9 h-9 rounded-full bg-[#6A1B9A] flex items-center justify-center shrink-0">
               <Venus size={20} strokeWidth={2} className="text-white" />
             </div>
           </div>

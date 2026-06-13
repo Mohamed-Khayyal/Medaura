@@ -93,5 +93,5 @@ export default function GeoLocationPicker({
     window.setTimeout(() => mapRef.current?.invalidateSize(), 0);
   }, [latitude, longitude]);
 
-  return <div ref={containerRef} className="h-full min-h-80 w-full" />;
+  return <div ref={containerRef} className="h-full w-full" />;
 }

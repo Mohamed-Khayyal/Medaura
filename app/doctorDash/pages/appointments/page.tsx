@@ -6,11 +6,14 @@ import CasesDonut from "./charts/CasesDonut/CasesDonut";
 import WeeklyBarChart from "./charts/WeeklyBarChart/WeeklyBarChart";
 import TodayProgress from "./charts/TodayProgress/TodayProgress";
 import TodayAppointmentsTaple from "./charts/TodayAppointmentsTaple/TodayAppointmentsTaple";
+import { useLocale } from "@/lib/hooks";
 
 export default function Dashboard() {
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const locale = useLocale();
+  const isRtl = locale === "ar";
 
   useEffect(() => {
     async function loadData() {
@@ -43,22 +46,22 @@ export default function Dashboard() {
   const pendingCount = bookings.filter(b => b.status === "pending").length;
 
   return (
-    <div className="p-4 flex flex-col gap-6">
-      <div className="p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+    <div className="flex min-w-0 flex-col gap-4 px-2 py-3 sm:gap-6 sm:px-4 sm:py-4" dir={isRtl ? "rtl" : "ltr"}>
+      <div className="grid min-w-0 grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-3">
         {/* Left Column */}
-        <div className="col-span-1">
+        <div className="min-w-0 lg:col-span-1">
           <TodayProgress todayAppointments={dashboardData?.todayAppointments || []} />
         </div>
 
         {/* Right Column */}
-        <div className="col-span-1 lg:col-span-2 flex flex-col gap-6">
+        <div className="flex min-w-0 flex-col gap-4 lg:col-span-2 lg:gap-6">
 
           <TodayOverview 
             totals={dashboardData?.totals} 
             todayCount={dashboardData?.todayAppointments?.length || 0} 
           />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          <div className="grid min-w-0 grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
 
             <CasesDonut 
               completed={completedCount} 
@@ -66,7 +69,7 @@ export default function Dashboard() {
               pending={pendingCount} 
             />
 
-            <div className="md:col-span-2 lg:col-span-2">
+            <div className="min-w-0 md:col-span-2 lg:col-span-2">
               <WeeklyBarChart bookings={bookings} />
             </div>
 
@@ -74,7 +77,7 @@ export default function Dashboard() {
 
         </div>
       </div>
-      <div className="">
+      <div className="min-w-0">
         <TodayAppointmentsTaple />
       </div>
     </div>

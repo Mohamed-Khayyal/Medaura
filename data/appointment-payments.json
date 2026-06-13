@@ -9,7 +9,7 @@
     "date": "2026-06-13"
   },
   "6a2c92810c718752c385671f": {
-    "status": "cancelled",
+    "status": "paid",
     "date": "2026-06-13"
   },
   "6a2cc075cde7df100fd93ceb": {
@@ -27,5 +27,6 @@
   "6a2c8d7749fbf5bde93f5ed2": {
     "status": "paid",
     "date": "2026-06-13"
-  }
+  },
+  "6a2c096acd1a41c46e0dcf0d": "paid"
 }

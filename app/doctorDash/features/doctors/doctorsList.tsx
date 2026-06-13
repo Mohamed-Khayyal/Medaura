@@ -2,6 +2,8 @@
 
 import { useState, useMemo } from "react";
 import { Clock } from "lucide-react";
+import { useLocale } from "@/lib/hooks";
+import { t } from "@/i18n";
 
 type TodayAppointment = {
   id?: number;
@@ -11,97 +13,32 @@ type TodayAppointment = {
   time: string;
 };
 
-const appointments: TodayAppointment[] = [
-  {
-    name: "محمد خالد",
-    type: "زيارة",
-    date: "2026-04-11",
-    time: "09:00",
-  },
-  {
-    name: "لبان محمد",
-    type: "استشارة",
-    date: "2026-04-11",
-    time: "11:35",
-  },
-  {
-    name: "بسنت محمد",
-    type: "طوارئ",
-    date: "2026-04-11",
-    time: "20:35",
-  },
-  {
-    name: "محمد السيد",
-    type: "استشارة",
-    date: "2026-04-11",
-    time: "23:00",
-  },
-  {
-    name: "محمد السيد",
-    type: "استشارة",
-    date: "2026-04-11",
-    time: "23:00",
-  },
-  {
-    name: "محمد السيد",
-    type: "استشارة",
-    date: "2026-04-11",
-    time: "23:00",
-  },
-  {
-    name: "محمد السيد",
-    type: "استشارة",
-    date: "2026-04-11",
-    time: "23:00",
-  },
-  {
-    name: "محمد السيد",
-    type: "استشارة",
-    date: "2026-04-11",
-    time: "23:00",
-  },
-];
-
-
 export default function TodayAppointments({
   appointments: appointmentsProp,
 }: {
   appointments?: TodayAppointment[];
 }) {
-  const rows = appointmentsProp ?? appointments;
+  const locale = useLocale();
+  const isRtl = locale === "ar";
+  const rows = appointmentsProp ?? [];
   const today = new Date();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(
     today.toISOString().split("T")[0],
   );
 
-  const week = useMemo(() => {
-    const start = new Date(today);
-    start.setDate(today.getDate() - today.getDay());
-
-    return Array.from({ length: 7 }).map((_, i) => {
-      const d = new Date(start);
-      d.setDate(start.getDate() + i);
-
-      return {
-        label: d.toLocaleDateString("en-US", { weekday: "short" }),
-        date: d.toISOString().split("T")[0],
-        day: d.getDate(),
-      };
-    });
-  }, []);
-
   const filtered = useMemo(() => {
     return rows
       .filter((a) => a.date === selectedDate)
-      .sort((a, b) => a.time.localeCompare(b.time));
+      .sort((a, b) => (a.time || "").localeCompare(b.time || ""));
   }, [rows, selectedDate]);
 
   const currentTime = new Date().toTimeString().slice(0, 5);
 
   const getStatus = (time: string) => {
-    return time <= currentTime ? "جاري الكشف" : null;
+    return time <= currentTime ? t("doctorDash.ongoingExam", locale) : null;
   };
+
   const getWeekRange = (date: Date) => {
     const start = new Date(date);
     start.setDate(date.getDate() - date.getDay());
@@ -113,6 +50,7 @@ export default function TodayAppointments({
   };
 
   const { start, end } = getWeekRange(currentDate);
+
   const formatRange = () => {
     const options: Intl.DateTimeFormatOptions = {
       month: "short",
@@ -120,10 +58,11 @@ export default function TodayAppointments({
     };
 
     return `${start.getDate()}–${end.getDate()} ${start.toLocaleDateString(
-      "en-US",
+      locale === "ar" ? "ar-EG" : "en-US",
       options,
     )}`;
   };
+
   const nextWeek = () => {
     const newDate = new Date(currentDate);
     newDate.setDate(currentDate.getDate() + 7);
@@ -135,26 +74,40 @@ export default function TodayAppointments({
     newDate.setDate(currentDate.getDate() - 7);
     setCurrentDate(newDate);
   };
+
   const weekDays = Array.from({ length: 7 }).map((_, i) => {
     const d = new Date(start);
     d.setDate(start.getDate() + i);
 
     return {
-      day: d.toLocaleDateString("en-US", { weekday: "short" }),
+      day: d.toLocaleDateString(locale === "ar" ? "ar-EG" : "en-US", { weekday: "short" }),
       date: d.toISOString().split("T")[0],
       num: d.getDate(),
     };
   });
+
+  const getAppointmentTypeTranslated = (type: string) => {
+    if (!type) return "";
+    const lower = type.toLowerCase();
+    if (lower === "زيارة" || lower === "visit") return t("doctorDash.visit", locale);
+    if (lower === "استشارة" || lower === "consultation") return t("doctorDash.consultation", locale);
+    if (lower === "طوارئ" || lower === "emergency") return t("doctorDash.emergency", locale);
+    return type;
+  };
+
   return (
-    <div className="flex flex-col bg-(--card-bg) rounded-2xl border border-(--card-border) shadow-[var(--shadow-soft)] w-full h-155">
+    <div 
+      className="flex flex-col bg-(--card-bg) rounded-2xl border border-(--card-border) shadow-[var(--shadow-soft)] w-full h-155"
+      dir={isRtl ? "rtl" : "ltr"}
+    >
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-(--card-border) mb-4 p-4">
         <button className="w-full sm:w-auto border border-(--card-border) px-3 py-1.5 rounded-xl text-xs sm:text-sm text-(--text-primary) font-medium cursor-pointer hover:text-white hover:bg-[color:var(--primary)] transition-colors duration-300">
-          جميع المواعيد
+          {t("doctorDash.allAppointments", locale)}
         </button>
 
         <h1 className="text-lg font-semibold text-(--text-primary)">
-          مواعيد اليوم
+          {t("doctorDash.todayAppointments", locale)}
         </h1>
       </div>
 
@@ -164,10 +117,10 @@ export default function TodayAppointments({
           <div className="w-full h-full flex items-center justify-center">
             <div className="text-center">
               <p className="text-sm font-semibold text-(--text-primary)">
-                لا يوجد مواعيد
+                {t("doctorDash.noTodayAppointments", locale)}
               </p>
               <p className="text-[11px] text-(--text-secondary)">
-                ستظهر المواعيد الجديدة هنا تلقائيا.
+                {t("doctorDash.noTodayAppointmentsDesc", locale)}
               </p>
             </div>
           </div>
@@ -198,10 +151,10 @@ export default function TodayAppointments({
               </div>
 
               {/* Info */}
-              <div className="text-right">
+              <div className="text-right ltr:text-left">
                 <p className="font-medium text-sm">{item.name}</p>
                 <p className="text-[11px] text-(--text-secondary)">
-                  {item.type}
+                  {getAppointmentTypeTranslated(item.type)}
                 </p>
               </div>
             </div>
@@ -212,12 +165,12 @@ export default function TodayAppointments({
       {/* Week Navigation */}
       <div className="mt-auto px-4 pb-4">
         <div className="flex items-center justify-between mt-4">
-          {/* Right arrow */}
+          {/* Prev arrow */}
           <button
             onClick={prevWeek}
             className="text-base text-(--text-primary) cursor-pointer"
           >
-            ❮
+            {isRtl ? "❯" : "❮"}
           </button>
 
           {/* Range */}
@@ -225,12 +178,12 @@ export default function TodayAppointments({
             {formatRange()}
           </p>
 
-          {/* Left arrow */}
+          {/* Next arrow */}
           <button
             onClick={nextWeek}
             className="text-base text-(--text-primary) cursor-pointer"
           >
-            ❯
+            {isRtl ? "❮" : "❯"}
           </button>
         </div>
         <div className="flex justify-between mt-4 text-[11px] text-(--text-primary)">

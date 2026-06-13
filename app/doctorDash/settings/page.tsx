@@ -14,7 +14,6 @@ import {
   Stethoscope,
   Calendar,
   DollarSign,
-  ChevronLeft,
   FileText,
   Lock,
   Eye,
@@ -22,18 +21,23 @@ import {
 } from "lucide-react";
 import Swal from "sweetalert2";
 import { useAuth } from "@/context/AuthContext";
+import { useLocale } from "@/lib/hooks";
+import { t } from "@/i18n";
 import EditProfileForm, { DoctorEditableProfile } from "./EditProfileForm";
 
 const GeoLocationMap = dynamic(() => import("./GeoLocationPicker"), {
   ssr: false,
-  loading: () => (
-    <div className="doctor-map-loading">
-      <div className="doctor-map-loading-inner">
-        <div className="doctor-map-pulse" />
-        <span>جاري تحميل الخريطة...</span>
+  loading: () => {
+    const isEn = typeof window !== "undefined" && window.localStorage.getItem("locale") === "en";
+    return (
+      <div className="doctor-map-loading">
+        <div className="doctor-map-loading-inner">
+          <div className="doctor-map-pulse" />
+          <span>{isEn ? "Loading map..." : "جاري تحميل الخريطة..."}</span>
+        </div>
       </div>
-    </div>
-  ),
+    );
+  },
 });
 
 type DoctorProfileData = {
@@ -59,16 +63,6 @@ type DoctorProfileData = {
   licence?: string | null;
 };
 
-const DAY_LABELS: Record<string, string> = {
-  sun: "الأحد",
-  mon: "الاثنين",
-  tue: "الثلاثاء",
-  wed: "الأربعاء",
-  thu: "الخميس",
-  fri: "الجمعة",
-  sat: "السبت",
-};
-
 const DEFAULT_GEO_LOCATION = {
   latitude: 30.0444,
   longitude: 31.2357,
@@ -86,23 +80,51 @@ function toNumberOrEmpty(value: unknown) {
   return Number.isFinite(numericValue) ? numericValue : "";
 }
 
-function formatWorkDays(workDays?: string | null) {
+function formatWorkDays(workDays: string | null | undefined, locale: string) {
   if (!workDays) return "—";
   return workDays
     .split(",")
-    .map((day) => DAY_LABELS[day.trim()] || day.trim())
+    .map((day) => {
+      const d = day.trim().toLowerCase();
+      return t(`settingsPage.${d}`, locale) || d;
+    })
     .filter(Boolean)
     .join(" · ");
 }
 
-function formatTimeToAmPm(value?: string | null) {
+function formatTimeToAmPm(value: string | null | undefined, locale: string) {
   if (!value) return "—";
   const [hourText, minuteText] = value.split(":");
   const hour = Number(hourText);
   if (!Number.isFinite(hour) || !minuteText) return value;
-  const period = hour >= 12 ? "م" : "ص";
+  const isAr = locale === "ar";
+  const period = hour >= 12 ? (isAr ? "م" : "PM") : (isAr ? "ص" : "AM");
   const normalizedHour = hour % 12 || 12;
   return `${normalizedHour}:${minuteText.padStart(2, "0")} ${period}`;
+}
+
+function getSpecialistLabel(specialist: string | null | undefined, locale: string) {
+  if (!specialist) return "—";
+  const arSpecialties: Record<string, string> = {
+    neurology: 'مخ واعصاب',
+    orthopedics: 'عظام',
+    oncology: 'الأورام',
+    ent: 'طب الأذن والأنف والحنجرة',
+    ophthalmology: 'طب العيون',
+    cardiology: 'قلب و اوعية دموية',
+    pulmonology: 'صدر و جهاز تنفسي',
+    nephrology: 'كلى',
+    dentistry: 'اسنان',
+    pediatrics: 'اطفال و حديثي الولادة',
+    dermatology: 'جلدية',
+    gynecology: 'نسا و توليد'
+  };
+
+  const key = Object.keys(arSpecialties).find(k => arSpecialties[k] === specialist);
+  if (key) {
+    return t(`authPage.doctor.specialties.${key}`, locale) || specialist;
+  }
+  return specialist;
 }
 
 function buildInitialData(profile: DoctorProfileData): DoctorEditableProfile {
@@ -176,6 +198,8 @@ function InfoRow({
 // ─── Main Component ─────────────────────────────────────────────────────────
 export default function DoctorSettingsPage() {
   const { user, loading, updateUser } = useAuth();
+  const locale = useLocale();
+  const isRtl = locale === "ar";
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [profileOverride, setProfileOverride] =
     useState<DoctorProfileData | null>(null);
@@ -242,9 +266,9 @@ export default function DoctorSettingsPage() {
     if (!currentPassword || !newPassword || !confirmPassword) {
       Swal.fire({
         icon: "error",
-        title: "خطأ",
-        text: "الرجاء تعبئة جميع حقول كلمة المرور",
-        confirmButtonText: "موافق",
+        title: t("settingsPage.errorTitle", locale),
+        text: t("settingsPage.fillAllFields", locale),
+        confirmButtonText: t("settingsPage.ok", locale),
       });
       return;
     }
@@ -252,9 +276,9 @@ export default function DoctorSettingsPage() {
     if (newPassword.length < 8) {
       Swal.fire({
         icon: "error",
-        title: "خطأ",
-        text: "يجب أن تتكون كلمة المرور من 8 أحرف على الأقل",
-        confirmButtonText: "موافق",
+        title: t("settingsPage.errorTitle", locale),
+        text: t("settingsPage.minChars", locale),
+        confirmButtonText: t("settingsPage.ok", locale),
       });
       return;
     }
@@ -262,9 +286,9 @@ export default function DoctorSettingsPage() {
     if (newPassword !== confirmPassword) {
       Swal.fire({
         icon: "error",
-        title: "خطأ",
-        text: "كلمة المرور الجديدة وتأكيدها غير متطابقتين",
-        confirmButtonText: "موافق",
+        title: t("settingsPage.errorTitle", locale),
+        text: t("settingsPage.passwordMismatch", locale),
+        confirmButtonText: t("settingsPage.ok", locale),
       });
       return;
     }
@@ -286,25 +310,28 @@ export default function DoctorSettingsPage() {
 
       const result = await response.json();
       if (!response.ok || !result.success) {
-        throw new Error(result.error || "فشل تغيير كلمة المرور");
+        throw new Error(result.error || t("settingsPage.failedChange", locale));
       }
 
       Swal.fire({
         icon: "success",
-        title: "تم بنجاح",
-        text: "تم تغيير كلمة المرور بنجاح",
-        confirmButtonText: "رائع",
+        title: t("settingsPage.successTitle", locale),
+        text: t("settingsPage.passwordChanged", locale),
+        confirmButtonText: t("settingsPage.great", locale),
       });
 
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-    } catch (err: any) {
+    } catch (err: unknown) {
       Swal.fire({
         icon: "error",
-        title: "فشل التغيير",
-        text: err.message || "حدث خطأ أثناء تغيير كلمة المرور",
-        confirmButtonText: "موافق",
+        title: t("settingsPage.changeFailedTitle", locale),
+        text:
+          err instanceof Error
+            ? err.message
+            : t("settingsPage.changeError", locale),
+        confirmButtonText: t("settingsPage.ok", locale),
       });
     } finally {
       setPasswordUpdating(false);
@@ -316,7 +343,7 @@ export default function DoctorSettingsPage() {
     return (
       <div className="ds-loading">
         <div className="ds-loading-spinner" />
-        <p>جاري تحميل بياناتك...</p>
+        <p>{t("settingsPage.loadingData", locale)}</p>
       </div>
     );
   }
@@ -378,11 +405,12 @@ export default function DoctorSettingsPage() {
 
         /* ── Page Wrapper ── */
         .ds-page {
+          --ds-align-items: flex-start;
+          --ds-text-align: start;
           min-height: 100vh;
           background: var(--ds-bg);
           font-family: 'Cairo', sans-serif;
           padding: 32px 24px 60px;
-          direction: rtl;
           position: relative;
           overflow-x: hidden;
         }
@@ -399,6 +427,7 @@ export default function DoctorSettingsPage() {
           position: relative;
           z-index: 1;
           max-width: 1200px;
+          width: 100%;
           margin: 0 auto;
           display: flex;
           flex-direction: column;
@@ -407,6 +436,7 @@ export default function DoctorSettingsPage() {
 
         /* ── Card base ── */
         .ds-card {
+          min-width: 0;
           background: var(--ds-card);
           border: 1px solid var(--ds-border);
           border-radius: var(--ds-radius);
@@ -432,6 +462,7 @@ export default function DoctorSettingsPage() {
           display: flex;
           align-items: center;
           gap: 20px;
+          min-width: 0;
         }
 
         /* Avatar */
@@ -503,6 +534,7 @@ export default function DoctorSettingsPage() {
           line-height: 1.2;
           margin: 0;
           font-family: 'Tajawal', sans-serif;
+          overflow-wrap: anywhere;
         }
         .ds-doc-specialty {
           display: inline-flex;
@@ -592,12 +624,15 @@ export default function DoctorSettingsPage() {
           font-size: 12px;
           color: var(--ds-text-secondary);
           font-weight: 500;
+          text-align: center;
+          overflow-wrap: anywhere;
         }
 
         /* ── Bottom Grid ── */
         .ds-bottom-grid {
           display: grid;
           gap: 24px;
+          min-width: 0;
         }
         @media (min-width: 1024px) {
           .ds-bottom-grid {
@@ -628,6 +663,8 @@ export default function DoctorSettingsPage() {
           color: var(--ds-text-primary);
           font-family: 'Tajawal', sans-serif;
           margin: 0;
+          min-width: 0;
+          overflow-wrap: anywhere;
         }
         .ds-section-line {
           flex: 1;
@@ -656,10 +693,13 @@ export default function DoctorSettingsPage() {
           padding: 8px 14px;
           font-size: 14px;
           color: var(--ds-text-secondary);
+          min-width: 0;
+          max-width: 100%;
         }
         .ds-work-chip strong {
           color: var(--ds-text-primary);
           font-weight: 600;
+          overflow-wrap: anywhere;
         }
         .ds-work-chip svg {
           opacity: 0.5;
@@ -667,6 +707,7 @@ export default function DoctorSettingsPage() {
         }
 
         .ds-map-wrapper {
+          width: 100%;
           border-radius: 12px;
           overflow: hidden;
           border: 1px solid var(--ds-border);
@@ -748,9 +789,10 @@ export default function DoctorSettingsPage() {
         .ds-info-content {
           display: flex;
           flex-direction: column;
-          align-items: flex-end;
+          align-items: var(--ds-align-items);
           gap: 2px;
           min-width: 0;
+          flex: 1;
         }
         .ds-info-label {
           font-size: 11px;
@@ -763,23 +805,68 @@ export default function DoctorSettingsPage() {
           font-size: 14px;
           color: var(--ds-text-primary);
           font-weight: 600;
-          word-break: break-all;
-          text-align: right;
+          overflow-wrap: anywhere;
+          word-break: normal;
+          text-align: var(--ds-text-align);
           font-family: 'Tajawal', sans-serif;
         }
 
         /* ── Responsive ── */
+        .ds-password-card {
+          padding: 28px;
+        }
+        .ds-password-card form {
+          padding: 0;
+        }
+        @media (max-width: 900px) {
+          .ds-bottom-grid {
+            grid-template-columns: minmax(0, 1fr);
+          }
+        }
         @media (max-width: 640px) {
-          .ds-page { padding: 16px 12px 48px; }
-          .ds-hero { padding: 20px; }
-          .ds-avatar { width: 88px; height: 88px; font-size: 26px; }
+          .ds-page { padding: 14px 10px 40px; }
+          .ds-inner { gap: 14px; }
+          .ds-card { border-radius: 14px; }
+          .ds-hero { padding: 18px; gap: 20px; }
+          .ds-hero-top {
+            align-items: stretch;
+            flex-direction: column;
+          }
+          .ds-hero-identity { gap: 14px; }
+          .ds-avatar { width: 78px; height: 78px; font-size: 24px; }
           .ds-doc-name { font-size: 20px; }
+          .ds-doc-specialty {
+            white-space: normal;
+            line-height: 1.5;
+          }
+          .ds-edit-btn {
+            width: 100%;
+            justify-content: center;
+          }
           .ds-stats-row { grid-template-columns: 1fr; gap: 10px; }
-          .ds-work-card, .ds-info-card { padding: 20px; }
+          .ds-stat-card { padding: 16px 12px; }
+          .ds-work-card, .ds-info-card, .ds-password-card { padding: 18px; }
+          .ds-section-header { margin-bottom: 18px; }
+          .ds-section-title { font-size: 16px; }
+          .ds-work-meta {
+            flex-direction: column;
+            align-items: stretch;
+          }
+          .ds-work-chip {
+            width: 100%;
+            justify-content: flex-start;
+            line-height: 1.6;
+          }
+          .ds-map-wrapper { height: 210px; }
+          .ds-info-row { padding: 10px 6px; }
         }
         @media (max-width: 480px) {
-          .ds-hero-top { flex-direction: column; align-items: flex-start; }
-          .ds-work-meta { flex-direction: column; }
+          .ds-hero-identity { align-items: center; }
+          .ds-avatar { width: 70px; height: 70px; }
+          .ds-section-line { display: none; }
+          .ds-map-wrapper { height: 190px; }
+          .ds-info-label { font-size: 10px; }
+          .ds-info-value { font-size: 13px; }
         }
 
         /* ── Entrance animations ── */
@@ -795,7 +882,7 @@ export default function DoctorSettingsPage() {
         .ds-inner > *:nth-child(2) { animation-delay: 0.15s; }
       `}</style>
 
-      <div className="ds-page">
+      <div className="ds-page" dir={isRtl ? "rtl" : "ltr"}>
         {isEditOpen && (
           <EditProfileForm
             onClose={() => setIsEditOpen(false)}
@@ -814,7 +901,10 @@ export default function DoctorSettingsPage() {
                     {profileData.photo ? (
                       <img
                         src={profileData.photo}
-                        alt={profileData.full_name || "Doctor"}
+                        alt={
+                          profileData.full_name ||
+                          t("settingsPage.doctorPhotoAlt", locale)
+                        }
                       />
                     ) : (
                       initials || <User size={36} />
@@ -827,14 +917,14 @@ export default function DoctorSettingsPage() {
                   )}
                 </div>
 
-                <div>
+                <div className="text-start">
                   <h2 className="ds-doc-name">
                     {valueOrDash(profileData.full_name)}
                   </h2>
                   {profileData.specialist && (
                     <div className="ds-doc-specialty">
                       <Stethoscope size={13} />
-                      {profileData.specialist}
+                      {getSpecialistLabel(profileData.specialist, locale)}
                     </div>
                   )}
                 </div>
@@ -846,7 +936,7 @@ export default function DoctorSettingsPage() {
                 className="ds-edit-btn"
               >
                 <Pencil size={14} />
-                تعديل الملف الشخصي
+                {t("settingsPage.editProfile", locale)}
               </button>
             </div>
 
@@ -861,13 +951,13 @@ export default function DoctorSettingsPage() {
                     ? `${valueOrDash(profileData.average_rating)} / 5`
                     : "—"
                 }
-                label={`${valueOrDash(profileData.total_ratings)} تقييم`}
+                label={`${valueOrDash(profileData.total_ratings)} ${t("settingsPage.ratings", locale)}`}
               />
               <StatCard
                 accent="green"
                 icon={<User size={22} color="#10b981" />}
                 value={valueOrDash(profileData.years_of_experience)}
-                label="سنوات الخبرة"
+                label={t("settingsPage.yearsExperience", locale)}
               />
               <StatCard
                 accent="blue"
@@ -877,8 +967,8 @@ export default function DoctorSettingsPage() {
                     color={profileData.is_verified ? "#3b82f6" : "#4a6080"}
                   />
                 }
-                value={profileData.is_verified ? "موثق" : "غير موثق"}
-                label="حالة التوثيق"
+                value={profileData.is_verified ? t("settingsPage.verified", locale) : t("settingsPage.notVerified", locale)}
+                label={t("settingsPage.verificationStatus", locale)}
               />
             </div>
           </div>
@@ -891,26 +981,26 @@ export default function DoctorSettingsPage() {
                 <div className="ds-section-icon">
                   <Clock size={16} color="#0d9488" />
                 </div>
-                <h3 className="ds-section-title">ساعات العمل والموقع</h3>
+                <h3 className="ds-section-title">{t("settingsPage.workHoursLocation", locale)}</h3>
                 <div className="ds-section-line" />
               </div>
 
               <div className="ds-work-meta">
                 <div className="ds-work-chip">
                   <Calendar size={15} />
-                  <strong>{formatWorkDays(profileData.work_days)}</strong>
+                  <strong>{formatWorkDays(profileData.work_days, locale)}</strong>
                 </div>
                 <div className="ds-work-chip">
                   <Clock size={15} />
                   <strong>
-                    {formatTimeToAmPm(profileData.work_from)} &nbsp;–&nbsp;{" "}
-                    {formatTimeToAmPm(profileData.work_to)}
+                    {formatTimeToAmPm(profileData.work_from, locale)} &nbsp;–&nbsp;{" "}
+                    {formatTimeToAmPm(profileData.work_to, locale)}
                   </strong>
                 </div>
                 {profileData.consultation_price && (
                   <div className="ds-work-chip">
                     <DollarSign size={15} />
-                    سعر الكشف:&nbsp;
+                    {t("settingsPage.consultationPrice", locale)}&nbsp;
                     <strong>{valueOrDash(profileData.consultation_price)}</strong>
                   </div>
                 )}
@@ -935,32 +1025,40 @@ export default function DoctorSettingsPage() {
                 <div className="ds-section-icon">
                   <User size={16} color="#0d9488" />
                 </div>
-                <h3 className="ds-section-title">المعلومات الشخصية</h3>
+                <h3 className="ds-section-title">{t("settingsPage.personalInfo", locale)}</h3>
               </div>
 
               <InfoRow
                 icon={<Mail size={16} />}
-                label="البريد الإلكتروني"
+                label={t("settingsPage.email", locale)}
                 value={valueOrDash(user?.email)}
               />
               <InfoRow
                 icon={<Phone size={16} />}
-                label="رقم الهاتف"
+                label={t("settingsPage.phone", locale)}
                 value={valueOrDash(profileData.phone)}
               />
               <InfoRow
                 icon={<MapPin size={16} />}
-                label="العنوان"
+                label={t("settingsPage.address", locale)}
                 value={valueOrDash(profileData.location)}
               />
               <InfoRow
                 icon={<User size={16} />}
-                label="الجنس"
-                value={valueOrDash(profileData.gender)}
+                label={t("settingsPage.gender", locale)}
+                value={
+                  profileData.gender === "male"
+                    ? t("settingsPage.genderMale", locale)
+                    : profileData.gender === "female"
+                      ? t("settingsPage.genderFemale", locale)
+                      : profileData.gender
+                        ? t("settingsPage.genderOther", locale)
+                        : t("settingsPage.genderNotSpecified", locale)
+                }
               />
               <InfoRow
                 icon={<FileText size={16} />}
-                label="مستند الترخيص المهني"
+                label={t("settingsPage.professionalLicence", locale)}
                 value={
                   profileData.licence ? (
                     <a
@@ -969,7 +1067,7 @@ export default function DoctorSettingsPage() {
                       rel="noopener noreferrer"
                       className="text-teal-600 hover:text-teal-800 underline font-semibold transition-colors"
                     >
-                      عرض مستند الترخيص
+                      {t("settingsPage.viewLicenceDoc", locale)}
                     </a>
                   ) : (
                     "—"
@@ -980,12 +1078,12 @@ export default function DoctorSettingsPage() {
           </div>
 
           {/* ── CHANGE PASSWORD CARD ── */}
-          <div className="ds-card mt-6">
+          <div className="ds-card ds-password-card">
             <div className="ds-section-header">
               <div className="ds-section-icon">
                 <Lock size={16} color="#0d9488" />
               </div>
-              <h3 className="ds-section-title">تغيير كلمة المرور</h3>
+              <h3 className="ds-section-title">{t("settingsPage.changePassword", locale)}</h3>
               <div className="ds-section-line" />
             </div>
 
@@ -996,13 +1094,19 @@ export default function DoctorSettingsPage() {
                     type={showCurrentPassword ? "text" : "password"}
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
-                    placeholder="كلمة المرور الحالية"
-                    className="w-full px-4 py-3 rounded-xl border border-[var(--ds-teal-border)] bg-transparent text-[var(--ds-text-primary)] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--ds-teal)] transition-all"
+                    placeholder={t("settingsPage.currentPassword", locale)}
+                    className="w-full px-4 py-3 rounded-xl border border-[var(--ds-teal-border)] bg-transparent text-[var(--ds-text-primary)] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--ds-teal)] transition-all text-start"
                   />
                   <button
                     type="button"
                     onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[var(--ds-teal)] cursor-pointer"
+                    aria-label={t(
+                      showCurrentPassword
+                        ? "settingsPage.hidePassword"
+                        : "settingsPage.showPassword",
+                      locale,
+                    )}
+                    className={`absolute top-1/2 -translate-y-1/2 text-gray-400 hover:text-[var(--ds-teal)] cursor-pointer ${isRtl ? "left-3" : "right-3"}`}
                   >
                     {showCurrentPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
@@ -1013,13 +1117,19 @@ export default function DoctorSettingsPage() {
                     type={showNewPassword ? "text" : "password"}
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="كلمة المرور الجديدة"
-                    className="w-full px-4 py-3 rounded-xl border border-[var(--ds-teal-border)] bg-transparent text-[var(--ds-text-primary)] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--ds-teal)] transition-all"
+                    placeholder={t("settingsPage.newPassword", locale)}
+                    className="w-full px-4 py-3 rounded-xl border border-[var(--ds-teal-border)] bg-transparent text-[var(--ds-text-primary)] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--ds-teal)] transition-all text-start"
                   />
                   <button
                     type="button"
                     onClick={() => setShowNewPassword(!showNewPassword)}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[var(--ds-teal)] cursor-pointer"
+                    aria-label={t(
+                      showNewPassword
+                        ? "settingsPage.hidePassword"
+                        : "settingsPage.showPassword",
+                      locale,
+                    )}
+                    className={`absolute top-1/2 -translate-y-1/2 text-gray-400 hover:text-[var(--ds-teal)] cursor-pointer ${isRtl ? "left-3" : "right-3"}`}
                   >
                     {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
@@ -1030,13 +1140,19 @@ export default function DoctorSettingsPage() {
                     type={showConfirmPassword ? "text" : "password"}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="تأكيد كلمة المرور"
-                    className="w-full px-4 py-3 rounded-xl border border-[var(--ds-teal-border)] bg-transparent text-[var(--ds-text-primary)] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--ds-teal)] transition-all"
+                    placeholder={t("settingsPage.confirmPassword", locale)}
+                    className="w-full px-4 py-3 rounded-xl border border-[var(--ds-teal-border)] bg-transparent text-[var(--ds-text-primary)] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--ds-teal)] transition-all text-start"
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[var(--ds-teal)] cursor-pointer"
+                    aria-label={t(
+                      showConfirmPassword
+                        ? "settingsPage.hidePassword"
+                        : "settingsPage.showPassword",
+                      locale,
+                    )}
+                    className={`absolute top-1/2 -translate-y-1/2 text-gray-400 hover:text-[var(--ds-teal)] cursor-pointer ${isRtl ? "left-3" : "right-3"}`}
                   >
                     {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
@@ -1054,7 +1170,7 @@ export default function DoctorSettingsPage() {
                   ) : (
                     <>
                       <Lock size={16} />
-                      تحديث كلمة المرور
+                      {t("settingsPage.updatePassword", locale)}
                     </>
                   )}
                 </button>

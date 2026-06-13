@@ -10,6 +10,8 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useLocale } from "@/lib/hooks";
+import { t } from "@/i18n";
 
 interface WeeklyAppointmentsChartProps {
   bookings?: any[];
@@ -17,6 +19,8 @@ interface WeeklyAppointmentsChartProps {
 
 export default function WeeklyAppointmentsChart({ bookings = [] }: WeeklyAppointmentsChartProps) {
   const [mode, setMode] = useState<"current" | "last7">("current");
+  const locale = useLocale();
+  const isRtl = locale === "ar";
 
   const weekRange = useMemo(() => {
     const now = new Date();
@@ -27,13 +31,13 @@ export default function WeeklyAppointmentsChart({ bookings = [] }: WeeklyAppoint
       d.setDate(now.getDate() + offset);
 
       return {
-        label: d.toLocaleDateString("ar-EG", { weekday: "long" }),
+        label: d.toLocaleDateString(locale === "ar" ? "ar-EG" : "en-US", { weekday: "long" }),
         day: d.getDate(),
-        month: d.toLocaleDateString("en-EG", { month: "long" }).slice(0, 3),
+        month: d.toLocaleDateString(locale === "ar" ? "ar-EG" : "en-US", { month: "long" }).slice(0, 3),
         dateStr: d.toISOString().slice(0, 10), // YYYY-MM-DD
       };
     });
-  }, []);
+  }, [locale]);
 
   const chartData = useMemo(() => {
     return weekRange.map((day) => {
@@ -63,39 +67,54 @@ export default function WeeklyAppointmentsChart({ bookings = [] }: WeeklyAppoint
   }, [chartData, mode]);
 
   return (
-    <div className="rounded-2xl border border-(--card-border) bg-(--card-bg) p-5">
-      <div className="mb-4 flex items-center justify-between">
-        <div className="flex items-center gap-4 text-sm">
+    <div className="min-w-0 rounded-2xl border border-(--card-border) bg-(--card-bg) p-4 sm:p-5" dir={isRtl ? "rtl" : "ltr"}>
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className={`flex items-center gap-4 text-sm ${isRtl ? "flex-row" : "flex-row-reverse"}`}>
+          <div className="flex items-center gap-1">
+            {isRtl ? (
+              <>
+                <button
+                  onClick={() => setMode("current")}
+                  className="text-md font-semibold text-(--text-primary) cursor-pointer"
+                >
+                  {isRtl ? "الحالي" : "Current"}
+                </button>
+                <span className="h-2 w-2 rounded-full bg-[#1F2B6C] p-1" />
+              </>
+            ) : (
+              <>
+                <span className="h-2 w-2 rounded-full bg-[#1F2B6C] p-1" />
+                <button
+                  onClick={() => setMode("current")}
+                  className="text-md font-semibold text-(--text-primary) cursor-pointer"
+                >
+                  Current
+                </button>
+              </>
+            )}
+          </div>
+
           <button
             onClick={() => setMode("last7")}
-            className="text-md font-semibold text-(--text-primary)"
+            className="text-md font-semibold text-(--text-primary) cursor-pointer"
           >
-            آخر 7 أيام
+            {isRtl ? "آخر 7 أيام" : "Last 7 Days"}
           </button>
-
-          <div className="flex items-center gap-1">
-            <span className="h-2 w-2 rounded-full bg-[#1F2B6C] p-1" />
-            <button
-              onClick={() => setMode("current")}
-              className="text-md font-semibold text-(--text-primary)"
-            >
-              الحالي
-            </button>
-          </div>
         </div>
 
-        <div className="text-right">
-          <h3 className="text-2xl font-bold text-(--text-primary)">
-            اتجاهات المواعيد الأسبوعية
+        <div className="text-start">
+          <h3 className="text-xl sm:text-2xl font-bold text-(--text-primary)">
+            {isRtl ? "اتجاهات المواعيد الأسبوعية" : "Weekly Appointments Trends"}
           </h3>
-          <p className="text-md text-(--text-secondary)">
-            مقارنة كثافة الزوار خلال الأسبوع الحالي
+          <p className="text-xs sm:text-sm text-(--text-secondary)">
+            {isRtl ? "مقارنة كثافة الزوار خلال الأسبوع الحالي" : "Comparison of visitor density during the current week"}
           </p>
         </div>
       </div>
 
-      <div className="h-[300px] min-h-[300px] w-full min-w-0">
-        <ResponsiveContainer width="100%" height="100%">
+      <div className="w-full overflow-x-auto pb-2">
+        <div className="h-[280px] min-h-[280px] min-w-[560px] sm:h-[300px] sm:min-h-[300px] sm:min-w-0">
+          <ResponsiveContainer width="100%" height="100%">
           <BarChart data={visibleChartData} barCategoryGap={30} barGap={-28}>
             <CartesianGrid
               strokeDasharray="0 0"
@@ -112,7 +131,7 @@ export default function WeeklyAppointmentsChart({ bookings = [] }: WeeklyAppoint
             />
 
             <YAxis
-              orientation="right"
+              orientation={isRtl ? "right" : "left"}
               tick={{ fontSize: 12, fill: "var(--text-primary)" }}
               axisLine={false}
               tickLine={false}
@@ -134,7 +153,7 @@ export default function WeeklyAppointmentsChart({ bookings = [] }: WeeklyAppoint
                   key="value"
                   style={{ color: "var(--text2-bg)", fontWeight: "bold" }}
                 >
-                  <span className="text-(--text-primary)">value : </span>
+                  <span className="text-(--text-primary)">{isRtl ? "القيمة : " : "Value: "}</span>
                   {value}
                 </span>,
               ]}
@@ -145,6 +164,7 @@ export default function WeeklyAppointmentsChart({ bookings = [] }: WeeklyAppoint
                 background: "var(--card-bg)",
                 color: "var(--text-primary)",
                 accentColor: "#1F2B6C",
+                textAlign: isRtl ? "right" : "left",
               }}
             />
             <Bar
@@ -154,7 +174,8 @@ export default function WeeklyAppointmentsChart({ bookings = [] }: WeeklyAppoint
               radius={[6, 6, 6, 6]}
             />
           </BarChart>
-        </ResponsiveContainer>
+          </ResponsiveContainer>
+        </div>
       </div>
     </div>
   );

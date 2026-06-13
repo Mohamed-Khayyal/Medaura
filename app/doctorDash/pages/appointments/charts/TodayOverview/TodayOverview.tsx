@@ -1,6 +1,8 @@
 "use client";
 
 import { Plus, Download, TrendingUp, TrendingDown } from "lucide-react";
+import { useLocale } from "@/lib/hooks";
+import { t } from "@/i18n";
 
 interface TodayOverviewProps {
   totals?: {
@@ -12,39 +14,60 @@ interface TodayOverviewProps {
 }
 
 export default function TodayOverview({ totals, todayCount = 0 }: TodayOverviewProps) {
+  const locale = useLocale();
+  const isRtl = locale === "ar";
+
   const stats = [
-    { title: "معدل الإلغاء", value: `${totals?.cancellationRate ?? 0}%`, change: 0 },
-    { title: "في الانتظار", value: totals?.pending ?? 0, change: 0 },
-    { title: "مواعيد اليوم", value: todayCount, change: 0 },
-    { title: "إجمالي المواعيد", value: totals?.appointments ?? 0, change: 0 },
+    { title: isRtl ? "معدل الإلغاء" : "Cancellation Rate", value: `${totals?.cancellationRate ?? 0}%`, change: 0 },
+    { title: t("doctorDashPages.todayAppointments.accessPending", locale) || (isRtl ? "في الانتظار" : "Pending"), value: totals?.pending ?? 0, change: 0 },
+    { title: isRtl ? "مواعيد اليوم" : "Today's Appointments", value: todayCount, change: 0 },
+    { title: isRtl ? "إجمالي المواعيد" : "Total Appointments", value: totals?.appointments ?? 0, change: 0 },
   ];
 
+  const formattedDate = new Date().toLocaleDateString(locale === "ar" ? "ar-EG" : "en-US", {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  });
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" dir={isRtl ? "rtl" : "ltr"}>
 
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
 
         {/* Buttons */}
-        <div className="flex gap-2 order-2 sm:order-1">
-          <button className="bg-[#1F2B6C] px-3 py-1.5 rounded-lg text-xs sm:text-sm text-white border border-(--input-border) flex items-center gap-1">
-            إضافة موعد
-            <Plus size={14} />
+        <div className={`order-2 grid grid-cols-2 gap-2 sm:order-1 sm:flex ${isRtl ? "justify-start" : "justify-end"}`}>
+          <button className="flex items-center justify-center gap-1 rounded-lg border border-(--input-border) bg-[#1F2B6C] px-3 py-2 text-xs text-white transition hover:bg-[#162056] sm:text-sm">
+            {isRtl ? (
+              <>
+                إضافة موعد
+                <Plus size={14} />
+              </>
+            ) : (
+              <>
+                <Plus size={14} />
+                Add Appointment
+              </>
+            )}
           </button>
 
-          <button className="border border-(--input-border) bg-(--input-bg) px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold flex items-center gap-1 hover:bg-(--hover-bg) transition-colors">
+          <button className="flex items-center justify-center gap-1 rounded-lg border border-(--input-border) bg-(--input-bg) px-3 py-2 text-xs font-bold transition-colors hover:bg-(--hover-bg) sm:text-sm">
             <Download size={14} />
-            تصدير
+            {isRtl ? "تصدير" : "Export"}
           </button>
         </div>
 
         {/* Title */}
-        <div className="text-right order-1 sm:order-2">
+        <div className="text-start order-1 sm:order-2">
           <h2 className="font-bold text-lg sm:text-2xl text-(--text-primary)">
-            نظرة عامة علي المواعيد
+            {isRtl ? "نظرة عامة على المواعيد" : "Appointments Overview"}
           </h2>
-          <p className="text-xs sm:text-md text-(--text-secondary)">
-            تحليل ذكي لبيانات الجدول والتدفق ليوم {new Date().toLocaleDateString("ar-EG", { day: 'numeric', month: 'long', year: 'numeric' })}
+          <p className="mt-1 text-xs leading-5 text-(--text-secondary) sm:text-sm">
+            {isRtl
+              ? `تحليل ذكي لبيانات الجدول والتدفق ليوم ${formattedDate}`
+              : `Smart analysis of schedule data for ${formattedDate}`
+            }
           </p>
         </div>
 
@@ -56,10 +79,12 @@ export default function TodayOverview({ totals, todayCount = 0 }: TodayOverviewP
         {stats.map((s, i) => (
           <div
             key={i}
-            className="bg-(--card-bg) border border-(--card-border) rounded-xl p-4 flex flex-col items-center sm:items-end gap-3 sm:gap-4 hover:-translate-y-1 hover:shadow-[0_2px_10px_var(--status-hover)] transition-all duration-300 ease-in-out"
+            className={`bg-(--card-bg) border border-(--card-border) rounded-xl p-4 flex flex-col items-center gap-3 sm:gap-4 hover:-translate-y-1 hover:shadow-[0_2px_10px_var(--status-hover)] transition-all duration-300 ease-in-out ${
+              isRtl ? "sm:items-end" : "sm:items-start"
+            }`}
           >
 
-            <p className="text-md sm:text-xl text-(--text-secondary)">
+            <p className="text-sm sm:text-base text-(--text-secondary)">
               {s.title}
             </p>
 
@@ -68,7 +93,7 @@ export default function TodayOverview({ totals, todayCount = 0 }: TodayOverviewP
             </h2>
 
             <p
-              className={`text-xs sm:text-md flex items-center gap-1 sm:gap-2 font-semibold ${
+              className={`text-xs sm:text-sm flex items-center gap-1 sm:gap-2 font-semibold ${
                 s.change >= 0 ? "text-green-600" : "text-red-500"
               }`}
             >

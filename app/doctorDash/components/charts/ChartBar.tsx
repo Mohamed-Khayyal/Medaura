@@ -10,6 +10,9 @@ import {
   CartesianGrid,
 } from "recharts";
 import { format } from "date-fns";
+import { useLocale } from "@/lib/hooks";
+import { t } from "@/i18n";
+
 
 interface props {
   data: {
@@ -20,6 +23,8 @@ interface props {
 }
 
 export default function ChartBar({ data }: props) {
+  const locale = useLocale();
+  const isRtl = locale === "ar";
   const [New, setNew] = useState(false);
   const [old, setOld] = useState(false);
 
@@ -35,7 +40,7 @@ export default function ChartBar({ data }: props) {
   });
 
   return (
-    <div className="bg-(--card-bg) rounded-2xl border border-(--card-border) shadow-[var(--shadow-soft)] overflow-hidden">
+    <div className="bg-(--card-bg) rounded-2xl border border-(--card-border) shadow-[var(--shadow-soft)] overflow-hidden" dir={isRtl ? "rtl" : "ltr"}>
       <div className="flex flex-col gap-3 border-b border-(--card-border) p-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2">
           <button
@@ -45,12 +50,12 @@ export default function ChartBar({ data }: props) {
             }}
             className="w-full sm:w-auto border border-(--card-border) px-3 py-1.5 rounded-xl text-xs text-(--text-primary) font-medium cursor-pointer hover:text-white hover:bg-[color:var(--primary)] transition-colors duration-300"
           >
-            عرض الكل
+            {t("doctorDash.showAll", locale)}
           </button>
         </div>
 
         <h1 className="text-lg font-semibold text-(--text-primary)">
-          إحصائيات المرضى
+          {t("doctorDash.patientStats", locale)}
         </h1>
       </div>
 
@@ -67,7 +72,7 @@ export default function ChartBar({ data }: props) {
             <span
               className={`h-2.5 w-2.5 rounded-full bg-[color:var(--primary)] ${New ? "ring-2 ring-[color:var(--primary)]/30" : ""}`}
             />
-            المرضى الجدد
+            {t("doctorDash.newPatients", locale)}
           </button>
 
           <button
@@ -80,13 +85,12 @@ export default function ChartBar({ data }: props) {
             <span
               className={`h-2.5 w-2.5 rounded-full bg-[#D7DCF4] ${old ? "ring-2 ring-[#D7DCF4]/40" : ""}`}
             />
-            المرضى القدامى
+            {t("doctorDash.oldPatients", locale)}
           </button>
         </div>
 
         <h3 className="text-xs font-semibold text-(--text-secondary)">
-          إجمالي عدد المرضى:{" "}
-          <span className="text-(--text-primary) font-bold">{totall}</span>
+          {t("doctorDash.totalPatientsCount", locale).replace("{count}", String(totall))}
         </h3>
       </div>
 
@@ -96,10 +100,10 @@ export default function ChartBar({ data }: props) {
           <div className="h-full w-full flex items-center justify-center">
             <div className="text-center">
               <p className="text-sm font-semibold text-(--text-primary)">
-                لا توجد بيانات بعد
+                {t("doctorDash.noData", locale)}
               </p>
               <p className="text-xs text-(--text-secondary)">
-                ستظهر الإحصائيات بمجرد توفر سجلات جديدة.
+                {t("doctorDash.noDataDesc", locale)}
               </p>
             </div>
           </div>
@@ -132,17 +136,23 @@ export default function ChartBar({ data }: props) {
               />
 
               <XAxis
-                reversed
+                reversed={isRtl}
                 dataKey="date"
                 tickMargin={8}
                 tick={{ fontSize: 11, fill: "var(--text-secondary)" }}
                 axisLine={false}
                 tickLine={false}
-                tickFormatter={(value) => format(new Date(value), "dd MMM")}
+                tickFormatter={(value) => {
+                  try {
+                    return format(new Date(value), "dd MMM");
+                  } catch {
+                    return String(value);
+                  }
+                }}
               />
 
               <YAxis
-                orientation="right"
+                orientation={isRtl ? "right" : "left"}
                 tick={{ fontSize: 11, fill: "var(--text-secondary)" }}
                 axisLine={false}
                 tickLine={false}

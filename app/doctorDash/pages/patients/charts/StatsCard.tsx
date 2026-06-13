@@ -9,19 +9,19 @@ export default function StatCard({ title, value, change }: Props) {
   const isPositive = change >= 0;
 
   return (
-    <div className="bg-(--card-bg) rounded-xl border border-(--card-border) px-4 py-3 w-full  flex flex-col items-end gap-2 hover:-translate-y-1  hover:shadow-[0_2px_10px_var(--status-hover)] duration-400 transition-all ease-in-out">
+    <div className="flex w-full min-w-0 flex-col items-start gap-2 rounded-xl border border-(--card-border) bg-(--card-bg) px-4 py-3 text-start transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-[0_2px_10px_var(--status-hover)] sm:items-end">
 
       {/* title */}
-      <p className="text-xl text-(--text-secondary)">{title}</p>
+      <p className="text-sm text-(--text-secondary) sm:text-lg lg:text-xl">{title}</p>
 
         {/* number */}
-        <h2 className="text-2xl font-bold text-(--text-primary)">
+        <h2 className="text-xl font-bold text-(--text-primary) sm:text-2xl">
           {value.toLocaleString()}
         </h2>
 
         {/* change */}
         <div
-          className={`flex items-center  gap-1 text-xl ${
+          className={`flex items-center gap-1 text-sm sm:text-lg ${
             isPositive ? "text-green-600" : "text-red-500"
           }`}
         >

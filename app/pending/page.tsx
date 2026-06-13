@@ -3,10 +3,14 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { useLocale } from "@/lib/hooks";
+import { t } from "@/i18n";
+import { Globe } from "lucide-react";
 
 export default function PendingApprovalPage() {
   const { user, isAuthenticated, loading, logout } = useAuth();
   const router = useRouter();
+  const locale = useLocale();
 
   useEffect(() => {
     if (loading) return;
@@ -44,6 +48,16 @@ export default function PendingApprovalPage() {
     }
   }, [loading, isAuthenticated, user, router]);
 
+  const toggleLocale = () => {
+    const next = locale === "en" ? "ar" : "en";
+    try {
+      localStorage.setItem("locale", next);
+    } catch {}
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("localeChange", { detail: next }));
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#f2f4f8]">
@@ -53,11 +67,23 @@ export default function PendingApprovalPage() {
   }
 
   const role = user?.user_type?.toLowerCase();
-
-  const config = getConfig(role);
+  const config = getConfig(role, locale);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#eef2ff] via-[#f5f7ff] to-[#e8f4ff] flex items-center justify-center p-4" dir="rtl">
+    <div className="min-h-screen bg-gradient-to-br from-[#eef2ff] via-[#f5f7ff] to-[#e8f4ff] flex items-center justify-center p-4 relative" dir={locale === "ar" ? "rtl" : "ltr"}>
+      {/* Language Switcher */}
+      <div className={`absolute top-4 ${locale === "ar" ? "left-4" : "right-4"} z-50`}>
+        <button
+          type="button"
+          onClick={toggleLocale}
+          className="inline-flex h-10 px-4 items-center gap-2 rounded-2xl border border-zinc-200 bg-white text-xs font-semibold text-zinc-800 hover:bg-zinc-50 transition shadow-sm cursor-pointer"
+          title={locale === "en" ? "Change to Arabic" : "تغيير إلى الإنجليزية"}
+        >
+          <Globe size={14} className="text-zinc-500" />
+          <span className="uppercase">{locale === "en" ? "ar" : "en"}</span>
+        </button>
+      </div>
+
       {/* Decorative background blobs */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 h-[500px] w-[500px] rounded-full bg-indigo-300/20 blur-3xl" />
@@ -73,7 +99,7 @@ export default function PendingApprovalPage() {
               <div className="h-10 w-10 rounded-full bg-indigo-700 flex items-center justify-center text-white font-bold text-lg">
                 M
               </div>
-              <span className="text-xl font-semibold text-indigo-900">Medaura</span>
+              <span className="text-xl font-semibold text-indigo-900">{t("pendingPage.title", locale)}</span>
             </div>
           </div>
 
@@ -117,7 +143,7 @@ export default function PendingApprovalPage() {
 
           {/* Info box */}
           <div
-            className="rounded-2xl p-4 mb-8 text-sm leading-relaxed text-right"
+            className={`rounded-2xl p-4 mb-8 text-sm leading-relaxed ${locale === "ar" ? "text-right" : "text-left"}`}
             style={{ background: config.infoBg, color: config.infoColor }}
           >
             <div className="flex items-start gap-3">
@@ -134,7 +160,7 @@ export default function PendingApprovalPage() {
           {/* Steps */}
           <div className="mb-8 space-y-3">
             {config.steps.map((step, i) => (
-              <div key={i} className="flex items-center gap-3 text-right">
+              <div key={i} className={`flex items-center gap-3 ${locale === "ar" ? "text-right" : "text-left"}`}>
                 <div
                   className="h-7 w-7 shrink-0 rounded-full flex items-center justify-center text-xs font-bold"
                   style={{ background: config.stepBg, color: config.stepColor }}
@@ -146,21 +172,26 @@ export default function PendingApprovalPage() {
             ))}
           </div>
 
+          {/* Action buttons (Complete Profile / Complete Data) */}
+          <div className="mb-3 w-full flex flex-col gap-2">
+            {getProfileButtons(role, locale, router)}
+          </div>
+
           {/* Logout button */}
           <button
             onClick={async () => {
               await logout();
               router.replace("/login");
             }}
-            className="w-full rounded-xl border border-gray-200 py-3 text-sm font-medium text-gray-500 transition hover:border-red-300 hover:bg-red-50 hover:text-red-600"
+            className="w-full rounded-xl border border-gray-200 py-3 text-sm font-medium text-gray-500 transition hover:border-red-300 hover:bg-red-50 hover:text-red-600 cursor-pointer"
           >
-            تسجيل الخروج
+            {t("pendingPage.logout", locale)}
           </button>
         </div>
 
         {/* Footer note */}
         <p className="mt-6 text-center text-xs text-gray-400">
-          إذا كانت لديك استفسارات، يرجى التواصل مع الدعم الفني
+          {t("pendingPage.footerNote", locale)}
         </p>
       </div>
     </div>
@@ -185,106 +216,178 @@ type RoleConfig = {
   stepColor: string;
 };
 
-function getConfig(role: string | undefined): RoleConfig {
+function getIconForRole(role: string) {
   switch (role) {
     case "staff":
-      return {
-        icon: (
-          <svg className="h-12 w-12 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
-        ),
-        iconBg: "linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)",
-        badge: "في انتظار موافقة العيادة",
-        badgeBg: "#fef9ec",
-        badgeColor: "#d97706",
-        title: "بانتظار موافقة العيادة",
-        subtitle: "تم تسجيل حسابك بنجاح! يحتاج الانضمام إلى العيادة إلى موافقة مدير العيادة.",
-        infoBg: "#fffbeb",
-        infoColor: "#92400e",
-        infoText: "سيقوم مدير العيادة بمراجعة طلبك والموافقة عليه قريباً. ستتمكن من الوصول إلى لوحة التحكم بعد قبول طلبك.",
-        steps: [
-          "تم إنشاء حسابك بنجاح ✓",
-          "في انتظار مراجعة مدير العيادة",
-          "الحصول على الموافقة والدخول للوحة التحكم",
-        ],
-        stepBg: "#fef3c7",
-        stepColor: "#b45309",
-      };
-
+      return (
+        <svg className="h-12 w-12 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+      );
     case "doctor":
-      return {
-        icon: (
-          <svg className="h-12 w-12 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-              d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-          </svg>
-        ),
-        iconBg: "linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%)",
-        badge: "في انتظار موافقة الإدارة",
-        badgeBg: "#eef2ff",
-        badgeColor: "#4338ca",
-        title: "بانتظار موافقة الإدارة",
-        subtitle: "تم تسجيل طلبك كطبيب بنجاح. يتطلب التحقق من بياناتك مراجعة من قِبل فريق الإدارة.",
-        infoBg: "#eef2ff",
-        infoColor: "#312e81",
-        infoText: "يقوم فريق إدارة Medaura بمراجعة وثائقك وبياناتك المهنية للتحقق منها. ستُخطَر عند اكتمال المراجعة.",
-        steps: [
-          "تم تسليم بياناتك المهنية ✓",
-          "مراجعة الوثائق من قِبل فريق الإدارة",
-          "الحصول على الاعتماد والوصول للوحة التحكم",
-        ],
-        stepBg: "#e0e7ff",
-        stepColor: "#3730a3",
-      };
-
+      return (
+        <svg className="h-12 w-12 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+        </svg>
+      );
     case "clinic":
-      return {
-        icon: (
-          <svg className="h-12 w-12 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-              d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-          </svg>
-        ),
-        iconBg: "linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%)",
-        badge: "في انتظار موافقة الإدارة",
-        badgeBg: "#f0fdfa",
-        badgeColor: "#0f766e",
-        title: "بانتظار اعتماد العيادة",
-        subtitle: "تم تسجيل عيادتك بنجاح! تحتاج إلى موافقة الإدارة قبل البدء في استقبال المواعيد.",
-        infoBg: "#f0fdfa",
-        infoColor: "#134e4a",
-        infoText: "يقوم فريق إدارة Medaura بمراجعة معلومات عيادتك والتحقق منها. ستتمكن من استخدام لوحة تحكم العيادة بعد الموافقة.",
-        steps: [
-          "تم تسجيل بيانات العيادة بنجاح ✓",
-          "مراجعة الطلب من قِبل فريق الإدارة",
-          "الحصول على الاعتماد وإدارة العيادة",
-        ],
-        stepBg: "#ccfbf1",
-        stepColor: "#0f766e",
-      };
-
+      return (
+        <svg className="h-12 w-12 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+        </svg>
+      );
     default:
-      return {
-        icon: (
-          <svg className="h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        ),
-        iconBg: "#f3f4f6",
-        badge: "في الانتظار",
-        badgeBg: "#f9fafb",
-        badgeColor: "#6b7280",
-        title: "في انتظار الموافقة",
-        subtitle: "حسابك قيد المراجعة.",
-        infoBg: "#f9fafb",
-        infoColor: "#374151",
-        infoText: "يُرجى الانتظار حتى تتم مراجعة حسابك.",
-        steps: ["إنشاء الحساب ✓", "مراجعة الطلب", "الوصول للمنصة"],
-        stepBg: "#f3f4f6",
-        stepColor: "#6b7280",
-      };
+      return (
+        <svg className="h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      );
   }
+}
+
+function getIconBgForRole(role: string) {
+  switch (role) {
+    case "staff":
+      return "linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)";
+    case "doctor":
+      return "linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%)";
+    case "clinic":
+      return "linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%)";
+    default:
+      return "#f3f4f6";
+  }
+}
+
+function getBadgeBgForRole(role: string) {
+  switch (role) {
+    case "staff":
+      return "#fef9ec";
+    case "doctor":
+      return "#eef2ff";
+    case "clinic":
+      return "#f0fdfa";
+    default:
+      return "#f9fafb";
+  }
+}
+
+function getBadgeColorForRole(role: string) {
+  switch (role) {
+    case "staff":
+      return "#d97706";
+    case "doctor":
+      return "#4338ca";
+    case "clinic":
+      return "#0f766e";
+    default:
+      return "#6b7280";
+  }
+}
+
+function getInfoBgForRole(role: string) {
+  switch (role) {
+    case "staff":
+      return "#fffbeb";
+    case "doctor":
+      return "#eef2ff";
+    case "clinic":
+      return "#f0fdfa";
+    default:
+      return "#f9fafb";
+  }
+}
+
+function getInfoColorForRole(role: string) {
+  switch (role) {
+    case "staff":
+      return "#92400e";
+    case "doctor":
+      return "#312e81";
+    case "clinic":
+      return "#134e4a";
+    default:
+      return "#374151";
+  }
+}
+
+function getStepBgForRole(role: string) {
+  switch (role) {
+    case "staff":
+      return "#fef3c7";
+    case "doctor":
+      return "#e0e7ff";
+    case "clinic":
+      return "#ccfbf1";
+    default:
+      return "#f3f4f6";
+  }
+}
+
+function getStepColorForRole(role: string) {
+  switch (role) {
+    case "staff":
+      return "#b45309";
+    case "doctor":
+      return "#3730a3";
+    case "clinic":
+      return "#0f766e";
+    default:
+      return "#6b7280";
+  }
+}
+
+function getProfileButtons(role: string | undefined, locale: string, router: any) {
+  const roleKey = role?.toLowerCase();
+
+  if (roleKey === "doctor" || roleKey === "staff") {
+    return (
+      <button
+        onClick={() => router.push("/doctorDash/settings")}
+        className="w-full rounded-xl bg-indigo-700 hover:bg-indigo-800 text-white py-3 text-sm font-semibold transition shadow-md hover:shadow-lg cursor-pointer"
+      >
+        {t("pendingPage.goToProfile", locale)}
+      </button>
+    );
+  }
+
+  if (roleKey === "clinic") {
+    return (
+      <button
+        onClick={() => router.push("/clinicDash/settings")}
+        className="w-full rounded-xl bg-indigo-700 hover:bg-indigo-800 text-white py-3 text-sm font-semibold transition shadow-md hover:shadow-lg cursor-pointer"
+      >
+        {t("pendingPage.goToProfile", locale)}
+      </button>
+    );
+  }
+
+  return null;
+}
+
+function getConfig(role: string | undefined, locale: string): RoleConfig {
+  const namespace = (role === "staff" || role === "doctor" || role === "clinic") ? role : "default";
+
+  return {
+    icon: getIconForRole(namespace),
+    iconBg: getIconBgForRole(namespace),
+    badge: t(`pendingPage.${namespace}.badge`, locale),
+    badgeBg: getBadgeBgForRole(namespace),
+    badgeColor: getBadgeColorForRole(namespace),
+    title: t(`pendingPage.${namespace}.title`, locale),
+    subtitle: t(`pendingPage.${namespace}.subtitle`, locale),
+    infoBg: getInfoBgForRole(namespace),
+    infoColor: getInfoColorForRole(namespace),
+    infoText: t(`pendingPage.${namespace}.infoText`, locale),
+    steps: [
+      t(`pendingPage.${namespace}.step1`, locale),
+      t(`pendingPage.${namespace}.step2`, locale),
+      t(`pendingPage.${namespace}.step3`, locale),
+    ],
+    stepBg: getStepBgForRole(namespace),
+    stepColor: getStepColorForRole(namespace),
+  };
 }

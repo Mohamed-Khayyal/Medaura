@@ -74,10 +74,10 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
 
   const sidebarPositionClass = isRtl
     ? `fixed inset-y-0 right-0 z-50 h-screen w-64 bg-[#0f2044] text-white p-4 space-y-4 overflow-auto shadow-2xl xl:shadow-none transform transition-transform duration-300 ease-in-out border-l border-white/10 xl:sticky xl:top-0 ${
-        open ? "translate-x-0" : "translate-x-full xl:translate-x-0"
+        open ? "translate-x-0 xl:translate-x-0" : "translate-x-full xl:translate-x-0"
       }`
     : `fixed inset-y-0 left-0 z-50 h-screen w-64 bg-[#0f2044] text-white p-4 space-y-4 overflow-auto shadow-2xl xl:shadow-none transform transition-transform duration-300 ease-in-out border-r border-white/10 xl:sticky xl:top-0 ${
-        open ? "translate-x-0" : "-translate-x-full xl:translate-x-0"
+        open ? "translate-x-0 xl:translate-x-0" : "-translate-x-full xl:translate-x-0"
       }`;
 
   return (

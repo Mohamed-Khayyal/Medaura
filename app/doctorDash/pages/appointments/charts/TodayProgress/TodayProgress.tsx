@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useLocale } from "@/lib/hooks";
+import { t } from "@/i18n";
 
 interface TodayProgressProps {
   todayAppointments?: any[];
@@ -24,6 +26,8 @@ function isInRange(start: string, end: string) {
 
 export default function TodaySchedule({ todayAppointments = [] }: TodayProgressProps) {
   const [now, setNow] = useState(new Date());
+  const locale = useLocale();
+  const isRtl = locale === "ar";
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -37,7 +41,7 @@ export default function TodaySchedule({ todayAppointments = [] }: TodayProgressP
     if (!todayAppointments || todayAppointments.length === 0) {
       return [
         {
-          title: "لا توجد مواعيد اليوم",
+          title: t("doctorDashPages.appointmentsTable.noAppointments", locale) || (isRtl ? "لا توجد مواعيد اليوم" : "No appointments today"),
           start: "09:00",
           end: "17:00",
           status: 3 as Status,
@@ -52,13 +56,13 @@ export default function TodaySchedule({ todayAppointments = [] }: TodayProgressP
       const endTime = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
       
       return {
-        title: `حجز ${app.name}`,
+        title: isRtl ? `حجز ${app.name}` : `Booking ${app.name}`,
         start: startTime,
         end: endTime,
         status: ((index % 3) + 1) as Status,
       };
     });
-  }, [todayAppointments]);
+  }, [todayAppointments, locale, isRtl]);
 
   const liveStatus: Status = useMemo(() => {
     const found = appointments.find(a => 
@@ -92,7 +96,7 @@ export default function TodaySchedule({ todayAppointments = [] }: TodayProgressP
 
   const today = new Date();
 
-  const formattedDate = today.toLocaleDateString("ar-EG", {
+  const formattedDate = today.toLocaleDateString(locale === "ar" ? "ar-EG" : "en-US", {
     weekday: "long",
     day: "numeric",
     month: "long",
@@ -109,17 +113,27 @@ export default function TodaySchedule({ todayAppointments = [] }: TodayProgressP
   };
 
   return (
-    <div className="bg-(--card-bg) border border-(--card-border) rounded-2xl p-4 sm:p-6 w-full max-w-sm">
+    <div className="h-full w-full min-w-0 rounded-2xl border border-(--card-border) bg-(--card-bg) p-4 sm:p-6" dir={isRtl ? "rtl" : "ltr"}>
 
       {/* Header */}
-      <div className="text-right mb-4">
-        <h2 className="font-bold text-lg sm:text-xl">جدول اليوم</h2>
-        <p className="text-xs sm:text-sm text-(--text-secondary) flex items-center gap-2 justify-end">
+      <div className={`mb-4 ${isRtl ? "text-right" : "text-left"}`}>
+        <h2 className="font-bold text-lg sm:text-xl">
+          {isRtl ? "جدول اليوم" : "Today's Schedule"}
+        </h2>
+        <p className={`text-xs sm:text-sm text-(--text-secondary) flex items-center gap-2 ${isRtl ? "justify-end" : "justify-start"}`}>
+          {!isRtl && (
+            <span
+              className="w-2.5 h-2.5 rounded-full"
+              style={{ backgroundColor: colors[liveStatus] }}
+            />
+          )}
           {formattedDate}
-          <span
-            className="w-2.5 h-2.5 mt-1 rounded-full"
-            style={{ backgroundColor: colors[liveStatus] }}
-          ></span>
+          {isRtl && (
+            <span
+              className="w-2.5 h-2.5 rounded-full"
+              style={{ backgroundColor: colors[liveStatus] }}
+            />
+          )}
         </p>
       </div>
 
@@ -154,17 +168,26 @@ export default function TodaySchedule({ todayAppointments = [] }: TodayProgressP
         {/* center */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span className="text-lg sm:text-xl font-semibold">{progress}%</span>
-          <span className="text-[10px] sm:text-xs text-gray-500">إنجاز يومي</span>
+          <span className="text-[10px] sm:text-xs text-gray-500">
+            {isRtl ? "إنجاز يومي" : "Daily Progress"}
+          </span>
         </div>
       </div>
 
       {/* Timeline */}
-      <div className="space-y-3 sm:space-y-4 text-right">
+      <div className={`space-y-3 sm:space-y-4 ${isRtl ? "text-right" : "text-left"}`}>
         {appointments.map((a, i) => {
           return (
-            <div key={i} className="flex items-start gap-3 justify-end">
+            <div key={i} className={`flex items-start gap-3 ${isRtl ? "justify-end" : "justify-start"}`}>
+              {!isRtl && (
+                <span
+                  className="w-2.5 h-2.5 mt-1.5 rounded-full"
+                  style={{ backgroundColor: colors[a.status as Status] }}
+                />
+              )}
+
               <div>
-                <p className="text-sm sm:text-md font-medium text-(--text-primary)">
+                <p className="text-sm sm:text-base font-medium text-(--text-primary)">
                   {a.title}
                 </p>
                 <p
@@ -173,15 +196,17 @@ export default function TodaySchedule({ todayAppointments = [] }: TodayProgressP
                   }`}
                 >
                   {isInRange(a.start, a.end)
-                    ? "الآن"
+                    ? (isRtl ? "الآن" : "Now")
                     : `${a.start} - ${a.end}`}
                 </p>
               </div>
 
-              <span
-                className="w-2.5 h-2.5 mt-1 rounded-full"
-                style={{ backgroundColor: colors[a.status as Status] }}
-              ></span>
+              {isRtl && (
+                <span
+                  className="w-2.5 h-2.5 mt-1.5 rounded-full"
+                  style={{ backgroundColor: colors[a.status as Status] }}
+                />
+              )}
             </div>
           );
         })}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { getDashboardPathByUserType, isUserPendingApproval } from "@/lib/utils/redirect";
 
@@ -28,6 +28,9 @@ export default function RouteGuard({ allowedRoles, children }: RouteGuardProps) 
   const allowed = allowedRoles.map((r) => r.toLowerCase());
   const hasAccess = isAuthenticated && allowed.includes(userRole);
   const isPending = isUserPendingApproval(user);
+  const pathname = usePathname();
+  const isSettingsPage = pathname.includes("/settings");
+  const shouldBlockPending = isPending && !isSettingsPage;
 
   useEffect(() => {
     if (loading) return;
@@ -38,7 +41,7 @@ export default function RouteGuard({ allowedRoles, children }: RouteGuardProps) 
       return;
     }
 
-    if (isPending) {
+    if (shouldBlockPending) {
       // Account awaiting approval → send to pending page
       router.replace("/pending");
       return;
@@ -49,7 +52,7 @@ export default function RouteGuard({ allowedRoles, children }: RouteGuardProps) 
       const profile = user?.profile as Record<string, unknown> | undefined;
       router.replace(getDashboardPathByUserType(user?.user_type, profile));
     }
-  }, [loading, isAuthenticated, isPending, hasAccess, user, router]);
+  }, [loading, isAuthenticated, shouldBlockPending, hasAccess, user, router]);
 
   // ── Loading ──────────────────────────────────────────────────────────────
   if (loading) {
@@ -76,7 +79,7 @@ export default function RouteGuard({ allowedRoles, children }: RouteGuardProps) 
   }
 
   // ── Pending approval ─────────────────────────────────────────────────────
-  if (isPending) {
+  if (shouldBlockPending) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#f2f4f8]">
         <div className="flex flex-col items-center gap-4">

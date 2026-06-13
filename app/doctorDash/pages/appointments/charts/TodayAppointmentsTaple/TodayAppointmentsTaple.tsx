@@ -13,17 +13,16 @@ import {
   Plus,
   X,
 } from "lucide-react";
+import { useLocale } from "@/lib/hooks";
+import { t } from "@/i18n";
 
 const statusColors: Record<string, string> = {
-  مكتملة: "bg-green-100 text-green-600",
-  قادمة: "bg-purple-100 text-purple-600",
-  "...جارية الأن": "bg-blue-100 text-blue-600",
-};
-
-const accessStatusLabels: Record<string, { label: string; color: string }> = {
-  accepted: { label: "مسموح", color: "text-green-600 bg-green-50" },
-  pending: { label: "في انتظار الموافقة", color: "text-amber-600 bg-amber-50" },
-  rejected: { label: "مرفوض", color: "text-red-600 bg-red-50" },
+  completed: "bg-green-100 text-green-600",
+  confirmed: "bg-blue-100 text-blue-600",
+  approved: "bg-blue-100 text-blue-600",
+  pending: "bg-amber-100 text-amber-600",
+  cancelled: "bg-red-100 text-red-600",
+  rejected: "bg-red-100 text-red-600",
 };
 
 interface Booking {
@@ -52,6 +51,8 @@ interface PrescriptionForm {
 
 export default function TodayAppointmentsTaple() {
   const router = useRouter();
+  const locale = useLocale();
+  const isRtl = locale === "ar";
 
   const [data, setData] = useState<Booking[]>([]);
   const [page, setPage] = useState(1);
@@ -82,6 +83,12 @@ export default function TodayAppointmentsTaple() {
 
   const pageSize = 5;
 
+  const accessStatusLabels: Record<string, { label: string; color: string }> = {
+    accepted: { label: t("doctorDashPages.todayAppointments.accessAllowed", locale) || "مسموح", color: "text-green-600 bg-green-50" },
+    pending: { label: t("doctorDashPages.todayAppointments.accessPending", locale) || "في انتظار الموافقة", color: "text-amber-600 bg-amber-50" },
+    rejected: { label: t("doctorDashPages.todayAppointments.accessRejected", locale) || "مرفوض", color: "text-red-600 bg-red-50" },
+  };
+
   const fetchBookings = useCallback(async () => {
     try {
       setLoading(true);
@@ -108,16 +115,11 @@ export default function TodayAppointmentsTaple() {
         return {
           id: item.booking_id as number,
           name: (item.patient_name as string) || "Unknown",
-          email: (item.patient_phone as string) || "لا يوجد هاتف",
+          email: (item.patient_phone as string) || t("doctorDashPages.todayAppointments.patientPhone", locale),
           age: "--",
-          status:
-            item.status === "confirmed"
-              ? "مكتملة"
-              : item.status === "pending"
-                ? "قادمة"
-                : "...جارية الأن",
+          status: item.status as string,
           time: `${item.booking_from} - ${item.booking_to}`,
-          type: "كشف",
+          type: t("appointmentsPage.visit", locale) || (isRtl ? "زيارة" : "Visit"),
           date: bDate,
           rawStatus: item.status as string,
           prescriptionAccess: (item.prescription_access_status as "pending" | "accepted" | "rejected" | null) ?? null,
@@ -131,7 +133,7 @@ export default function TodayAppointmentsTaple() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [locale, isRtl]);
 
   useEffect(() => {
     fetchBookings();
@@ -146,7 +148,7 @@ export default function TodayAppointmentsTaple() {
       );
       const result = await response.json();
       if (!response.ok) {
-        alert(result.error || "حدث خطأ أثناء طلب الصلاحية");
+        alert(result.error || t("doctorDashPages.todayAppointments.requestAccessError", locale));
         return;
       }
       // update local state
@@ -156,7 +158,7 @@ export default function TodayAppointmentsTaple() {
         ),
       );
     } catch {
-      alert("حدث خطأ في الاتصال");
+      alert(t("doctorDashPages.todayAppointments.connectionError", locale));
     } finally {
       setActionLoading(null);
     }
@@ -186,13 +188,13 @@ export default function TodayAppointmentsTaple() {
 
     if (!symptoms && !diagnosis && !medication_name && !notes && !test_name) {
       setPrescriptionError(
-        "يرجى إدخال الأعراض أو التشخيص أو الدواء أو الفحوصات أو الملاحظات على الأقل",
+        t("doctorDashPages.todayAppointments.validationAtLeastOne", locale)
       );
       return;
     }
 
     if ((prescriptionForm.dose || prescriptionForm.duration) && !medication_name) {
-      setPrescriptionError("اسم الدواء مطلوب عند إدخال الجرعة أو مدة العلاج");
+      setPrescriptionError(t("doctorDashPages.todayAppointments.validationMedRequired", locale));
       return;
     }
 
@@ -224,7 +226,7 @@ export default function TodayAppointmentsTaple() {
       const result = await response.json();
 
       if (!response.ok) {
-        setPrescriptionError(result.error || "فشل إنشاء الروشتة");
+        setPrescriptionError(result.error || t("doctorDashPages.todayAppointments.prescriptionError", locale));
         return;
       }
 
@@ -234,13 +236,13 @@ export default function TodayAppointmentsTaple() {
         setPrescriptionSuccess(false);
       }, 1800);
     } catch {
-      setPrescriptionError("حدث خطأ في الاتصال");
+      setPrescriptionError(t("doctorDashPages.todayAppointments.connectionError", locale));
     } finally {
       setPrescriptionSubmitting(false);
     }
   };
 
-  const totalPages = Math.ceil(data.length / pageSize);
+  const totalPages = Math.max(1, Math.ceil(data.length / pageSize));
   const paginated = data.slice((page - 1) * pageSize, page * pageSize);
 
   const getPages = () => {
@@ -256,39 +258,170 @@ export default function TodayAppointmentsTaple() {
     return ["...", page - 1, page, page + 1, "..."];
   };
 
+  const getStatusLabel = (status: string) => {
+    if (status === "completed") return t("appointmentsPage.statusCompleted", locale) || (isRtl ? "مكتملة" : "Completed");
+    if (status === "confirmed" || status === "approved") return t("appointmentsPage.statusConfirmed", locale) || (isRtl ? "مؤكدة" : "Confirmed");
+    if (status === "pending") return t("appointmentsPage.statusPending", locale) || (isRtl ? "قادمة" : "Pending");
+    if (status === "cancelled" || status === "rejected") return t("appointmentsPage.statusCancelled", locale) || (isRtl ? "ملغاة" : "Cancelled");
+    return status;
+  };
+
   return (
     <>
-      <div className="bg-(--card-bg) rounded-2xl flex flex-col gap-6 border border-(--card-border) p-6">
+      <div className="flex min-w-0 flex-col gap-5 rounded-2xl border border-(--card-border) bg-(--card-bg) p-3 sm:gap-6 sm:p-6" dir={isRtl ? "rtl" : "ltr"}>
         <div className="flex items-center justify-between mb-4">
-          <div className="relative flex justify-center items-end flex-col gap-3">
-            <h3 className="font-bold text-2xl text-(--text-primary)">
-              قائمة الحجوزات
+          <div className="relative flex flex-col gap-1 text-start">
+            <h3 className="text-xl font-bold text-(--text-primary) sm:text-2xl">
+              {t("doctorDashPages.todayAppointments.title", locale)}
             </h3>
             <span className="text-md text-(--text-secondary)">
-              إدارة الحجوزات والروشتات الطبية
+              {t("doctorDashPages.todayAppointments.subtitle", locale)}
             </span>
           </div>
         </div>
 
         {loading ? (
           <div className="text-center py-10 text-(--text-secondary)">
-            جاري التحميل...
+            {t("doctorDashPages.todayAppointments.loading", locale)}
           </div>
         ) : data.length === 0 ? (
           <div className="text-center py-10 text-(--text-secondary)">
-            لا يوجد حجوزات
+            {t("doctorDashPages.todayAppointments.noBookings", locale)}
           </div>
         ) : (
           <>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="text-(--text-primary) text-base">
-                  <tr className="text-center border-b border-(--card-border)">
-                    <th className="pb-3 text-right">المريض</th>
-                    <th className="pb-3">الوقت</th>
-                    <th className="pb-3">الحالة</th>
-                    <th className="pb-3">صلاحية الروشتة</th>
-                    <th className="pb-3">إجراءات</th>
+            {/* Mobile booking cards */}
+            <div className="grid gap-3 md:hidden">
+              {paginated.map((booking) => {
+                const accessInfo = booking.prescriptionAccess
+                  ? accessStatusLabels[booking.prescriptionAccess]
+                  : null;
+
+                return (
+                  <article
+                    key={booking.id}
+                    className="rounded-xl border border-(--card-border) bg-(--semi-card-bg) p-4"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 text-start">
+                        <p className="truncate font-semibold text-(--text-primary)">
+                          {booking.name}
+                        </p>
+                        <p className="truncate text-xs text-(--text-secondary)">
+                          {booking.email}
+                        </p>
+                      </div>
+                      <span
+                        className={`shrink-0 rounded-md px-2.5 py-1 text-[11px] font-medium ${
+                          statusColors[booking.status] ||
+                          "bg-gray-100 text-gray-600"
+                        }`}
+                      >
+                        {getStatusLabel(booking.status)}
+                      </span>
+                    </div>
+
+                    <div className="mt-4 grid grid-cols-2 gap-3 border-y border-(--card-border) py-3">
+                      <div className="text-start">
+                        <p className="text-[10px] text-(--text-secondary)">
+                          {t("doctorDashPages.todayAppointments.colTime", locale)}
+                        </p>
+                        <p className="text-xs font-semibold text-(--text-primary)">
+                          {booking.time}
+                        </p>
+                        <p className="text-[10px] text-(--text-secondary)">
+                          {booking.type} {booking.date && `| ${booking.date}`}
+                        </p>
+                      </div>
+                      <div className="text-start">
+                        <p className="text-[10px] text-(--text-secondary)">
+                          {t(
+                            "doctorDashPages.todayAppointments.colPrescriptionAccess",
+                            locale,
+                          )}
+                        </p>
+                        {accessInfo ? (
+                          <span
+                            className={`mt-1 inline-flex rounded-full px-2 py-1 text-[11px] font-medium ${accessInfo.color}`}
+                          >
+                            {accessInfo.label}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-(--text-secondary)">—</span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="mt-3 grid gap-2">
+                      {booking.rawStatus === "confirmed" &&
+                        (!booking.prescriptionAccess ||
+                          booking.prescriptionAccess === "rejected") && (
+                          <button
+                            onClick={() => handleRequestAccess(booking.id)}
+                            disabled={actionLoading === booking.id}
+                            className="flex w-full items-center justify-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700 transition hover:bg-amber-100 disabled:opacity-60"
+                          >
+                            {actionLoading === booking.id ? (
+                              <Loader2 size={14} className="animate-spin" />
+                            ) : (
+                              <Clock size={14} />
+                            )}
+                            {t(
+                              "doctorDashPages.todayAppointments.requestAccess",
+                              locale,
+                            )}
+                          </button>
+                        )}
+
+                      {booking.rawStatus === "confirmed" &&
+                        booking.prescriptionAccess === "accepted" && (
+                          <button
+                            onClick={() =>
+                              openPrescriptionModal(
+                                booking.id,
+                                booking.name,
+                              )
+                            }
+                            className="flex w-full items-center justify-center gap-2 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-xs text-green-700 transition hover:bg-green-100"
+                          >
+                            <Plus size={14} />
+                            {t(
+                              "doctorDashPages.todayAppointments.prescription",
+                              locale,
+                            )}
+                          </button>
+                        )}
+
+                      <button
+                        onClick={() =>
+                          router.push(
+                            `/doctorDash/pages/patients/${booking.id}`,
+                          )
+                        }
+                        className="flex w-full items-center justify-center gap-2 rounded-lg border border-(--card-border) bg-(--card-bg) px-3 py-2 text-xs text-(--text-primary)"
+                      >
+                        <FileText size={14} />
+                        {t(
+                          "doctorDashPages.todayAppointments.details",
+                          locale,
+                        )}
+                      </button>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+
+            {/* Desktop table */}
+            <div className="hidden w-full overflow-x-auto md:block">
+              <table className="w-full min-w-[900px] border-collapse text-sm">
+                <thead className="text-(--text-primary) text-base border-b border-(--card-border)">
+                  <tr className="text-center">
+                    <th className={`pb-3 ${isRtl ? "text-right pr-4" : "text-left pl-4"}`}>{t("doctorDashPages.todayAppointments.colPatient", locale)}</th>
+                    <th className="pb-3">{t("doctorDashPages.todayAppointments.colTime", locale)}</th>
+                    <th className="pb-3">{t("doctorDashPages.todayAppointments.colStatus", locale)}</th>
+                    <th className="pb-3">{t("doctorDashPages.todayAppointments.colPrescriptionAccess", locale)}</th>
+                    <th className="pb-3">{t("doctorDashPages.todayAppointments.colActions", locale)}</th>
                   </tr>
                 </thead>
 
@@ -304,9 +437,9 @@ export default function TodayAppointmentsTaple() {
                         className="text-(--text-primary) hover:bg-(--semi-card-bg) transition text-center w-full border-b border-(--card-border)/40"
                       >
                         {/* Patient */}
-                        <td className="py-3">
-                          <div className="flex items-center gap-3 justify-start">
-                            <div className="text-right">
+                        <td className="py-4">
+                          <div className={`flex items-center gap-3 px-4 ${isRtl ? "justify-end" : "justify-start"}`}>
+                            <div className={isRtl ? "text-right" : "text-left"}>
                               <p className="font-semibold">{p.name}</p>
                               <p className="text-xs text-(--text-secondary)">
                                 {p.email}
@@ -316,7 +449,7 @@ export default function TodayAppointmentsTaple() {
                         </td>
 
                         {/* Time */}
-                        <td className="py-3">
+                        <td className="py-4">
                           <div className="flex flex-col items-center gap-0.5">
                             <span className="font-medium">{p.time}</span>
                             <span className="text-xs text-(--text-secondary)">
@@ -326,16 +459,16 @@ export default function TodayAppointmentsTaple() {
                         </td>
 
                         {/* Status */}
-                        <td className="py-3">
+                        <td className="py-4">
                           <span
-                            className={`px-2 py-1 text-xs rounded-md ${statusColors[p.status] || "bg-gray-100 text-gray-600"}`}
+                            className={`px-2.5 py-1 text-xs rounded-md font-medium ${statusColors[p.status] || "bg-gray-100 text-gray-600"}`}
                           >
-                            {p.status}
+                            {getStatusLabel(p.status)}
                           </span>
                         </td>
 
                         {/* Prescription Access */}
-                        <td className="py-3">
+                        <td className="py-4">
                           {accessInfo ? (
                             <span
                               className={`px-2 py-1 text-xs rounded-full font-medium ${accessInfo.color}`}
@@ -348,7 +481,7 @@ export default function TodayAppointmentsTaple() {
                         </td>
 
                         {/* Actions */}
-                        <td className="py-3">
+                        <td className="py-4">
                           <div className="flex items-center justify-center gap-2">
                             {/* Request access: only if confirmed & no access yet or rejected */}
                             {p.rawStatus === "confirmed" &&
@@ -356,15 +489,15 @@ export default function TodayAppointmentsTaple() {
                                 <button
                                   onClick={() => handleRequestAccess(p.id)}
                                   disabled={actionLoading === p.id}
-                                  className="flex items-center gap-1 px-2 py-1 text-xs rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 transition border border-amber-200 disabled:opacity-60"
-                                  title="طلب صلاحية الروشتة"
+                                  className="flex items-center gap-1 px-2.5 py-1 text-xs rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 transition border border-amber-200 disabled:opacity-60 cursor-pointer"
+                                  title={t("doctorDashPages.todayAppointments.requestAccess", locale)}
                                 >
                                   {actionLoading === p.id ? (
                                     <Loader2 size={12} className="animate-spin" />
                                   ) : (
                                     <Clock size={12} />
                                   )}
-                                  <span>طلب صلاحية</span>
+                                  <span>{t("doctorDashPages.todayAppointments.requestAccess", locale)}</span>
                                 </button>
                               )}
 
@@ -375,11 +508,11 @@ export default function TodayAppointmentsTaple() {
                                   onClick={() =>
                                     openPrescriptionModal(p.id, p.name)
                                   }
-                                  className="flex items-center gap-1 px-2 py-1 text-xs rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition border border-green-200"
-                                  title="كتابة روشتة"
+                                  className="flex items-center gap-1 px-2.5 py-1 text-xs rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition border border-green-200 cursor-pointer"
+                                  title={t("doctorDashPages.todayAppointments.prescription", locale)}
                                 >
                                   <Plus size={12} />
-                                  <span>روشتة</span>
+                                  <span>{t("doctorDashPages.todayAppointments.prescription", locale)}</span>
                                 </button>
                               )}
 
@@ -390,11 +523,11 @@ export default function TodayAppointmentsTaple() {
                                   `/doctorDash/pages/patients/${p.id}`,
                                 )
                               }
-                              className="flex items-center gap-1 px-2 py-1 text-xs rounded-lg bg-(--semi-card-bg) text-(--text-secondary) hover:text-(--text-primary) transition border border-(--card-border)"
-                              title="تفاصيل المريض"
+                              className="flex items-center gap-1 px-2.5 py-1 text-xs rounded-lg bg-(--semi-card-bg) text-(--text-secondary) hover:text-(--text-primary) transition border border-(--card-border) cursor-pointer"
+                              title={t("doctorDashPages.todayAppointments.details", locale)}
                             >
                               <FileText size={12} />
-                              <span>تفاصيل</span>
+                              <span>{t("doctorDashPages.todayAppointments.details", locale)}</span>
                             </button>
                           </div>
                         </td>
@@ -406,13 +539,14 @@ export default function TodayAppointmentsTaple() {
             </div>
 
             {/* Pagination */}
-            <div className="flex items-center justify-between mt-4 text-sm">
-              <div className="flex gap-2 items-center">
+            <div className="mt-2 flex flex-col items-center justify-between gap-3 text-sm sm:mt-4 sm:flex-row sm:gap-4">
+              <div className="order-2 flex max-w-full flex-wrap items-center justify-center gap-2 sm:order-1">
                 <button
                   onClick={() => setPage((p) => Math.max(p - 1, 1))}
-                  className="cursor-pointer text-2xl flex items-center justify-center border border-(--input-border) rounded-md p-1 hover:bg-(--semi-card-bg) transition"
+                  disabled={page === 1}
+                  className="flex cursor-pointer items-center justify-center rounded-md border border-(--input-border) p-1.5 text-2xl text-(--text-primary) transition hover:bg-(--semi-card-bg) disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  <ChevronLeft size={19} />
+                  {isRtl ? <ChevronRight size={17} /> : <ChevronLeft size={17} />}
                 </button>
 
                 {getPages().map((p, i) => (
@@ -420,12 +554,12 @@ export default function TodayAppointmentsTaple() {
                     key={i}
                     onClick={() => typeof p === "number" && setPage(p)}
                     disabled={p === "..."}
-                    className={`px-2 py-1 rounded cursor-pointer ${
+                    className={`px-3 py-1 rounded cursor-pointer transition ${
                       p === page
-                        ? "bg-[#1F2B6C] text-white"
+                        ? "bg-[#1F2B6C] text-white font-medium"
                         : p === "..."
                           ? "cursor-default text-gray-400"
-                          : "border border-(--input-border) hover:bg-(--semi-card-bg)"
+                          : "border border-(--input-border) text-(--text-primary) hover:bg-(--semi-card-bg)"
                     }`}
                   >
                     {p}
@@ -436,14 +570,18 @@ export default function TodayAppointmentsTaple() {
                   onClick={() =>
                     setPage((p) => Math.min(p + 1, totalPages))
                   }
-                  className="cursor-pointer text-2xl flex items-center justify-center border border-(--input-border) rounded-md p-1 hover:bg-(--semi-card-bg) transition"
+                  disabled={page === totalPages}
+                  className="flex cursor-pointer items-center justify-center rounded-md border border-(--input-border) p-1.5 text-2xl text-(--text-primary) transition hover:bg-(--semi-card-bg) disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  <ChevronRight size={19} />
+                  {isRtl ? <ChevronLeft size={17} /> : <ChevronRight size={17} />}
                 </button>
               </div>
 
-              <p className="text-(--text-secondary)">
-                عرض {page} - {totalPages} من أصل {data.length} حجز
+              <p className="text-(--text-secondary) order-1 sm:order-2">
+                {t("doctorDashPages.todayAppointments.showing", locale)
+                  .replace("{from}", String(data.length > 0 ? (page - 1) * pageSize + 1 : 0))
+                  .replace("{to}", String(Math.min(page * pageSize, data.length)))
+                  .replace("{total}", String(data.length))}
               </p>
             </div>
           </>
@@ -452,41 +590,41 @@ export default function TodayAppointmentsTaple() {
 
       {/* Create Prescription Modal */}
       {prescriptionModal.open && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-[#1a2744] rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-0 backdrop-blur-sm sm:p-4" dir={isRtl ? "rtl" : "ltr"}>
+          <div className="max-h-[100dvh] w-full max-w-2xl overflow-y-auto bg-white shadow-2xl dark:bg-[#1a2744] sm:max-h-[90vh] sm:rounded-2xl">
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-white/10">
+            <div className="flex items-center justify-between border-b border-gray-200 p-4 dark:border-white/10 sm:p-6">
               <button
                 onClick={() =>
                   setPrescriptionModal({ open: false, bookingId: null, patientName: "" })
                 }
-                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 transition"
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 transition cursor-pointer"
               >
                 <X size={20} />
               </button>
-              <div className="text-right">
+              <div className="text-start">
                 <h3 className="font-bold text-xl text-gray-900 dark:text-white">
-                  كتابة روشتة طبية
+                  {t("doctorDashPages.todayAppointments.modalTitle", locale)}
                 </h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                  المريض: {prescriptionModal.patientName}
+                  {t("doctorDashPages.todayAppointments.modalPatient", locale)}: {prescriptionModal.patientName}
                 </p>
               </div>
             </div>
 
             {prescriptionSuccess ? (
               <div className="flex flex-col items-center gap-4 py-12 px-6">
-                <CheckCircle size={56} className="text-green-500" />
+                <CheckCircle size={56} className="text-green-500 animate-bounce" />
                 <p className="text-xl font-semibold text-gray-900 dark:text-white">
-                  تم إنشاء الروشتة بنجاح
+                  {t("doctorDashPages.todayAppointments.modalSuccess", locale)}
                 </p>
               </div>
             ) : (
-              <div className="p-6 space-y-5">
+              <div className="space-y-5 p-4 sm:p-6">
                 {/* Symptoms */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5 text-right">
-                    الأعراض
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5 text-start">
+                    {t("doctorDashPages.todayAppointments.symptoms", locale)}
                   </label>
                   <textarea
                     value={prescriptionForm.symptoms}
@@ -494,16 +632,15 @@ export default function TodayAppointmentsTaple() {
                       setPrescriptionForm((f) => ({ ...f, symptoms: e.target.value }))
                     }
                     rows={2}
-                    placeholder="صف أعراض المريض..."
-                    className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 px-4 py-2.5 text-sm text-gray-900 dark:text-white outline-none focus:border-[#1F2B6C] focus:ring-2 focus:ring-[#1F2B6C]/10 resize-none text-right"
-                    dir="rtl"
+                    placeholder={t("doctorDashPages.todayAppointments.symptomsPlaceholder", locale)}
+                    className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 px-4 py-2.5 text-sm text-gray-900 dark:text-white outline-none focus:border-[#1F2B6C] focus:ring-2 focus:ring-[#1F2B6C]/10 resize-none text-start"
                   />
                 </div>
 
                 {/* Diagnosis */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5 text-right">
-                    التشخيص
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5 text-start">
+                    {t("doctorDashPages.todayAppointments.diagnosis", locale)}
                   </label>
                   <textarea
                     value={prescriptionForm.diagnosis}
@@ -511,17 +648,16 @@ export default function TodayAppointmentsTaple() {
                       setPrescriptionForm((f) => ({ ...f, diagnosis: e.target.value }))
                     }
                     rows={2}
-                    placeholder="التشخيص الطبي..."
-                    className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 px-4 py-2.5 text-sm text-gray-900 dark:text-white outline-none focus:border-[#1F2B6C] focus:ring-2 focus:ring-[#1F2B6C]/10 resize-none text-right"
-                    dir="rtl"
+                    placeholder={t("doctorDashPages.todayAppointments.diagnosisPlaceholder", locale)}
+                    className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 px-4 py-2.5 text-sm text-gray-900 dark:text-white outline-none focus:border-[#1F2B6C] focus:ring-2 focus:ring-[#1F2B6C]/10 resize-none text-start"
                   />
                 </div>
 
                 {/* Medication */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="sm:col-span-1">
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5 text-right">
-                      اسم الدواء
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5 text-start">
+                      {t("doctorDashPages.todayAppointments.medicationName", locale)}
                     </label>
                     <input
                       type="text"
@@ -529,14 +665,13 @@ export default function TodayAppointmentsTaple() {
                       onChange={(e) =>
                         setPrescriptionForm((f) => ({ ...f, medication_name: e.target.value }))
                       }
-                      placeholder="مثال: باراسيتامول"
-                      className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 px-4 py-2.5 text-sm text-gray-900 dark:text-white outline-none focus:border-[#1F2B6C] focus:ring-2 focus:ring-[#1F2B6C]/10 text-right"
-                      dir="rtl"
+                      placeholder={t("doctorDashPages.todayAppointments.medicationPlaceholder", locale)}
+                      className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 px-4 py-2.5 text-sm text-gray-900 dark:text-white outline-none focus:border-[#1F2B6C] focus:ring-2 focus:ring-[#1F2B6C]/10 text-start"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5 text-right">
-                      الجرعة
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5 text-start">
+                      {t("doctorDashPages.todayAppointments.dose", locale)}
                     </label>
                     <input
                       type="text"
@@ -544,14 +679,13 @@ export default function TodayAppointmentsTaple() {
                       onChange={(e) =>
                         setPrescriptionForm((f) => ({ ...f, dose: e.target.value }))
                       }
-                      placeholder="مثال: 500 ملغ"
-                      className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 px-4 py-2.5 text-sm text-gray-900 dark:text-white outline-none focus:border-[#1F2B6C] focus:ring-2 focus:ring-[#1F2B6C]/10 text-right"
-                      dir="rtl"
+                      placeholder={t("doctorDashPages.todayAppointments.dosePlaceholder", locale)}
+                      className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 px-4 py-2.5 text-sm text-gray-900 dark:text-white outline-none focus:border-[#1F2B6C] focus:ring-2 focus:ring-[#1F2B6C]/10 text-start"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5 text-right">
-                      مدة العلاج
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5 text-start">
+                      {t("doctorDashPages.todayAppointments.duration", locale)}
                     </label>
                     <input
                       type="text"
@@ -559,9 +693,8 @@ export default function TodayAppointmentsTaple() {
                       onChange={(e) =>
                         setPrescriptionForm((f) => ({ ...f, duration: e.target.value }))
                       }
-                      placeholder="مثال: 5 أيام"
-                      className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 px-4 py-2.5 text-sm text-gray-900 dark:text-white outline-none focus:border-[#1F2B6C] focus:ring-2 focus:ring-[#1F2B6C]/10 text-right"
-                      dir="rtl"
+                      placeholder={t("doctorDashPages.todayAppointments.durationPlaceholder", locale)}
+                      className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 px-4 py-2.5 text-sm text-gray-900 dark:text-white outline-none focus:border-[#1F2B6C] focus:ring-2 focus:ring-[#1F2B6C]/10 text-start"
                     />
                   </div>
                 </div>
@@ -569,8 +702,8 @@ export default function TodayAppointmentsTaple() {
                 {/* Tests */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5 text-right">
-                      اسم الفحص
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5 text-start">
+                      {t("doctorDashPages.todayAppointments.testName", locale)}
                     </label>
                     <input
                       type="text"
@@ -578,14 +711,13 @@ export default function TodayAppointmentsTaple() {
                       onChange={(e) =>
                         setPrescriptionForm((f) => ({ ...f, test_name: e.target.value }))
                       }
-                      placeholder="مثال: صورة دم كاملة"
-                      className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 px-4 py-2.5 text-sm text-gray-900 dark:text-white outline-none focus:border-[#1F2B6C] focus:ring-2 focus:ring-[#1F2B6C]/10 text-right"
-                      dir="rtl"
+                      placeholder={t("doctorDashPages.todayAppointments.testNamePlaceholder", locale)}
+                      className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 px-4 py-2.5 text-sm text-gray-900 dark:text-white outline-none focus:border-[#1F2B6C] focus:ring-2 focus:ring-[#1F2B6C]/10 text-start"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5 text-right">
-                      نتيجة الفحص
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5 text-start">
+                      {t("doctorDashPages.todayAppointments.testResult", locale)}
                     </label>
                     <input
                       type="text"
@@ -593,17 +725,16 @@ export default function TodayAppointmentsTaple() {
                       onChange={(e) =>
                         setPrescriptionForm((f) => ({ ...f, test_result: e.target.value }))
                       }
-                      placeholder="نتيجة الفحص..."
-                      className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 px-4 py-2.5 text-sm text-gray-900 dark:text-white outline-none focus:border-[#1F2B6C] focus:ring-2 focus:ring-[#1F2B6C]/10 text-right"
-                      dir="rtl"
+                      placeholder={t("doctorDashPages.todayAppointments.testResultPlaceholder", locale)}
+                      className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 px-4 py-2.5 text-sm text-gray-900 dark:text-white outline-none focus:border-[#1F2B6C] focus:ring-2 focus:ring-[#1F2B6C]/10 text-start"
                     />
                   </div>
                 </div>
 
                 {/* Notes */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5 text-right">
-                    ملاحظات إضافية
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5 text-start">
+                    {t("doctorDashPages.todayAppointments.notes", locale)}
                   </label>
                   <textarea
                     value={prescriptionForm.notes}
@@ -611,9 +742,8 @@ export default function TodayAppointmentsTaple() {
                       setPrescriptionForm((f) => ({ ...f, notes: e.target.value }))
                     }
                     rows={3}
-                    placeholder="أي ملاحظات أو تعليمات إضافية..."
-                    className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 px-4 py-2.5 text-sm text-gray-900 dark:text-white outline-none focus:border-[#1F2B6C] focus:ring-2 focus:ring-[#1F2B6C]/10 resize-none text-right"
-                    dir="rtl"
+                    placeholder={t("doctorDashPages.todayAppointments.notesPlaceholder", locale)}
+                    className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 px-4 py-2.5 text-sm text-gray-900 dark:text-white outline-none focus:border-[#1F2B6C] focus:ring-2 focus:ring-[#1F2B6C]/10 resize-none text-start"
                   />
                 </div>
 
@@ -624,27 +754,27 @@ export default function TodayAppointmentsTaple() {
                   </div>
                 )}
 
-                <div className="flex gap-3 justify-end pt-2">
+                <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
                   <button
                     onClick={() =>
                       setPrescriptionModal({ open: false, bookingId: null, patientName: "" })
                     }
-                    className="px-5 py-2.5 text-sm font-semibold rounded-xl border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition"
+                    className="w-full rounded-xl border border-gray-200 px-5 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 dark:border-white/10 dark:text-gray-300 dark:hover:bg-white/5 sm:w-auto"
                   >
-                    إلغاء
+                    {t("doctorDashPages.todayAppointments.cancel", locale)}
                   </button>
                   <button
                     onClick={handleCreatePrescription}
                     disabled={prescriptionSubmitting}
-                    className="px-5 py-2.5 text-sm font-semibold rounded-xl bg-[#1F2B6C] text-white hover:bg-[#162056] transition disabled:opacity-60 flex items-center gap-2"
+                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#1F2B6C] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#162056] disabled:opacity-60 sm:w-auto"
                   >
                     {prescriptionSubmitting ? (
                       <>
                         <Loader2 size={16} className="animate-spin" />
-                        جارٍ الإرسال...
+                        {t("doctorDashPages.todayAppointments.sending", locale)}
                       </>
                     ) : (
-                      "حفظ الروشتة"
+                      t("doctorDashPages.todayAppointments.savePrescription", locale)
                     )}
                   </button>
                 </div>

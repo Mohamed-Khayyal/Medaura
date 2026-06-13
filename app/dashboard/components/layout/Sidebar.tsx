@@ -59,11 +59,11 @@ function Sidebar({ open, onClose }: SidebarProps) {
   ];
 
   const sidebarPositionClass = isRtl
-    ? `fixed inset-y-0 right-0 z-50 w-64 h-screen bg-[#1F2B6C] text-white p-6 space-y-6 overflow-auto shadow-2xl lg:shadow-none transform translate-x-full lg:translate-x-0 lg:sticky lg:top-0 transition-transform duration-300 ease-in-out border-l border-white/10 ${
-        open ? "translate-x-0" : "translate-x-full lg:translate-x-0"
+    ? `fixed inset-y-0 right-0 z-50 w-64 h-screen bg-[#1F2B6C] text-white p-6 space-y-6 overflow-auto shadow-2xl lg:shadow-none transform lg:sticky lg:top-0 transition-transform duration-300 ease-in-out border-l border-white/10 ${
+        open ? "translate-x-0 lg:translate-x-0" : "translate-x-full lg:translate-x-0"
       }`
-    : `fixed inset-y-0 left-0 z-50 w-64 h-screen bg-[#1F2B6C] text-white p-6 space-y-6 overflow-auto shadow-2xl lg:shadow-none transform -translate-x-full lg:translate-x-0 lg:sticky lg:top-0 transition-transform duration-300 ease-in-out border-r border-white/10 ${
-        open ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+    : `fixed inset-y-0 left-0 z-50 w-64 h-screen bg-[#1F2B6C] text-white p-6 space-y-6 overflow-auto shadow-2xl lg:shadow-none transform lg:sticky lg:top-0 transition-transform duration-300 ease-in-out border-r border-white/10 ${
+        open ? "translate-x-0 lg:translate-x-0" : "-translate-x-full lg:translate-x-0"
       }`;
 
   return (
@@ -93,7 +93,7 @@ function Sidebar({ open, onClose }: SidebarProps) {
                 ? pathname === item.href
                 : pathname.startsWith(item.href);
               return (
-                <Link key={index} href={item.href} className="w-full block">
+                <Link key={index} href={item.href} className="w-full block" onClick={onClose}>
                   <div
                     className={`relative w-full flex items-center gap-2.5 px-3 py-2 rounded-xl cursor-pointer transition-all duration-200 group
                     ${isRtl ? "flex-row-reverse" : "flex-row"}

@@ -40,6 +40,26 @@ function parseWorkDays(workDaysString?: string): string[] | undefined {
     .filter(Boolean);
 }
 
+function getSpecialistLabel(specialist: string, locale: string) {
+  const specialties: Record<string, string> = {
+    "مخ واعصاب": "neurology",
+    عظام: "orthopedics",
+    الأورام: "oncology",
+    "طب الأذن والأنف والحنجرة": "ent",
+    "طب العيون": "ophthalmology",
+    "قلب و اوعية دموية": "cardiology",
+    "صدر و جهاز تنفسي": "pulmonology",
+    كلى: "nephrology",
+    اسنان: "dentistry",
+    "اطفال و حديثي الولادة": "pediatrics",
+    جلدية: "dermatology",
+    "نسا و توليد": "gynecology",
+  };
+  const key = specialties[specialist] || specialist.toLowerCase();
+  const translated = t(`authPage.doctor.specialties.${key}`, locale);
+  return translated.startsWith("authPage.") ? specialist : translated;
+}
+
 type DoctorProfileData = {
   id?: number;
   doctor_id?: number;
@@ -205,7 +225,7 @@ function normalizeRatingsPayload(payload: unknown) {
 
 function formatDisplayDate(date: string, locale: string) {
   if (!date) return "";
-  return new Intl.DateTimeFormat(locale === "en" ? "ar-EG" : "en-US", {
+  return new Intl.DateTimeFormat(locale === "ar" ? "ar-EG" : "en-US", {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -235,7 +255,7 @@ function formatDayToken(token: string, locale: string) {
     const base = new Date("2024-01-07T00:00:00");
     base.setDate(base.getDate() + index);
 
-    return new Intl.DateTimeFormat(locale === "en" ? "ar-EG" : "en-US", {
+    return new Intl.DateTimeFormat(locale === "ar" ? "ar-EG" : "en-US", {
       weekday: "long",
     }).format(base);
   }
@@ -378,7 +398,9 @@ export default function DoctorProfilePage() {
 
         if (!response.ok || payload.success === false) {
           throw new Error(
-            payload.error || payload.message || "Failed to load doctor profile"
+            payload.error ||
+              payload.message ||
+              t("providerProfile.loadDoctorError", locale)
           );
         }
 
@@ -386,7 +408,10 @@ export default function DoctorProfilePage() {
       } catch (error: unknown) {
         console.error("Doctor profile fetch error:", error);
         setProfileError(
-          getErrorMessage(error, "Failed to load doctor profile.")
+          getErrorMessage(
+            error,
+            t("providerProfile.loadDoctorError", locale),
+          )
         );
       } finally {
         setProfileLoading(false);
@@ -418,7 +443,9 @@ export default function DoctorProfilePage() {
 
         if (!response.ok || payload.success === false) {
           throw new Error(
-            payload.error || payload.message || "Failed to load available slots"
+            payload.error ||
+              payload.message ||
+              t("providerProfile.loadSlotsError", locale)
           );
         }
 
@@ -429,18 +456,16 @@ export default function DoctorProfilePage() {
           setSelectedTime("");
           Swal.fire({
             icon: "warning",
-            title: locale === "en" ? "اليوم محجوز بالكامل" : "Fully Booked Day",
-            text: locale === "en" 
-              ? "عذراً، جميع المواعيد في هذا اليوم محجوزة بالكامل. يرجى اختيار يوم آخر."
-              : "Sorry, all booking times on this day are fully booked. Please choose another date.",
-            confirmButtonText: locale === "en" ? "موافق" : "OK",
+            title: t("providerProfile.fullyBookedTitle", locale),
+            text: t("providerProfile.fullyBookedMessage", locale),
+            confirmButtonText: t("booking.validation.ok", locale),
           });
         }
       } catch (error: unknown) {
         console.error("Booking slots fetch error:", error);
         setSlots([]);
         setSlotsError(
-          getErrorMessage(error, "Failed to load available times.")
+          getErrorMessage(error, t("providerProfile.loadSlotsError", locale))
         );
       } finally {
         setSlotsLoading(false);
@@ -482,7 +507,10 @@ export default function DoctorProfilePage() {
           (isRecord(payload) && payload.success === false)
         ) {
           throw new Error(
-            getPayloadMessage(payload, "Failed to load doctor ratings"),
+            getPayloadMessage(
+              payload,
+              t("providerProfile.loadDoctorRatingsError", locale),
+            ),
           );
         }
 
@@ -495,7 +523,10 @@ export default function DoctorProfilePage() {
       } catch (error: unknown) {
         if (!active) return;
         setDoctorRatingsError(
-          getErrorMessage(error, "Failed to load doctor ratings"),
+          getErrorMessage(
+            error,
+            t("providerProfile.loadDoctorRatingsError", locale),
+          ),
         );
       } finally {
         if (active) setDoctorRatingsLoading(false);
@@ -510,7 +541,9 @@ export default function DoctorProfilePage() {
   }, [doctorId, doctorRatingsPage, doctorRatingsRefreshKey, canRateAndSeeReviews]);
 
   const doctorName = doctor?.full_name || "";
-  const doctorSpecialist = doctor?.specialist || "";
+  const doctorSpecialist = doctor?.specialist
+    ? getSpecialistLabel(doctor.specialist, locale)
+    : "";
   const baseRatingValue = Number(doctor?.average_rating ?? doctor?.rating ?? 0);
   const baseRating = Number.isFinite(baseRatingValue) ? baseRatingValue : 0;
   const baseRatingCount = Number(doctor?.total_ratings ?? 0);
@@ -567,9 +600,7 @@ export default function DoctorProfilePage() {
 
     if (doctorRatingValue < 1 || doctorRatingValue > 5) {
       setDoctorRatingSubmitError(
-        locale === "en"
-          ? "برجاء اختيار تقييم من ١ إلى ٥."
-          : "Please select a rating from 1 to 5.",
+        t("providerProfile.selectRating", locale),
       );
       return;
     }
@@ -597,14 +628,15 @@ export default function DoctorProfilePage() {
         (isRecord(payload) && payload.success === false)
       ) {
         throw new Error(
-          getPayloadMessage(payload, "Failed to submit doctor rating"),
+          getPayloadMessage(
+            payload,
+            t("providerProfile.submitRatingError", locale),
+          ),
         );
       }
 
       setDoctorRatingSubmitSuccess(
-        locale === "en"
-          ? "تم إرسال التقييم بنجاح."
-          : "Rating submitted successfully.",
+        t("providerProfile.ratingSubmitted", locale),
       );
       setDoctorRatingComment("");
       setDoctorRatingValue(0);
@@ -614,9 +646,7 @@ export default function DoctorProfilePage() {
       setDoctorRatingSubmitError(
         getErrorMessage(
           error,
-          locale === "en"
-            ? "تعذر إرسال التقييم."
-            : "Failed to submit rating.",
+          t("providerProfile.submitRatingError", locale),
         ),
       );
     } finally {
@@ -628,10 +658,8 @@ export default function DoctorProfilePage() {
     if (!isAuthenticated) {
       setValidationModalData({
         type: "warning",
-        title: locale === "en" ? "Please Log In" : "يرجى تسجيل الدخول",
-        message: locale === "en"
-          ? "Please log in first to complete your booking."
-          : "يرجى تسجيل الدخول أولاً لإتمام الحجز.",
+        title: t("providerProfile.loginRequiredTitle", locale),
+        message: t("providerProfile.loginRequiredMessage", locale),
       });
       setShowValidationModal(true);
       setRedirectToLogin(true);
@@ -695,7 +723,9 @@ export default function DoctorProfilePage() {
 
       if (!response.ok || payload.success === false) {
         throw new Error(
-          payload.error || payload.message || "Failed to create booking"
+          payload.error ||
+            payload.message ||
+            t("providerProfile.bookingFailedMessage", locale)
         );
       }
 
@@ -716,10 +746,10 @@ export default function DoctorProfilePage() {
     } catch (error: unknown) {
       setValidationModalData({
         type: "warning",
-        title: "Could not complete booking",
+        title: t("providerProfile.bookingFailedTitle", locale),
         message: getErrorMessage(
           error,
-          "Something went wrong while creating the booking."
+          t("providerProfile.bookingFailedMessage", locale)
         ),
       });
       setShowValidationModal(true);
@@ -731,7 +761,9 @@ export default function DoctorProfilePage() {
   if (profileLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="font-semibold text-[#001A6E]">Loading profile...</p>
+        <p className="font-semibold text-[#001A6E]">
+          {t("providerProfile.loadingProfile", locale)}
+        </p>
       </div>
     );
   }
@@ -747,13 +779,18 @@ export default function DoctorProfilePage() {
   }
 
   return (
-    <main dir="rtl" className="min-h-screen bg-white pb-16 pt-28">
+    <main
+      dir={locale === "ar" ? "rtl" : "ltr"}
+      className="min-h-screen bg-white pb-16 pt-28"
+    >
       <div className="max-w-5xl mx-auto px-4">
         <button
           onClick={() => router.back()}
           className="flex items-center gap-2 text-[#001A6E] font-bold mb-8 hover:opacity-80 transition-opacity"
         >
-          <ArrowRight className="w-5 h-5" />
+          <ArrowRight
+            className={`h-5 w-5 ${locale === "en" ? "rotate-180" : ""}`}
+          />
           {t("booking.back", locale)}
         </button>
 
@@ -818,7 +855,8 @@ export default function DoctorProfilePage() {
                       {t("booking.sessionFee", locale)}
                     </p>
                     <p className="font-bold text-[#001A6E]">
-                      {doctor.consultation_price ?? "-"} EGP
+                      {doctor.consultation_price ?? "-"}{" "}
+                      {t("providerProfile.currency", locale)}
                     </p>
                   </div>
                   <div className="bg-gray-50 p-4 rounded-2xl">
@@ -838,7 +876,7 @@ export default function DoctorProfilePage() {
                 {t("booking.aboutDoctor", locale)}
               </h2>
               <p className="text-gray-500 leading-relaxed text-sm">
-                {doctor.bio || "No bio available."}
+                {doctor.bio || t("providerProfile.noBio", locale)}
               </p>
             </section>
 
@@ -889,7 +927,9 @@ export default function DoctorProfilePage() {
                   disabled={isBooking || !canBeBooked}
                   className="mt-6 w-full bg-[#001A6E] text-white py-4 rounded-2xl font-bold hover:bg-[#001250] transition-colors shadow-lg shadow-blue-900/10 disabled:cursor-not-allowed disabled:opacity-70"
                 >
-                  {isBooking ? "Booking..." : t("booking.bookNow", locale)}
+                  {isBooking
+                    ? t("providerProfile.bookingInProgress", locale)
+                    : t("booking.bookNow", locale)}
                 </button>
 
                 {doctor?.phone && (
@@ -900,7 +940,7 @@ export default function DoctorProfilePage() {
                     className="mt-3 w-full bg-emerald-600 hover:bg-emerald-700 text-white py-4 rounded-2xl font-bold transition-colors shadow-lg shadow-emerald-900/10 flex items-center justify-center gap-2 cursor-pointer text-center"
                   >
                     <MessageSquare className="w-5 h-5" />
-                    <span>{locale === "en" ? "ارسال رساله" : "Send Message"}</span>
+                    <span>{t("booking.sendMessage", locale)}</span>
                   </a>
                 )}
 
@@ -947,15 +987,13 @@ export default function DoctorProfilePage() {
               <div>
                 {doctorRatingsLoading ? (
                   <p className="text-center text-[#001A6E]">
-                    {locale === "en" ? "جاري تحميل التقييمات..." : "Loading ratings..."}
+                    {t("providerProfile.loadingRatings", locale)}
                   </p>
                 ) : doctorRatingsError ? (
                   <p className="text-center text-red-600">{doctorRatingsError}</p>
                 ) : doctorRatings.length === 0 ? (
                   <p className="text-center text-gray-400">
-                    {locale === "en"
-                      ? "لا توجد تقييمات بعد."
-                      : "No reviews yet."}
+                    {t("providerProfile.noReviews", locale)}
                   </p>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
@@ -978,7 +1016,7 @@ export default function DoctorProfilePage() {
                         <div className="mb-3 flex items-center justify-end gap-3">
                           <p className="text-xs font-semibold text-gray-500">
                             {review.patient_name ||
-                              (locale === "en" ? "مريض" : "Patient")}
+                              t("providerProfile.patient", locale)}
                           </p>
                           <div className="h-10 w-10 overflow-hidden rounded-full bg-[#eaf0fb]">
                             {review.patient_photo ? (
@@ -996,7 +1034,7 @@ export default function DoctorProfilePage() {
                           </p>
                         ) : (
                           <p className="text-gray-400 text-sm">
-                            {locale === "en" ? "بدون تعليق" : "No comment"}
+                            {t("providerProfile.noComment", locale)}
                           </p>
                         )}
                       </div>
@@ -1014,12 +1052,12 @@ export default function DoctorProfilePage() {
                     disabled={doctorRatingsPage <= 1}
                     className="rounded-full border border-[#dce5f6] px-4 py-2 text-sm font-semibold text-[#001A6E] disabled:opacity-50"
                   >
-                    {locale === "en" ? "السابق" : "Previous"}
+                    {t("providerProfile.previous", locale)}
                   </button>
                   <span className="text-sm text-gray-500">
-                    {locale === "en"
-                      ? `صفحة ${doctorRatingsPage} من ${doctorRatingsTotalPages}`
-                      : `Page ${doctorRatingsPage} of ${doctorRatingsTotalPages}`}
+                    {t("providerProfile.pageOf", locale)
+                      .replace("{page}", String(doctorRatingsPage))
+                      .replace("{total}", String(doctorRatingsTotalPages))}
                   </span>
                   <button
                     onClick={() =>
@@ -1030,14 +1068,14 @@ export default function DoctorProfilePage() {
                     disabled={doctorRatingsPage >= doctorRatingsTotalPages}
                     className="rounded-full border border-[#dce5f6] px-4 py-2 text-sm font-semibold text-[#001A6E] disabled:opacity-50"
                   >
-                    {locale === "en" ? "التالي" : "Next"}
+                    {t("providerProfile.next", locale)}
                   </button>
                 </div>
               )}
 
               <div className="mt-10 border-t border-[#e6ecf6] pt-8 text-center">
                 <h3 className="text-lg font-bold text-[#001A6E] mb-4">
-                  {locale === "en" ? "قيّم هذا الطبيب" : "Rate this doctor"}
+                  {t("providerProfile.rateDoctor", locale)}
                 </h3>
                 <div className="mx-auto flex max-w-xl flex-col items-center gap-4">
                   <div className="flex items-center gap-1">
@@ -1061,9 +1099,7 @@ export default function DoctorProfilePage() {
                     value={doctorRatingComment}
                     onChange={(event) => setDoctorRatingComment(event.target.value)}
                     placeholder={
-                      locale === "en"
-                        ? "اكتب تعليقك هنا (اختياري)"
-                        : "Write your comment (optional)"
+                      t("providerProfile.commentPlaceholder", locale)
                     }
                     rows={3}
                     className="w-full rounded-2xl border border-[#dce5f6] px-4 py-3 text-sm text-gray-600 outline-none focus:border-[#001A6E]"
@@ -1084,12 +1120,8 @@ export default function DoctorProfilePage() {
                     className="rounded-2xl bg-[#001A6E] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-blue-900/10 transition-colors hover:bg-[#162f80] disabled:cursor-not-allowed disabled:opacity-70"
                   >
                     {doctorRatingSubmitting
-                      ? locale === "en"
-                        ? "جاري الإرسال..."
-                        : "Submitting..."
-                      : locale === "en"
-                        ? "إرسال التقييم"
-                        : "Submit rating"}
+                      ? t("providerProfile.submitting", locale)
+                      : t("providerProfile.submitRating", locale)}
                   </button>
                 </div>
               </div>

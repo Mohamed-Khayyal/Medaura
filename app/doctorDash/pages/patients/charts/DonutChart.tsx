@@ -78,15 +78,15 @@ export default function MedicalChart({data}:Props) {
         onMouseLeave: () => { setActiveIndex(-1); setTooltipActive(false); },
       };
   return (
-    <div className="bg-(--card-bg) p-6 rounded-2xl border border-(--card-border) text-center">
+    <div className="min-w-0 rounded-2xl border border-(--card-border) bg-(--card-bg) p-4 text-center sm:p-6">
 
       {/* Title */}
-      <h2 className="font-bold  text-(--text-primary) text-xl mb-4 text-right">
+      <h2 className="mb-4 text-start text-lg font-bold text-(--text-primary) sm:text-xl">
         توزيع الحالات الطبية
       </h2>
 
       {/* Chart */}
-      <div className="flex justify-center relative">
+      <div className="relative flex justify-center overflow-hidden">
 
         <PieChart width={220} height={220}>
           <Pie {...pieProps}>
@@ -107,7 +107,7 @@ export default function MedicalChart({data}:Props) {
       </div>
 
       {/* Legend */}
-      <div className="flex justify-center gap-6 mt-4 text-sm">
+      <div className="mt-4 flex flex-wrap justify-center gap-3 text-xs sm:gap-6 sm:text-sm">
 
         {data.map((item, i) => (
           <div key={i} className="flex items-center gap-2">

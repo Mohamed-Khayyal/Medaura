@@ -57,11 +57,15 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
     if (loading) return; // wait until auth state is known
     if (!isAuthenticated) return; // not logged in, stay on auth page
 
+    if (pathname.startsWith("/doctorDocument")) {
+      return;
+    }
+
     const profile = user?.profile as Record<string, unknown> | undefined;
     const destination = getDashboardPathByUserType(user?.user_type, profile);
     // Replace so the browser back button won't re-show the auth page
     router.replace(destination);
-  }, [loading, isAuthenticated, user, router]);
+  }, [loading, isAuthenticated, user, router, pathname]);
 
   // If we are on the doctor documents page, render without the auth layout wrapper
   if (pathname.startsWith("/doctorDocument")) {

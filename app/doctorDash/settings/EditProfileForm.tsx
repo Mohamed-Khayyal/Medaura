@@ -3,6 +3,8 @@
 import dynamic from "next/dynamic";
 import { useState } from "react";
 import { Camera, FileText, Loader, MapPin, Save, X } from "lucide-react";
+import { useLocale } from "@/lib/hooks";
+import { t } from "@/i18n";
 
 type GeoLocation = {
   latitude: number | "";
@@ -48,12 +50,43 @@ const SPECIALTIES = [
 
 const GeoLocationPicker = dynamic(() => import("./GeoLocationPicker"), {
   ssr: false,
-  loading: () => (
-    <div className="flex min-h-80 items-center justify-center rounded-lg border border-(--card-border) bg-(--semi-card-bg) text-sm text-(--text-secondary)">
-      Loading map...
-    </div>
-  ),
+  loading: () => {
+    const locale =
+      typeof window !== "undefined" &&
+      window.localStorage.getItem("locale") === "ar"
+        ? "ar"
+        : "en";
+    return (
+      <div className="flex min-h-64 items-center justify-center rounded-lg border border-(--card-border) bg-(--semi-card-bg) text-sm text-(--text-secondary) sm:min-h-80">
+        {t("settingsPage.loadingMap", locale)}
+      </div>
+    );
+  },
 });
+
+function getSpecialistLabel(specialist: string | null | undefined, locale: string) {
+  if (!specialist) return "—";
+  const arSpecialties: Record<string, string> = {
+    neurology: 'مخ واعصاب',
+    orthopedics: 'عظام',
+    oncology: 'الأورام',
+    ent: 'طب الأذن والأنف والحنجرة',
+    ophthalmology: 'طب العيون',
+    cardiology: 'قلب و اوعية دموية',
+    pulmonology: 'صدر و جهاز تنفسي',
+    nephrology: 'كلى',
+    dentistry: 'اسنان',
+    pediatrics: 'اطفال و حديثي الولادة',
+    dermatology: 'جلدية',
+    gynecology: 'نسا و توليد'
+  };
+
+  const key = Object.keys(arSpecialties).find(k => arSpecialties[k] === specialist);
+  if (key) {
+    return t(`authPage.doctor.specialties.${key}`, locale) || specialist;
+  }
+  return specialist;
+}
 
 const WORK_DAYS = [
   { value: "sun", label: "Sunday" },
@@ -102,15 +135,6 @@ function getUpdatedProfile(result: unknown) {
   return null;
 }
 
-function toRequiredNumber(value: number | "", fieldName: string) {
-  const numericValue = Number(value);
-  if (!Number.isFinite(numericValue)) {
-    throw new Error(`${fieldName} is required`);
-  }
-
-  return numericValue;
-}
-
 function toNullableString(value: string) {
   const trimmedValue = value.trim();
   return trimmedValue === "" ? null : trimmedValue;
@@ -157,6 +181,8 @@ export default function EditProfileForm({
   initialData,
   onSuccess,
 }: EditProfileFormProps) {
+  const locale = useLocale();
+  const isRtl = locale === "ar";
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -272,7 +298,9 @@ export default function EditProfileForm({
       // لو الـ API رجع 200 او 201 يبقي نجاح
       if (!response.ok) {
         throw new Error(
-          result?.message || result?.error || "Failed to update profile",
+          result?.message ||
+            result?.error ||
+            t("settingsPage.updateProfileError", locale),
         );
       }
 
@@ -292,34 +320,37 @@ export default function EditProfileForm({
       }, 1000);
     } catch (err) {
       console.error(err);
-
-      setError(err instanceof Error ? err.message : "Failed to update profile");
+      setError(
+        err instanceof Error
+          ? err.message
+          : t("settingsPage.updateProfileError", locale),
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 p-4">
-      <div className="max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-2xl border border-(--card-border) bg-(--card-bg) shadow-lg">
-        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-(--card-border) bg-(--card-bg) p-6">
+    <div className="fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 p-0 sm:p-4" dir={isRtl ? "rtl" : "ltr"}>
+      <div className="max-h-[100dvh] w-full max-w-4xl overflow-y-auto border border-(--card-border) bg-(--card-bg) shadow-lg sm:max-h-[92vh] sm:rounded-2xl">
+        <div className={`sticky top-0 z-10 flex items-center justify-between border-b border-(--card-border) bg-(--card-bg) p-4 sm:p-6 ${isRtl ? "flex-row" : "flex-row-reverse"}`}>
           <button
             type="button"
             onClick={onClose}
-            className="text-gray-500 transition hover:text-gray-700"
-            aria-label="Close"
+            className="text-gray-500 transition hover:text-gray-700 cursor-pointer"
+            aria-label={t("settingsPage.close", locale)}
           >
             <X size={24} />
           </button>
-          <h2 className="text-2xl font-bold text-(--text-primary)">
-            Edit doctor profile
+          <h2 className="text-xl font-bold text-(--text-primary) sm:text-2xl">
+            {t("settingsPage.editProfile", locale)}
           </h2>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6 p-6" dir="rtl">
+        <form onSubmit={handleSubmit} className="space-y-5 p-4 sm:space-y-6 sm:p-6">
           {success && (
             <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-green-700">
-              Profile updated successfully.
+              {t("settingsPage.profileUpdated", locale)}
             </div>
           )}
 
@@ -335,7 +366,10 @@ export default function EditProfileForm({
                 {photoPreview ? (
                   <img
                     src={photoPreview}
-                    alt={formData.full_name || "Doctor"}
+                    alt={
+                      formData.full_name ||
+                      t("settingsPage.doctorPhotoAlt", locale)
+                    }
                     className="h-full w-full object-cover"
                   />
                 ) : (
@@ -344,7 +378,7 @@ export default function EditProfileForm({
               </div>
               <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-blue-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-600">
                 <Camera size={16} />
-                Photo
+                {t("settingsPage.photo", locale)}
                 <input
                   type="file"
                   accept="image/*"
@@ -355,9 +389,9 @@ export default function EditProfileForm({
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <label className="block">
+              <label className="block text-start">
                 <span className="mb-2 block text-sm font-semibold text-(--text-primary)">
-                  Full name
+                  {t("settingsPage.fullName", locale)}
                 </span>
                 <input
                   type="text"
@@ -368,14 +402,14 @@ export default function EditProfileForm({
                       full_name: e.target.value,
                     }))
                   }
-                  className="w-full rounded-lg border border-(--card-border) bg-(--card-bg) px-4 py-2 text-(--text-primary) focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-lg border border-(--card-border) bg-(--card-bg) px-4 py-2 text-(--text-primary) focus:outline-none focus:ring-2 focus:ring-blue-500 text-start"
                   required
                 />
               </label>
 
-              <label className="block">
+              <label className="block text-start">
                 <span className="mb-2 block text-sm font-semibold text-(--text-primary)">
-                  Phone
+                  {t("settingsPage.phone", locale)}
                 </span>
                 <input
                   type="tel"
@@ -386,30 +420,30 @@ export default function EditProfileForm({
                       phone: e.target.value,
                     }))
                   }
-                  className="w-full rounded-lg border border-(--card-border) bg-(--card-bg) px-4 py-2 text-(--text-primary) focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-lg border border-(--card-border) bg-(--card-bg) px-4 py-2 text-(--text-primary) focus:outline-none focus:ring-2 focus:ring-blue-500 text-start"
                 />
               </label>
 
-              <label className="block">
+              <label className="block text-start">
                 <span className="mb-2 block text-sm font-semibold text-(--text-primary)">
-                  Gender
+                  {t("settingsPage.gender", locale)}
                 </span>
                 <select
                   value={formData.gender}
                   onChange={(e) =>
                     setFormData((prev) => ({ ...prev, gender: e.target.value }))
                   }
-                  className="w-full rounded-lg border border-(--card-border) bg-(--card-bg) px-4 py-2 text-(--text-primary) focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-lg border border-(--card-border) bg-(--card-bg) px-4 py-2 text-(--text-primary) focus:outline-none focus:ring-2 focus:ring-blue-500 text-start"
                 >
-                  <option value="">Not specified</option>
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
+                  <option value="">{t("settingsPage.genderNotSpecified", locale)}</option>
+                  <option value="male">{t("settingsPage.genderMale", locale)}</option>
+                  <option value="female">{t("settingsPage.genderFemale", locale)}</option>
                 </select>
               </label>
 
-              <label className="block">
+              <label className="block text-start">
                 <span className="mb-2 block text-sm font-semibold text-(--text-primary)">
-                  Years of experience
+                  {t("settingsPage.yearsExperience", locale)}
                 </span>
                 <input
                   type="number"
@@ -421,15 +455,15 @@ export default function EditProfileForm({
                         e.target.value === "" ? "" : Number(e.target.value),
                     }))
                   }
-                  className="w-full rounded-lg border border-(--card-border) bg-(--card-bg) px-4 py-2 text-(--text-primary) focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-lg border border-(--card-border) bg-(--card-bg) px-4 py-2 text-(--text-primary) focus:outline-none focus:ring-2 focus:ring-blue-500 text-start"
                   min="0"
                   step="1"
                 />
               </label>
 
-              <label className="block">
+              <label className="block text-start">
                 <span className="mb-2 block text-sm font-semibold text-(--text-primary)">
-                  Consultation price
+                  {t("settingsPage.consultationPriceField", locale)}
                 </span>
                 <input
                   type="number"
@@ -441,47 +475,47 @@ export default function EditProfileForm({
                         e.target.value === "" ? "" : Number(e.target.value),
                     }))
                   }
-                  className="w-full rounded-lg border border-(--card-border) bg-(--card-bg) px-4 py-2 text-(--text-primary) focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-lg border border-(--card-border) bg-(--card-bg) px-4 py-2 text-(--text-primary) focus:outline-none focus:ring-2 focus:ring-blue-500 text-start"
                   required
                   min="0"
                   step="1"
                 />
               </label>
 
-              <label className="block">
+              <label className="block text-start">
                 <span className="mb-2 block text-sm font-semibold text-(--text-primary)">
-                  Specialist (Specialty)
+                  {t("settingsPage.specialty", locale)}
                 </span>
                 <select
                   value={formData.specialist}
                   disabled
-                  className="w-full rounded-lg border border-(--card-border) bg-zinc-100 dark:bg-zinc-800/50 px-4 py-2 text-zinc-500 cursor-not-allowed focus:outline-none"
+                  className="w-full rounded-lg border border-(--card-border) bg-zinc-100 dark:bg-zinc-800/50 px-4 py-2 text-zinc-500 cursor-not-allowed focus:outline-none text-start"
                 >
-                  <option value="">Choose specialty...</option>
+                  <option value="">{t("settingsPage.chooseSpecialty", locale)}</option>
                   {SPECIALTIES.map((s) => (
-                    <option key={s} value={s}>{s}</option>
+                    <option key={s} value={s}>{getSpecialistLabel(s, locale)}</option>
                   ))}
                 </select>
               </label>
             </div>
           </div>
 
-          <label className="block">
+          <label className="block text-start">
             <span className="mb-2 block text-sm font-semibold text-(--text-primary)">
-              Bio
+              {t("settingsPage.bio", locale)}
             </span>
             <textarea
               value={formData.bio}
               onChange={(e) =>
                 setFormData((prev) => ({ ...prev, bio: e.target.value }))
               }
-              className="min-h-28 w-full resize-y rounded-lg border border-(--card-border) bg-(--card-bg) px-4 py-3 text-(--text-primary) focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="min-h-28 w-full resize-y rounded-lg border border-(--card-border) bg-(--card-bg) px-4 py-3 text-(--text-primary) focus:outline-none focus:ring-2 focus:ring-blue-500 text-start"
             />
           </label>
 
-          <div>
+          <div className="text-start">
             <label className="mb-3 block text-sm font-semibold text-(--text-primary)">
-              Work days
+              {t("settingsPage.workDays", locale)}
             </label>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
               {WORK_DAYS.map((day) => (
@@ -489,22 +523,22 @@ export default function EditProfileForm({
                   key={day.value}
                   type="button"
                   onClick={() => handleWorkDayToggle(day.value)}
-                  className={`rounded-lg px-3 py-2 text-sm font-medium transition ${
+                  className={`rounded-lg px-3 py-2 text-sm font-medium transition cursor-pointer ${
                     selectedDays.includes(day.value)
                       ? "bg-blue-500 text-white"
                       : "bg-(--semi-card-bg) text-(--text-primary) hover:bg-gray-300"
                   }`}
                 >
-                  {day.label}
+                  {t(`settingsPage.${day.value}`, locale)}
                 </button>
               ))}
             </div>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <label className="block">
+            <label className="block text-start">
               <span className="mb-2 block text-sm font-semibold text-(--text-primary)">
-                Work from
+                {t("settingsPage.workFrom", locale)}
               </span>
               <input
                 type="time"
@@ -515,14 +549,14 @@ export default function EditProfileForm({
                     work_from: e.target.value,
                   }))
                 }
-                className="w-full rounded-lg border border-(--card-border) bg-(--card-bg) px-4 py-2 text-(--text-primary) focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded-lg border border-(--card-border) bg-(--card-bg) px-4 py-2 text-(--text-primary) focus:outline-none focus:ring-2 focus:ring-blue-500 text-start"
                 required
               />
             </label>
 
-            <label className="block">
+            <label className="block text-start">
               <span className="mb-2 block text-sm font-semibold text-(--text-primary)">
-                Work to
+                {t("settingsPage.workTo", locale)}
               </span>
               <input
                 type="time"
@@ -533,17 +567,17 @@ export default function EditProfileForm({
                     work_to: e.target.value,
                   }))
                 }
-                className="w-full rounded-lg border border-(--card-border) bg-(--card-bg) px-4 py-2 text-(--text-primary) focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded-lg border border-(--card-border) bg-(--card-bg) px-4 py-2 text-(--text-primary) focus:outline-none focus:ring-2 focus:ring-blue-500 text-start"
                 required
               />
             </label>
           </div>
 
           <div className="space-y-4 rounded-xl border border-(--card-border) p-4">
-            <div className="flex items-center justify-between gap-3">
-              <label className="flex-1">
+            <div className="flex items-end gap-3">
+              <label className="flex-1 text-start">
                 <span className="mb-2 block text-sm font-semibold text-(--text-primary)">
-                  Location
+                  {t("settingsPage.location", locale)}
                 </span>
                 <input
                   type="text"
@@ -554,14 +588,14 @@ export default function EditProfileForm({
                       location: e.target.value,
                     }))
                   }
-                  className="w-full rounded-lg border border-(--card-border) bg-(--card-bg) px-4 py-2 text-(--text-primary) focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Cairo"
+                  className="w-full rounded-lg border border-(--card-border) bg-(--card-bg) px-4 py-2 text-(--text-primary) focus:outline-none focus:ring-2 focus:ring-blue-500 text-start"
+                  placeholder={t("settingsPage.locationPlaceholder", locale)}
                 />
               </label>
               <MapPin className="mt-7 shrink-0 text-blue-500" size={24} />
             </div>
 
-            <div className="overflow-hidden rounded-lg border border-(--card-border)">
+            <div className="h-64 overflow-hidden rounded-lg border border-(--card-border) sm:h-80">
               <GeoLocationPicker
                 latitude={mapLatitude}
                 longitude={mapLongitude}
@@ -578,9 +612,9 @@ export default function EditProfileForm({
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
-              <label className="block">
+              <label className="block text-start">
                 <span className="mb-1 block text-xs font-medium text-(--text-secondary)">
-                  Latitude
+                  {t("settingsPage.latitude", locale)}
                 </span>
                 <input
                   type="number"
@@ -595,15 +629,15 @@ export default function EditProfileForm({
                       },
                     }))
                   }
-                  className="w-full rounded-lg border border-(--card-border) bg-(--card-bg) px-4 py-2 text-(--text-primary) focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-lg border border-(--card-border) bg-(--card-bg) px-4 py-2 text-(--text-primary) focus:outline-none focus:ring-2 focus:ring-blue-500 text-start"
                   required
                   step="0.000001"
                 />
               </label>
 
-              <label className="block">
+              <label className="block text-start">
                 <span className="mb-1 block text-xs font-medium text-(--text-secondary)">
-                  Longitude
+                  {t("settingsPage.longitude", locale)}
                 </span>
                 <input
                   type="number"
@@ -618,7 +652,7 @@ export default function EditProfileForm({
                       },
                     }))
                   }
-                  className="w-full rounded-lg border border-(--card-border) bg-(--card-bg) px-4 py-2 text-(--text-primary) focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-lg border border-(--card-border) bg-(--card-bg) px-4 py-2 text-(--text-primary) focus:outline-none focus:ring-2 focus:ring-blue-500 text-start"
                   required
                   step="0.000001"
                 />
@@ -627,17 +661,17 @@ export default function EditProfileForm({
           </div>
 
           {/* Licence Upload */}
-          <div className="rounded-xl border border-(--card-border) bg-(--semi-card-bg) p-4">
+          <div className="rounded-xl border border-(--card-border) bg-(--semi-card-bg) p-4 text-start">
             <span className="mb-3 block text-sm font-semibold text-(--text-primary)">
-              Licence Document
+              {t("settingsPage.licenceDoc", locale)}
             </span>
             <p className="mb-3 text-xs text-(--text-secondary)">
-              Upload your medical licence as an image or PDF. This is optional — you can add or update it at any time.
+              {t("settingsPage.licenceUploadDesc", locale)}
             </p>
-            <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-(--card-border) bg-(--card-bg) px-4 py-3 text-sm text-(--text-primary) transition hover:border-blue-400 hover:bg-blue-50">
+            <label className="inline-flex max-w-full cursor-pointer items-center gap-2 rounded-lg border border-dashed border-(--card-border) bg-(--card-bg) px-4 py-3 text-sm text-(--text-primary) transition hover:border-blue-400 hover:bg-blue-50">
               <FileText size={18} className="shrink-0 text-blue-500" />
-              <span className="truncate max-w-xs">
-                {licenceFileName || "Choose PDF or image file"}
+              <span className="max-w-[65vw] truncate sm:max-w-xs">
+                {licenceFileName || t("settingsPage.chooseFile", locale)}
               </span>
               <input
                 type="file"
@@ -650,36 +684,36 @@ export default function EditProfileForm({
               <button
                 type="button"
                 onClick={() => { setLicenceFile(null); setLicenceFileName(""); }}
-                className="ml-3 mt-2 text-xs text-red-500 hover:underline"
+                className="ms-3 mt-2 cursor-pointer text-xs text-red-500 hover:underline"
               >
-                Remove
+                {t("settingsPage.remove", locale)}
               </button>
             )}
           </div>
 
-          <div className="flex gap-4 pt-4">
+          <div className="flex flex-col-reverse gap-3 pt-4 sm:flex-row sm:gap-4">
             <button
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="flex-1 rounded-lg border border-(--card-border) px-4 py-3 font-semibold text-(--text-primary) transition hover:bg-gray-100 disabled:opacity-50"
+              className="flex-1 rounded-lg border border-(--card-border) px-4 py-3 font-semibold text-(--text-primary) transition hover:bg-gray-100 disabled:opacity-50 cursor-pointer"
             >
-              Cancel
+              {t("settingsPage.cancel", locale)}
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-blue-500 px-4 py-3 font-semibold text-white transition hover:bg-blue-600 disabled:opacity-50"
+              className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-blue-500 px-4 py-3 font-semibold text-white transition hover:bg-blue-600 disabled:opacity-50 cursor-pointer"
             >
               {loading ? (
                 <>
                   <Loader size={20} className="animate-spin" />
-                  Saving...
+                  {t("settingsPage.saving", locale)}
                 </>
               ) : (
                 <>
                   <Save size={20} />
-                  Save changes
+                  {t("settingsPage.saveChanges", locale)}
                 </>
               )}
             </button>
