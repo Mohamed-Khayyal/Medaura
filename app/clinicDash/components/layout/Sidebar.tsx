@@ -10,6 +10,7 @@ import {
   Building2,
   ChevronRight,
   DollarSign,
+  CheckSquare,
 } from "lucide-react";
 import { useLocale } from "@/lib/hooks";
 import { t } from "@/i18n";
@@ -60,6 +61,12 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
           text: t("dashboard.sidebar.financialManagement", locale),
           icon: <DollarSign size={16} />,
           href: "/clinicDash/financial",
+          exact: true,
+        },
+        {
+          text: locale === "ar" ? "تأكيد المدفوعات" : "Confirm Payments",
+          icon: <CheckSquare size={16} />,
+          href: "/clinicDash/financial/pending-payments",
           exact: false,
         },
         {

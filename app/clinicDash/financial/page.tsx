@@ -8,7 +8,6 @@ import ProfitSharingModal from "./components/ProfitSharingModal";
 import RevenueCharts from "./components/RevenueCharts";
 import FinancialFilters from "./components/FinancialFilters";
 import ExportButtons from "./components/ExportButtons";
-import PendingAppointmentsTable from "./components/PendingAppointmentsTable";
 import type {
   FinancialSummary,
   DailyRevenue,
@@ -546,38 +545,6 @@ export default function FinancialPage() {
         onFiltersChange={setFilters}
         onReset={handleReset}
       />
-
-      {/* ── Pending Patient Payments ── */}
-      <div className="rounded-2xl border border-(--card-border) bg-(--card-bg) p-5 shadow-[var(--shadow-soft)]">
-        <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-          <div>
-            <h2 className="text-sm font-bold text-(--text-primary)">تأكيد مدفوعات المرضى</h2>
-            <p className="text-xs text-(--text-secondary) mt-0.5">
-              يرجى تأكيد دفع كل موعد — المبالغ غير المؤكدة تُضاف لـ "المدفوعات المعلقة"
-            </p>
-          </div>
-          <div className="flex items-center gap-2 text-xs">
-            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-              في الانتظار
-            </span>
-            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-500">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              مدفوع
-            </span>
-            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-500">
-              <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
-              ملغي
-            </span>
-          </div>
-        </div>
-
-        <PendingAppointmentsTable
-          records={allApptData}
-          loading={allApptLoading}
-          onMarkPayment={handleAppointmentPayment}
-        />
-      </div>
 
       {/* ── Doctor Earnings Table (salary payment tracking) ── */}
       <div className="rounded-2xl border border-(--card-border) bg-(--card-bg) p-5 shadow-[var(--shadow-soft)]">
