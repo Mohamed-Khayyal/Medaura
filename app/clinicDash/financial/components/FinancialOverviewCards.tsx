@@ -120,8 +120,7 @@ export default function FinancialOverviewCards({ summary, loading }: Props) {
           ROW 1  — 3 cards: Hero (5fr) | Month (4fr) | Today (3fr)
       ══════════════════════════════════════════════════ */}
       <div
-        className="grid gap-3"
-        style={{ gridTemplateColumns: "5fr 4fr 3fr" }}
+        className="grid gap-3 grid-cols-1 lg:grid-cols-[5fr_4fr_3fr]"
       >
         {/* ── HERO: إجمالي السنة ── */}
         <div
@@ -289,7 +288,7 @@ export default function FinancialOverviewCards({ summary, loading }: Props) {
       {/* ══════════════════════════════════════════════════
           ROW 2  — 3 equal cards: Clinic | Doctors | Pending
       ══════════════════════════════════════════════════ */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
 
         {/* ── CARD 4: ربح العيادة ── */}
         <div

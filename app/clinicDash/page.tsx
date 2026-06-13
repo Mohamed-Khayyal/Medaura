@@ -327,8 +327,8 @@ export default function ClinicDashPage() {
         </div>
       </div>
 
-      {/* ── Stats cards — always 4 cards in 2×2 on mobile, 4×1 on xl ─────────── */}
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+      {/* ── Stats cards — 1 column on small mobile, 2×2 on sm, 4×1 on xl ─────────── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <StatsCard
           title={t("clinicDash.totalDoctors", locale)}
           value={statsLoading ? "—" : doctorsCount}
