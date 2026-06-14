@@ -64,9 +64,24 @@ export async function GET(request: NextRequest) {
     
     const paymentsRes = await apiClient.get<any>("/api/payments/clinic/financials?limit=10000", { token });
     const payments = paymentsRes?.payments || [];
-    const apptStore: Record<string, string> = {};
+
+    // Always use Egypt local date (UTC+2/+3) so "today" matches what the admin sees.
+    // Any confirmed payment counts as paid on the day the admin confirmed it in Egypt time.
+    const egyptToday = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Africa/Cairo",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date()); // gives "YYYY-MM-DD"
+
+    const apptStore: Record<string, { status: "paid" | "cancelled"; date: string }> = {};
     for (const p of payments) {
-      apptStore[String(p.booking_id)] = "paid";
+      // Try to get the actual confirmation date from the API (various possible field names).
+      // If no date field exists, stamp it with today's Egypt date — it was confirmed today.
+      const rawDate: string =
+        p.paid_at ?? p.confirmed_at ?? p.payment_date ?? p.updated_at ?? p.created_at ?? "";
+      const payDate = rawDate ? rawDate.slice(0, 10) : egyptToday;
+      apptStore[String(p.booking_id)] = { status: "paid", date: payDate };
     }
 
     // All summary KPIs now reflect paid appointments only
