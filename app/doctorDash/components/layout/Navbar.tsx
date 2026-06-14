@@ -8,7 +8,7 @@ import { useLocale } from "@/lib/hooks";
 import { t } from "@/i18n";
 
 function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
-  const { logout, user } = useAuth();
+  const { logout, user, isAuthenticated } = useAuth();
   const locale = useLocale();
   const fullName = (user?.profile?.full_name as string) || (locale === "ar" ? "د.محمد إسماعيل" : "Dr. Mohamed Ismail");
   const specialist = (user?.profile?.specialist as string) || (locale === "ar" ? "طبيب قلب" : "Cardiologist");
@@ -27,6 +27,7 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
   };
 
   useEffect(() => {
+    if (!isAuthenticated) return;
     async function loadNotifications() {
       try {
         const response = await fetch("/api/notifications/me", { credentials: "include" });
@@ -63,7 +64,7 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
       }
     }
     loadNotifications();
-  }, []);
+  }, [isAuthenticated]);
 
   const handleMarkAllRead = async () => {
     const unread = notifications.filter(n => !n.read);

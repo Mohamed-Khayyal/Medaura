@@ -739,7 +739,7 @@ export default function SettingsPage() {
               موقع العيادة على الخريطة
             </div>
 
-            <div className="overflow-hidden rounded-2xl border border-(--card-border)">
+            <div className="h-64 overflow-hidden rounded-2xl border border-(--card-border) sm:h-80">
               <GeoLocationPicker
                 latitude={Number(mapLatitude)}
                 longitude={Number(mapLongitude)}

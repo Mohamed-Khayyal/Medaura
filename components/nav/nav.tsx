@@ -123,6 +123,7 @@ const Navbar: FC = () => {
 
   // ── notifications API ─────────────────────────────────────
   async function loadNotifications() {
+    if (!isAuthenticated) return;
     setLoadingNotif(true);
     setNotifError(null);
     try {
@@ -176,10 +177,10 @@ const Navbar: FC = () => {
   }, [isAuthenticated]);
 
   useEffect(() => {
-    if (notifOpen) {
+    if (notifOpen && isAuthenticated) {
       loadNotifications();
     }
-  }, [notifOpen]);
+  }, [notifOpen, isAuthenticated]);
 
   // ── user photo ────────────────────────────────────────────
   const userPhoto: string | undefined =

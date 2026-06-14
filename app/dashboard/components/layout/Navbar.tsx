@@ -21,7 +21,7 @@ import { useLocale } from "@/lib/hooks";
 import { t } from "@/i18n";
 
 function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
-  const { logout, user } = useAuth();
+  const { logout, user, isAuthenticated } = useAuth();
   const locale = useLocale();
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -89,6 +89,7 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
   }, [searchOpen]);
 
   const loadNotifications = useCallback(async () => {
+    if (!isAuthenticated) return;
     try {
       setNotificationsLoading(true);
       setNotificationsError(null);
@@ -109,10 +110,11 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
     } finally {
       setNotificationsLoading(false);
     }
-  }, []);
+  }, [isAuthenticated]);
 
   const isFirstMount = useRef(true);
   useEffect(() => {
+    if (!isAuthenticated) return;
     if (isFirstMount.current) {
       isFirstMount.current = false;
       loadNotifications();
@@ -121,7 +123,7 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
     if (notifOpen) {
       loadNotifications();
     }
-  }, [loadNotifications, notifOpen]);
+  }, [loadNotifications, notifOpen, isAuthenticated]);
 
   const markNotificationRead = useCallback(async (notificationId: string) => {
     setNotifications((prev) =>

@@ -106,9 +106,7 @@ export default function DoctorRegisterPage() {
     }
   }
 
-  function handleGoogleSignIn() {
-    setErrors({ form: "التسجيل عبر جوجل غير متاح حالياً" });
-  }
+
 
   const inputCls = (key: string) =>
     `w-full text-sm sm:text-base border rounded-md px-3 py-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:scale-[1.01] ${
@@ -261,30 +259,6 @@ export default function DoctorRegisterPage() {
       >
         {loading ? "جاري التسجيل..." : "التسجيل"}
       </button>
-
-      <div className="flex items-center gap-3 my-2 sm:my-3" aria-hidden="true">
-        <div className="h-px bg-zinc-200 flex-1" />
-        <div className="text-sm text-zinc-500">أو</div>
-        <div className="h-px bg-zinc-200 flex-1" />
-      </div>
-
-      <div className="mt-1 sm:mt-2">
-        <button
-          type="button"
-          onClick={handleGoogleSignIn}
-          disabled
-          aria-label="التسجيل عبر جوجل"
-          className="w-full border border-zinc-200 rounded-md px-3 py-2 flex items-center justify-center gap-2 hover:shadow-sm disabled:opacity-60 disabled:cursor-not-allowed text-sm sm:text-base"
-        >
-          <svg className="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 24 24" fill="none">
-            <path d="M21.35 11.1h-9.18v2.92h5.28c-.23 1.61-1.33 2.95-2.84 3.63v3.02h4.6c2.69-2.49 4.21-6.14 3.14-10.57-.18-.68-.46-1.32-.99-1.9z" fill="#4285F4" />
-            <path d="M12.17 22c2.78 0 5.12-.92 6.82-2.5l-4.6-3.02c-1.1.74-2.5 1.18-4.22 1.18-3.26 0-6.02-2.2-7.01-5.15H.68v3.23C2.38 19.9 6.8 22 12.17 22z" fill="#34A853" />
-            <path d="M5.16 13.51c-.24-.72-.38-1.49-.38-2.28 0-.79.14-1.56.38-2.28V5.72H.68A11.99 11.99 0 0 0 0 11.23c0 1.86.4 3.63 1.12 5.24l4.04-2.96z" fill="#FBBC05" />
-            <path d="M12.17 4.44c1.9 0 3.58.66 4.92 1.96l3.67-3.67C17.28.75 14.95 0 12.17 0 6.8 0 2.38 2.1.68 5.72l4.48 3.44c.99-2.95 3.75-5.15 7.01-5.15z" fill="#EA4335" />
-          </svg>
-          التسجيل عبر جوجل
-        </button>
-      </div>
     </form>
   );
 }
