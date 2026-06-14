@@ -126,10 +126,16 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
           <header className="flex flex-col items-center lg:items-start gap-4 mb-6">
             {/* LOGO */}
             <div className="flex items-center gap-2">
-              <div className="h-10 w-10 rounded-full bg-indigo-700 flex items-center justify-center text-white font-bold transition hover:scale-105">
-                M
+              <div className="relative h-10 w-10 shrink-0 transition hover:scale-105">
+                <Image
+                  src="/images/Logo1.png"
+                  alt="Medaura logo"
+                  fill
+                  sizes="40px"
+                  className="object-contain"
+                />
               </div>
-              <h1 className="text-xl font-semibold text-indigo-900">Medaura</h1>
+              <h1 className="text-xl font-bold tracking-wide text-indigo-900">Medaura</h1>
             </div>
 
             {/* NAVIGATION TABS */}

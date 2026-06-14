@@ -202,7 +202,7 @@ const Navbar: FC = () => {
 
         {/* Left: Logo */}
         <Link href="/" className="flex shrink-0 items-center gap-2">
-          <div className="relative h-10 w-10">
+          <div className="relative h-10 w-10 shrink-0">
             <Image
               src="/images/Logo1.png"
               alt="Medaura logo"
@@ -211,7 +211,7 @@ const Navbar: FC = () => {
               className="object-contain"
             />
           </div>
-          <span className="hidden text-xl font-bold text-[#0f1a4f] sm:inline">
+          <span className="text-xl font-bold tracking-wide text-[#0f1a4f]">
             Medaura
           </span>
         </Link>

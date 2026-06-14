@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { formatDistanceToNow } from "date-fns";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import type { Notification } from "@/lib/types/api";
@@ -190,15 +191,29 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
       <div className="px-3 sm:px-6 py-3">
         <div className="flex items-center gap-2 sm:gap-3">
 
-          {/* Sidebar toggle */}
-          <button
-            type="button"
-            onClick={onToggleSidebar}
-            className="flex-shrink-0 inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[#e6eaf0] bg-white text-[#5e6b85] hover:bg-[#f1f4f9] transition lg:hidden"
-            aria-label="Open sidebar"
-          >
-            <Menu size={18} />
-          </button>
+          {/* Sidebar toggle and Logo (Mobile) */}
+          <div className="flex items-center gap-2 lg:hidden">
+            <button
+              type="button"
+              onClick={onToggleSidebar}
+              className="flex-shrink-0 inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[#e6eaf0] bg-white text-[#5e6b85] hover:bg-[#f1f4f9] transition"
+              aria-label="Open sidebar"
+            >
+              <Menu size={18} />
+            </button>
+            <div className="flex items-center gap-2">
+              <div className="relative h-8 w-8 shrink-0">
+                <Image
+                  src="/images/Logo1.png"
+                  alt="Medaura logo"
+                  fill
+                  sizes="32px"
+                  className="object-contain"
+                />
+              </div>
+              <span className="text-lg font-bold text-[#0f1b3d]">Medaura</span>
+            </div>
+          </div>
 
           {/* Desktop search bar */}
           <form

@@ -244,6 +244,7 @@ export function computeAppointmentRecords(
     // Shares are 0 for cancelled appointments
     const docShare    = paymentStatus !== "cancelled" ? (fee * docPct)    / 100 : 0;
     const clinicShare = paymentStatus !== "cancelled" ? (fee * clinicPct) / 100 : 0;
+    const paymentDate = getApptPaymentDate(b.id, apptStore, date);
 
     records.push({
       bookingId:        b.id,
@@ -259,6 +260,7 @@ export function computeAppointmentRecords(
       doctorShare:      docShare,   // ← fix: was `doctorShare` shorthand but variable is `docShare`
       clinicShare,
       paymentStatus,
+      paymentDate,
     });
   }
 

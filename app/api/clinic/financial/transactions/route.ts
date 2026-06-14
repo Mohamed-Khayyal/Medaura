@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerAccessToken } from "@/lib/api/server-auth";
+export const dynamic = "force-dynamic";
 import { bookingService } from "@/lib/api/bookings";
 import { apiClient } from "@/lib/api/client";
 import fs from "fs";

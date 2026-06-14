@@ -43,6 +43,7 @@ export interface AppointmentRecord {
   /** Non-zero only when paymentStatus === "paid" */
   clinicShare: number;
   paymentStatus: PaymentStatus;
+  paymentDate: string;
 }
 
 export interface FinancialSummary {

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useRef, useState } from "react";
+import Image from "next/image";
 import { SuccessMessage } from "../components";
 
 function UploadCard({
@@ -187,8 +188,17 @@ export default function DoctorDocumentPage() {
   return (
     <div dir="rtl" className="max-w-4xl mx-auto py-10 px-4 text-right">
       <div className="text-center mb-6">
-        <div className="inline-flex items-center gap-3 mb-3">
-          <div className="text-indigo-900 font-semibold text-xl">Medaura</div>
+        <div className="inline-flex items-center gap-2 mb-3">
+          <div className="relative h-10 w-10 shrink-0">
+            <Image
+              src="/images/Logo1.png"
+              alt="Medaura logo"
+              fill
+              sizes="40px"
+              className="object-contain"
+            />
+          </div>
+          <div className="text-indigo-900 font-bold tracking-wide text-2xl">Medaura</div>
         </div>
         <h1 className="text-lg sm:text-2xl font-semibold text-zinc-900">
           رفع المستندات للتحقق من هويتك المهنية

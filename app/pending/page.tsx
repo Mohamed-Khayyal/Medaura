@@ -6,6 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useLocale } from "@/lib/hooks";
 import { t } from "@/i18n";
 import { Globe } from "lucide-react";
+import Image from "next/image";
 
 export default function PendingApprovalPage() {
   const { user, isAuthenticated, loading, logout } = useAuth();
@@ -96,10 +97,16 @@ export default function PendingApprovalPage() {
           {/* Logo */}
           <div className="mb-8 flex justify-center">
             <div className="flex items-center gap-2">
-              <div className="h-10 w-10 rounded-full bg-indigo-700 flex items-center justify-center text-white font-bold text-lg">
-                M
+              <div className="relative h-10 w-10 shrink-0">
+                <Image
+                  src="/images/Logo1.png"
+                  alt="Medaura logo"
+                  fill
+                  sizes="40px"
+                  className="object-contain"
+                />
               </div>
-              <span className="text-xl font-semibold text-indigo-900">{t("pendingPage.title", locale)}</span>
+              <span className="text-xl font-bold tracking-wide text-indigo-900">Medaura</span>
             </div>
           </div>
 

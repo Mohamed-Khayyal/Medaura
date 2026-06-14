@@ -272,8 +272,8 @@ export default function FinancialPage() {
    * appointments from any period are always visible regardless of the
    * current date filter selected by the user.
    */
-  const fetchAllAppointments = useCallback(async () => {
-    setAllApptLoading(true);
+  const fetchAllAppointments = useCallback(async (background = false) => {
+    if (!background) setAllApptLoading(true);
     try {
       const res  = await fetch("/api/clinic/financial/transactions"); // no date params
       const json = await res.json() as { success: boolean; data: TransactionData; error?: string };
@@ -281,7 +281,7 @@ export default function FinancialPage() {
     } catch {
       // silently ignore — main error banner covers API failures
     } finally {
-      setAllApptLoading(false);
+      if (!background) setAllApptLoading(false);
     }
   }, []);
 
@@ -299,10 +299,15 @@ export default function FinancialPage() {
 
     tickRef.current = setInterval(() => setTickCount((n) => n + 1), 60_000);
 
+    const livePoll = setInterval(() => {
+      void fetchAllAppointments(true);
+    }, 10_000); // 10 seconds live polling
+
     return () => {
       if (checkRef.current) clearInterval(checkRef.current);
       if (tickRef.current)  clearInterval(tickRef.current);
       if (refreshTimeoutRef.current) clearTimeout(refreshTimeoutRef.current);
+      clearInterval(livePoll);
     };
   }, [fetchSummary, fetchAllAppointments]);
 
@@ -330,7 +335,7 @@ export default function FinancialPage() {
   const handleRefresh = () => {
     void fetchSummary(true);
     void fetchTransactions(filters);
-    void fetchAllAppointments();
+    void fetchAllAppointments(false);
   };
 
   // ── Derived ───────────────────────────────────────────────────────────────
@@ -351,7 +356,7 @@ export default function FinancialPage() {
   const paidThisYear = allApptLoading
     ? null
     : allApptData.filter(
-        (r) => r.paymentStatus === "paid" && r.bookingDate.startsWith(currentYear)
+        (r) => r.paymentStatus === "paid" && r.paymentDate.startsWith(currentYear)
       );
 
   const liveYearlyRevenue = paidThisYear
@@ -360,13 +365,13 @@ export default function FinancialPage() {
 
   const liveMonthlyRevenue = paidThisYear
     ? paidThisYear
-        .filter((r) => r.bookingDate.startsWith(`${currentYear}-${currentMonth}`))
+        .filter((r) => r.paymentDate.startsWith(`${currentYear}-${currentMonth}`))
         .reduce((sum, r) => sum + r.consultationFee, 0)
     : (summaryData?.summary.monthlyRevenue ?? 0);
 
   const liveTodayRevenue = paidThisYear
     ? paidThisYear
-        .filter((r) => r.bookingDate === todayDateStr)
+        .filter((r) => r.paymentDate === todayDateStr)
         .reduce((sum, r) => sum + r.consultationFee, 0)
     : (summaryData?.summary.todayRevenue ?? 0);
 
