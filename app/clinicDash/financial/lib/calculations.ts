@@ -36,7 +36,7 @@ export function formatCurrencyCompact(amount: number): string {
 
 /** Extract the numeric ID from a staff/booking record */
 export function getDoctorId(member: RawStaffMember): string | number | null {
-  const raw = member.id ?? member.staff_id ?? member.user_id;
+  const raw = member._id ?? member.id ?? member.staff_id ?? member.user_id;
   if (typeof raw === "string" || typeof raw === "number") return raw;
   return null;
 }
@@ -73,7 +73,9 @@ export function isCompleted(b: RawBooking): boolean {
     s === "done"      ||
     s === "finished"  ||
     s === "attended"  ||
-    s === "approved"
+    s === "approved"  ||
+    s === "pending"   ||
+    s === "cancelled"
   );
 }
 
@@ -86,13 +88,16 @@ export function isCompleted(b: RawBooking): boolean {
  *  - "pending"   → appointment completed but payment not yet confirmed
  */
 export function getApptPaymentStatus(
-  bookingId: string | number,
+  b: RawBooking,
   apptStore: AppointmentPaymentStore
 ): "paid" | "cancelled" | "pending" {
-  const record = apptStore[String(bookingId)];
-  if (!record) return "pending";
-  if (typeof record === "string") return record as "paid" | "cancelled";
-  return record.status;
+  const record = apptStore[String(b.id)];
+  if (record) {
+    if (typeof record === "string") return record as "paid" | "cancelled";
+    return record.status;
+  }
+  if ((b.status ?? "").toLowerCase().trim() === "cancelled") return "cancelled";
+  return "pending";
 }
 
 export function getApptPaymentDate(
@@ -154,7 +159,7 @@ export function computeSummary(
   for (const b of bookings) {
     if (!isCompleted(b)) continue;
 
-    const paymentStatus = getApptPaymentStatus(b.id, apptStore);
+    const paymentStatus = getApptPaymentStatus(b, apptStore);
     // Cancelled bookings contribute nothing
     if (paymentStatus === "cancelled") continue;
 
@@ -230,7 +235,7 @@ export function computeAppointmentRecords(
     if (filters?.dateFrom && date < filters.dateFrom) continue;
     if (filters?.dateTo   && date > filters.dateTo)   continue;
 
-    const paymentStatus = getApptPaymentStatus(b.id, apptStore);
+    const paymentStatus = getApptPaymentStatus(b, apptStore);
     const fee           = member.consultation_price ?? 0;
     const config        = profitStore[String(docId)] ?? { doctorPercentage: DEFAULT_DOCTOR_PCT, paid: [] };
     const docPct        = config.doctorPercentage;

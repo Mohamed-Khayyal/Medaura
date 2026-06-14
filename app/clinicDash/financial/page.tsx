@@ -345,12 +345,30 @@ export default function FinancialPage() {
    * Revenue KPIs (today/month/year) still come from the 9 PM cache.
    */
   const currentYear = String(new Date().getFullYear());
+  const currentMonth = String(new Date().getMonth() + 1).padStart(2, "0");
+  const todayDateStr = new Date().toISOString().slice(0, 10);
 
   const paidThisYear = allApptLoading
     ? null
     : allApptData.filter(
         (r) => r.paymentStatus === "paid" && r.bookingDate.startsWith(currentYear)
       );
+
+  const liveYearlyRevenue = paidThisYear
+    ? paidThisYear.reduce((sum, r) => sum + r.consultationFee, 0)
+    : (summaryData?.summary.yearlyRevenue ?? 0);
+
+  const liveMonthlyRevenue = paidThisYear
+    ? paidThisYear
+        .filter((r) => r.bookingDate.startsWith(`${currentYear}-${currentMonth}`))
+        .reduce((sum, r) => sum + r.consultationFee, 0)
+    : (summaryData?.summary.monthlyRevenue ?? 0);
+
+  const liveTodayRevenue = paidThisYear
+    ? paidThisYear
+        .filter((r) => r.bookingDate === todayDateStr)
+        .reduce((sum, r) => sum + r.consultationFee, 0)
+    : (summaryData?.summary.todayRevenue ?? 0);
 
   const livePendingPayments = allApptLoading
     ? (summaryData?.summary.pendingPayments ?? 0)
@@ -369,6 +387,9 @@ export default function FinancialPage() {
   const displaySummary = summaryData?.summary
     ? {
         ...summaryData.summary,
+        yearlyRevenue:        liveYearlyRevenue,
+        monthlyRevenue:       liveMonthlyRevenue,
+        todayRevenue:         liveTodayRevenue,
         pendingPayments:      livePendingPayments,
         clinicProfit:         liveClinicProfit,
         doctorsTotalEarnings: liveDoctorsTotalEarnings,
@@ -445,9 +466,8 @@ export default function FinancialPage() {
       <RevenueCharts
         daily={summaryData?.daily ?? []}
         monthly={summaryData?.monthly ?? []}
-        doctorRecords={txData?.doctorRecords ?? []}
-        clinicProfit={summaryData?.summary.clinicProfit ?? 0}
-        doctorsTotalEarnings={summaryData?.summary.doctorsTotalEarnings ?? 0}
+        clinicProfit={liveClinicProfit}
+        doctorsTotalEarnings={liveDoctorsTotalEarnings}
         loading={summaryLoading}
       />
 

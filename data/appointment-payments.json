@@ -11,10 +11,6 @@
     "status": "paid",
     "date": "2026-06-13"
   },
-  "6a2c53082c561af8334a70b4": {
-    "status": "paid",
-    "date": "2026-06-13"
-  },
   "6a2c377cc5f9d5e9d141b9fb": {
     "status": "paid",
     "date": "2026-06-13"
@@ -31,5 +27,6 @@
   "6a2cc075cde7df100fd93ceb": {
     "status": "paid",
     "date": "2026-06-13"
-  }
+  },
+  "6a2d9687808dccebfb5f7a1a": "paid"
 }

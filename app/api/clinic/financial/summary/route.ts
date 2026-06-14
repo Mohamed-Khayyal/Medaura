@@ -60,7 +60,13 @@ export async function GET(request: NextRequest) {
     const bookings  = (Array.isArray(bookingsRaw) ? bookingsRaw : []) as RawBooking[];
     const staff     = extractList<RawStaffMember>(staffRaw);
     const store     = readStore();
-    const apptStore = readApptStore();
+    
+    const paymentsRes = await apiClient.get<any>("/api/payments/clinic/financials?limit=10000", { token });
+    const payments = paymentsRes?.payments || [];
+    const apptStore: Record<string, string> = {};
+    for (const p of payments) {
+      apptStore[String(p.booking_id)] = "paid";
+    }
 
     // All summary KPIs now reflect paid appointments only
     const summary = computeSummary(bookings, staff, store, apptStore);

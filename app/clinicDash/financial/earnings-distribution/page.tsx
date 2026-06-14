@@ -7,6 +7,7 @@ import DoctorEarningsTable from "../components/DoctorEarningsTable";
 import ProfitSharingModal from "../components/ProfitSharingModal";
 import FinancialFilters from "../components/FinancialFilters";
 import ExportButtons from "../components/ExportButtons";
+import DoctorEarningsOverview from "../components/DoctorEarningsOverview";
 import { currentMonthStr } from "../lib/calculations";
 import type {
   DoctorFinancialRecord,
@@ -104,15 +105,43 @@ export default function EarningsDistributionPage() {
     bookingId: string | number,
     status: "paid" | "cancelled" | "pending"
   ) => {
-    await fetch("/api/clinic/financial/appointment-payment", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ booking_id: bookingId, status }),
-    });
+    let res;
+    if (status === "paid") {
+      res = await fetch(`/api/payments/clinic/bookings/${bookingId}/confirm`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" }
+      });
+    } else if (status === "pending") {
+      res = await fetch(`/api/payments/clinic/bookings/${bookingId}/undo`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" }
+      });
+    } else {
+      res = await fetch("/api/clinic/financial/appointment-payment", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ booking_id: bookingId, status }),
+      });
+    }
     void fetchTransactions(filters);
   };
 
   const handleReset = () => setFilters({ period: "month" });
+
+  const handleSeedData = async () => {
+    setTxLoading(true);
+    try {
+      // Calling the Clynk backend directly via the apiClient abstraction inside a Next API route would be cleaner,
+      // but we can just use apiClient directly here if it works on client side?
+      // Wait, we can't use apiClient securely on client side without the token.
+      // So we will hit a new Next.js API route: POST /api/clinic/financial/seed
+      await fetch("/api/clinic/financial/seed", { method: "POST" });
+      void fetchTransactions(filters);
+    } catch {
+      setError("تعذر توليد البيانات");
+      setTxLoading(false);
+    }
+  };
 
   const doctorOptions = txData?.doctorRecords.map((r) => ({ id: r.doctorId, name: r.doctorName })) ?? [];
   const specialists   = txData?.specialties ?? [];
@@ -151,6 +180,14 @@ export default function EarningsDistributionPage() {
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={handleSeedData}
+            disabled={txLoading}
+            className="p-2 px-3 rounded-xl border border-blue-500/30 bg-blue-500/10 text-blue-500 hover:bg-blue-500 hover:text-white transition-all shadow-[var(--shadow-soft)] disabled:opacity-50 text-sm font-medium"
+            title="توليد بيانات تجريبية"
+          >
+            توليد بيانات تجريبية
+          </button>
           <ExportButtons records={txData?.doctorRecords ?? []} period={activePeriod} />
           <button
             onClick={() => fetchTransactions(filters)}
@@ -189,6 +226,9 @@ export default function EarningsDistributionPage() {
           ملاحظة هامة: لا يتم احتساب الإيرادات أو حصص الأرباح في الإجماليات السفلية إلا للمواعيد التي اكتملت وتم دفع قيمتها بنجاح.
         </p>
       </div>
+
+      {/* ── Overview Chart ── */}
+      <DoctorEarningsOverview records={txData?.doctorRecords ?? []} loading={txLoading} />
 
       {/* ── Doctor Earnings Sections ── */}
       {txLoading ? (

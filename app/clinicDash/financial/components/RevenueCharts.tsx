@@ -22,7 +22,6 @@ import { formatCurrencyCompact, formatCurrency } from "../lib/calculations";
 interface Props {
   daily: DailyRevenue[];
   monthly: MonthlyRevenue[];
-  doctorRecords: DoctorFinancialRecord[];
   clinicProfit: number;
   doctorsTotalEarnings: number;
   loading: boolean;
@@ -248,82 +247,12 @@ function PieShareChart({
   );
 }
 
-// ── Top Doctors Horizontal Bar ────────────────────────────────────────────────
-function TopDoctorsChart({
-  records,
-  loading,
-}: {
-  records: DoctorFinancialRecord[];
-  loading: boolean;
-}) {
-  const top5 = records
-    .slice()
-    .sort((a, b) => b.totalRevenue - a.totalRevenue)
-    .slice(0, 5)
-    .map((r) => ({
-      name: r.doctorName.split(" ").slice(0, 2).join(" "),
-      revenue: r.totalRevenue,
-    }));
 
-  return (
-    <div className="rounded-2xl border border-(--card-border) bg-(--card-bg) p-5 space-y-4 shadow-[var(--shadow-soft)]">
-      <div>
-        <h3 className="text-sm font-bold text-(--text-primary)">أعلى 5 أطباء إيراداً</h3>
-        <p className="text-xs text-(--text-secondary) mt-0.5">بناءً على المواعيد المكتملة</p>
-      </div>
-      {loading ? (
-        <ChartSkeleton height={240} />
-      ) : top5.length === 0 ? (
-        <div className="flex items-center justify-center h-[240px] text-(--text-secondary) text-sm">
-          لا توجد بيانات حتى الآن
-        </div>
-      ) : (
-        <ResponsiveContainer width="100%" height={240}>
-          <BarChart
-            data={top5}
-            layout="vertical"
-            margin={{ top: 0, right: 10, bottom: 0, left: 0 }}
-          >
-            <defs>
-              <linearGradient id="amberGrad" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.9} />
-                <stop offset="95%" stopColor="#fbbf24" stopOpacity={0.7} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.1)" horizontal={false} />
-            <XAxis
-              type="number"
-              tickFormatter={(v) => formatCurrencyCompact(v)}
-              tick={{ fontSize: 10, fill: "var(--text-secondary, #94a3b8)" }}
-              tickLine={false}
-              axisLine={false}
-            />
-            <YAxis
-              type="category"
-              dataKey="name"
-              hide
-            />
-            <Tooltip content={<CurrencyTooltip />} />
-            <Bar
-              dataKey="revenue"
-              fill="url(#amberGrad)"
-              radius={[0, 6, 6, 0]}
-              maxBarSize={28}
-            >
-              <LabelList dataKey="name" position="center" fill="#1a2340" fontSize={12} fontWeight="bold" />
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      )}
-    </div>
-  );
-}
 
 // ── Main Export ───────────────────────────────────────────────────────────────
 export default function RevenueCharts({
   daily,
   monthly,
-  doctorRecords,
   clinicProfit,
   doctorsTotalEarnings,
   loading,
@@ -333,7 +262,6 @@ export default function RevenueCharts({
       <DailyChart data={daily} loading={loading} />
       <MonthlyChart data={monthly} loading={loading} />
       <PieShareChart clinicProfit={clinicProfit} doctorsTotalEarnings={doctorsTotalEarnings} loading={loading} />
-      <TopDoctorsChart records={doctorRecords} loading={loading} />
     </div>
   );
 }

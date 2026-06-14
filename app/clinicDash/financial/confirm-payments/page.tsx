@@ -90,12 +90,24 @@ export default function ConfirmPaymentsPage() {
       return { ...prev, appointmentRecords: newAppts };
     });
 
-    await fetch("/api/clinic/financial/appointment-payment", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ booking_id: bookingId, status }),
-    });
-
+    let res;
+    if (status === "paid") {
+      res = await fetch(`/api/payments/clinic/bookings/${bookingId}/confirm`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" }
+      });
+    } else if (status === "pending") {
+      res = await fetch(`/api/payments/clinic/bookings/${bookingId}/undo`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" }
+      });
+    } else {
+      res = await fetch("/api/clinic/financial/appointment-payment", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ booking_id: bookingId, status }),
+      });
+    }
     void fetchData(filters);
   };
 

@@ -59,10 +59,19 @@ export async function GET(request: NextRequest) {
 
     // 3. Load configurations & payment states
     const store = readStore();
-    const apptStore = readApptStore();
+    
+    // Fetch real payment records from Clynk backend
+    const isStaff = user?.role?.toLowerCase() === "staff";
+    const endpoint = isStaff ? "/api/payments/staff/financials?limit=10000" : "/api/payments/doctor/financials?limit=10000";
+    const paymentsRes = await apiClient.get<any>(endpoint, { token });
+    const payments = paymentsRes?.payments || [];
+    const apptStore: Record<string, string> = {};
+    for (const p of payments) {
+      apptStore[String(p.booking_id)] = "paid";
+    }
 
     const config = store[String(providerId)] ?? { doctorPercentage: 70, paid: [] };
-    const docPct = config.doctorPercentage;
+    const docPct = isStaff ? 80 : config.doctorPercentage;
     const clinicPct = 100 - docPct;
 
     // 4. Compute filtered appointment records

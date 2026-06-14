@@ -52,15 +52,18 @@ export default function PendingPaymentsPage() {
           case "today": dateFrom = fmt(today); dateTo = fmt(today); break;
           case "week": {
             const s = new Date(today); s.setDate(today.getDate() - 6);
-            dateFrom = fmt(s); dateTo = fmt(today); break;
+            const e = new Date(today); e.setDate(today.getDate() + 7);
+            dateFrom = fmt(s); dateTo = fmt(e); break;
           }
           case "month": {
             const s = new Date(today.getFullYear(), today.getMonth(), 1);
-            dateFrom = fmt(s); dateTo = fmt(today); break;
+            const e = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+            dateFrom = fmt(s); dateTo = fmt(e); break;
           }
           case "year": {
             const s = new Date(today.getFullYear(), 0, 1);
-            dateFrom = fmt(s); dateTo = fmt(today); break;
+            const e = new Date(today.getFullYear(), 11, 31);
+            dateFrom = fmt(s); dateTo = fmt(e); break;
           }
         }
         if (dateFrom) params.set("date_from", dateFrom);
@@ -118,11 +121,24 @@ export default function PendingPaymentsPage() {
       ));
 
       // Persist to server
-      const res = await fetch("/api/clinic/financial/appointment-payment", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ booking_id: bookingId, status }),
-      });
+      let res;
+      if (status === "paid") {
+        res = await fetch(`/api/payments/clinic/bookings/${bookingId}/confirm`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" }
+        });
+      } else if (status === "pending") {
+        res = await fetch(`/api/payments/clinic/bookings/${bookingId}/undo`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" }
+        });
+      } else {
+        res = await fetch("/api/clinic/financial/appointment-payment", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ booking_id: bookingId, status }),
+        });
+      }
       
       if (!res.ok) throw new Error("Failed to update status");
 

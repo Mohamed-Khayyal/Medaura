@@ -190,6 +190,31 @@ export default function TodayAppointmentsTaple() {
     }
   };
 
+  const handleConfirmPayment = async (bookingId: number) => {
+    setActionLoading(bookingId);
+    try {
+      const response = await fetch(`/api/payments/doctor/bookings/${bookingId}/confirm`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+      });
+      const result = await response.json();
+      if (!response.ok || result.success === false) {
+        alert(result.error || (isRtl ? "فشل تأكيد الدفع" : "Failed to confirm payment"));
+        return;
+      }
+      setData((prev) =>
+        prev.map((b) =>
+          b.id === bookingId ? { ...b, status: "confirmed", rawStatus: "confirmed" } : b
+        )
+      );
+    } catch {
+      alert(t("doctorDashPages.todayAppointments.connectionError", locale));
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const openPrescriptionModal = (bookingId: number, patientName: string) => {
     setPrescriptionModal({ open: true, bookingId, patientName });
     setPrescriptionForm({
@@ -391,7 +416,7 @@ export default function TodayAppointmentsTaple() {
                       {booking.rawStatus === "pending" && (
                         <div className="grid grid-cols-2 gap-2">
                           <button
-                            onClick={() => handleUpdateStatus(booking.id, "confirmed")}
+                            onClick={() => handleConfirmPayment(booking.id)}
                             disabled={actionLoading === booking.id}
                             className="flex items-center justify-center gap-1.5 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-xs text-green-700 transition hover:bg-green-100 disabled:opacity-60 font-semibold cursor-pointer"
                           >
@@ -562,7 +587,7 @@ export default function TodayAppointmentsTaple() {
                             {p.rawStatus === "pending" && (
                               <>
                                 <button
-                                  onClick={() => handleUpdateStatus(p.id, "confirmed")}
+                                  onClick={() => handleConfirmPayment(p.id)}
                                   disabled={actionLoading === p.id}
                                   className="flex items-center gap-1 px-2.5 py-1 text-xs rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition border border-green-200 disabled:opacity-60 cursor-pointer font-medium"
                                   title={isRtl ? "تأكيد الدفع" : "Confirm Payment"}
