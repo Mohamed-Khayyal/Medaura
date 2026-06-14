@@ -72,4 +72,16 @@ export const bookingService = {
       { token }
     );
   },
+
+  async updateBookingStatus(
+    bookingId: string | number,
+    status: string,
+    token: string
+  ) {
+    return apiClient.patch(
+      `/api/book/${bookingId}/status`,
+      { status },
+      { token }
+    );
+  },
 };

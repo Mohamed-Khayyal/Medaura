@@ -25,7 +25,7 @@ type NotificationResponseItem = {
 };
 
 function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
-  const { logout, user } = useAuth();
+  const { logout, user, isAuthenticated } = useAuth();
   const locale = useLocale();
   const clinicName = (user?.profile?.name as string) || (locale === "ar" ? "عيادتي" : "My Clinic");
   const [notifOpen, setNotifOpen] = useState(false);
@@ -73,6 +73,7 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
 
   // Fetch notifications
   useEffect(() => {
+    if (!isAuthenticated) return;
     fetch("/api/notifications/list", { credentials: "include" })
       .then((r) => r.json())
       .then((res) => {
@@ -96,7 +97,7 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
         }
       })
       .catch(() => {});
-  }, []);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     const clickHandler = (e: MouseEvent) => {

@@ -3,7 +3,7 @@ import { MapPin, Phone, Star } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 interface ClinicCardData {
-  clinic_id: number;
+  clinic_id: string | number;
   name: string;
   location: string;
   phone: string;

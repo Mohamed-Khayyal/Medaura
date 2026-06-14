@@ -20,6 +20,8 @@ import {
   MapPin,
 } from "lucide-react";
 import type { DoctorProfile } from "@/lib/types/api";
+import { useLocale } from "@/lib/hooks";
+import { t } from "@/i18n";
 
 const API_BASE_URL = "";
 const DOCTORS_API_URL = "/api/doctors";
@@ -55,20 +57,96 @@ const SPECIALTIES = [
   "نسا و توليد",
 ];
 
-const SORT_OPTIONS: { label: string; value: SortKey }[] = [
-  { label: "الأعلى تقييماً", value: "rating" },
-  { label: "السعر: الأقل أولاً", value: "price_asc" },
-  { label: "السعر: الأعلى أولاً", value: "price_desc" },
-  { label: "الاسم أبجدياً", value: "name" },
-];
+const getSpecialtyLabel = (spec: string, locale: string) => {
+  if (locale === "en") {
+    const keys: Record<string, string> = {
+      "جميع التخصصات": "All Specialties",
+      "مخ واعصاب": "Neurology",
+      "عظام": "Orthopedics",
+      "الأورام": "Oncology",
+      "طب الأذن والأنف والحنجرة": "ENT",
+      "طب العيون": "Ophthalmology",
+      "قلب و اوعية دموية": "Cardiology",
+      "صدر و جهاز تنفسي": "Pulmonology",
+      "كلى": "Nephrology",
+      "اسنان": "Dentistry",
+      "اطفال و حديثي الولادة": "Pediatrics",
+      "جلدية": "Dermatology",
+      "نسا و توليد": "OB-GYN"
+    };
+    return keys[spec] || spec;
+  }
+  return spec;
+};
 
-const PRICE_RANGES = [
-  { label: "جميع الأسعار", min: 0, max: Infinity },
-  { label: "أقل من 200 ج.م", min: 0, max: 200 },
-  { label: "200 – 500 ج.م", min: 200, max: 500 },
-  { label: "500 – 1000 ج.م", min: 500, max: 1000 },
-  { label: "أكثر من 1000 ج.م", min: 1000, max: Infinity },
-];
+const getSortOptions = (locale: string) => {
+  if (locale === "en") {
+    return [
+      { label: "Top Rated", value: "rating" as SortKey },
+      { label: "Price: Low to High", value: "price_asc" as SortKey },
+      { label: "Price: High to Low", value: "price_desc" as SortKey },
+      { label: "Alphabetical (A-Z)", value: "name" as SortKey },
+    ];
+  }
+  return [
+    { label: "الأعلى تقييماً", value: "rating" as SortKey },
+    { label: "السعر: الأقل أولاً", value: "price_asc" as SortKey },
+    { label: "السعر: الأعلى أولاً", value: "price_desc" as SortKey },
+    { label: "الاسم أبجدياً", value: "name" as SortKey },
+  ];
+};
+
+const getPriceRanges = (locale: string) => {
+  if (locale === "en") {
+    return [
+      { label: "All Prices", min: 0, max: Infinity },
+      { label: "Under 200 EGP", min: 0, max: 200 },
+      { label: "200 – 500 EGP", min: 200, max: 500 },
+      { label: "500 – 1000 EGP", min: 500, max: 1000 },
+      { label: "Over 1000 EGP", min: 1000, max: Infinity },
+    ];
+  }
+  return [
+    { label: "جميع الأسعار", min: 0, max: Infinity },
+    { label: "أقل من 200 ج.م", min: 0, max: 200 },
+    { label: "200 – 500 ج.م", min: 200, max: 500 },
+    { label: "500 – 1000 ج.م", min: 500, max: 1000 },
+    { label: "أكثر من 1000 ج.م", min: 1000, max: Infinity },
+  ];
+};
+
+const tPage = (key: string, locale: string) => {
+  const translations: Record<string, { en: string; ar: string }> = {
+    badgeText: { en: "Best Certified Doctors in Egypt", ar: "أفضل الأطباء المعتمدين في مصر" },
+    mostBooked: { en: "Most Booked Doctors", ar: "الأطباء الأكثر حجزاً" },
+    doctorsInSpecialty: { en: "Doctors in {specialty}", ar: "أطباء تخصص {specialty}" },
+    availableCountInSpecialty: { en: "{count} available doctors in {specialty}", ar: "{count} طبيب متاح في تخصص {specialty}" },
+    certifiedCountAll: { en: "{count} certified doctors in all specialties", ar: "{count} طبيب موثق في جميع التخصصات" },
+    searchPlaceholder: { en: "Search by doctor name or specialty...", ar: "ابحث باسم الطبيب أو التخصص..." },
+    filterLabelSpecialty: { en: "Select Specialty", ar: "اختر تخصص" },
+    filterLabelPrice: { en: "Consultation Price", ar: "سعر الاستشارة" },
+    filterLabelGender: { en: "Gender", ar: "النوع" },
+    filterLabelSort: { en: "Sort By", ar: "الترتيب" },
+    clearFilters: { en: "Clear Filters", ar: "مسح الفلاتر" },
+    genderAll: { en: "All", ar: "الكل" },
+    genderMale: { en: "Male", ar: "ذكر" },
+    genderFemale: { en: "Female", ar: "أنثى" },
+    sessionFee: { en: "Session Fee", ar: "سعر الجلسة" },
+    workingHours: { en: "Working Hours", ar: "مواعيد العمل" },
+    currency: { en: "EGP", ar: "ج.م" },
+    viewProfile: { en: "View Profile", ar: "عرض الملف الشخصي" },
+    showing: { en: "Showing", ar: "عرض" },
+    of: { en: "of", ar: "من" },
+    doctors: { en: "doctors", ar: "طبيب" },
+    page: { en: "Page", ar: "صفحة" },
+    noDoctors: { en: "No doctors available", ar: "لا يوجد أطباء متاحون" },
+    changeFilters: { en: "Try changing the filters or search for different terms", ar: "حاول تغيير الفلاتر أو ابحث بكلمات مختلفة" },
+    clearAllFilters: { en: "Clear All Filters", ar: "مسح جميع الفلاتر" },
+    loading: { en: "Loading...", ar: "جاري التحميل..." },
+    failedToLoad: { en: "Failed to load data. Please try again.", ar: "حدث خطأ في تحميل البيانات" }
+  };
+  return translations[key]?.[locale === "en" ? "en" : "ar"] || key;
+};
 
 function getDoctorImage(doctor: DoctorWithClinic) {
   return doctor.photo?.trim() || doctor.image?.trim() || DOCTOR_FALLBACK_IMAGE;
@@ -79,7 +157,6 @@ async function getDoctors(): Promise<DoctorWithClinic[]> {
     const response = await fetch(DOCTORS_API_URL);
     const payload = await response.json();
     
-    // Extract doctors list safely supporting both array, bff success-wrapped format, and raw doctors field
     const list = Array.isArray(payload) 
       ? payload 
       : Array.isArray(payload.data)
@@ -113,9 +190,10 @@ function StarRating({ rating }: { rating: number }) {
   );
 }
 
-function DoctorCard({ doctor, index }: { doctor: DoctorWithClinic; index: number }) {
+function DoctorCard({ doctor, index, locale }: { doctor: DoctorWithClinic; index: number; locale: string }) {
   const ratingValue = Number(doctor.average_rating ?? doctor.rating ?? 0);
   const rating = Number.isFinite(ratingValue) ? ratingValue : 0;
+  const isRtl = locale === "ar";
 
   return (
     <article
@@ -125,12 +203,10 @@ function DoctorCard({ doctor, index }: { doctor: DoctorWithClinic; index: number
         animationDelay: `${index * 60}ms`,
       }}
     >
-      {/* Top accent bar */}
       <div className="h-1 w-full bg-gradient-to-r from-[#001a6e] to-[#0036d9]" />
 
       <div className="flex flex-1 flex-col p-5">
-        {/* Header: avatar + name */}
-        <div className="flex items-start gap-4">
+        <div className={`flex items-start gap-4 ${isRtl ? "text-right" : "text-left"}`}>
           <div className="relative shrink-0">
             <div className="relative h-[76px] w-[76px] overflow-hidden rounded-xl bg-[#edf2ff] ring-2 ring-[#001a6e]/10">
               <Image
@@ -141,31 +217,44 @@ function DoctorCard({ doctor, index }: { doctor: DoctorWithClinic; index: number
                 className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
             </div>
-            {/* Rating badge */}
-            <div className="absolute -bottom-2 -right-2 flex items-center gap-0.5 rounded-full bg-[#001a6e] px-2 py-0.5 text-[10px] font-bold text-white shadow-lg">
+            <div className={`absolute -bottom-2 ${isRtl ? "-right-2" : "-left-2"} flex items-center gap-0.5 rounded-full bg-[#001a6e] px-2 py-0.5 text-[10px] font-bold text-white shadow-lg`}>
               <Star className="h-2.5 w-2.5 fill-[#ffd84d] text-[#ffd84d]" />
               <span>{rating.toFixed(1)}</span>
             </div>
           </div>
 
-          <div className="min-w-0 flex-1 text-right">
+          <div className="min-w-0 flex-1">
             <div className="flex items-start justify-between gap-2">
               <div className="flex-1">
                 <h2 className="line-clamp-1 text-[15px] font-bold text-[#0f1b3d]">
                   {doctor.full_name}
                 </h2>
-                <div className="mt-1 flex items-center justify-end gap-1.5">
+                <div className={`mt-1 flex items-center gap-1.5 ${isRtl ? "justify-end" : "justify-start"}`}>
+                  {!isRtl && <Stethoscope className="h-3.5 w-3.5 shrink-0 text-[#001a6e]" />}
                   <span className="text-[12px] font-semibold text-[#001a6e]">
-                    {doctor.specialist}
+                    {t("doctorCard.consultant", locale)} {getSpecialtyLabel(doctor.specialist || "", locale)}
                   </span>
-                  <Stethoscope className="h-3.5 w-3.5 shrink-0 text-[#001a6e]" />
+                  {isRtl && <Stethoscope className="h-3.5 w-3.5 shrink-0 text-[#001a6e]" />}
                 </div>
-                <div className="mt-1.5 flex items-center justify-end gap-1">
-                  <StarRating rating={rating} />
-                  {doctor.total_ratings != null && (
-                    <span className="text-[11px] text-gray-400">
-                      ({doctor.total_ratings})
-                    </span>
+                <div className={`mt-1.5 flex items-center gap-1 ${isRtl ? "justify-end" : "justify-start"}`}>
+                  {isRtl ? (
+                    <>
+                      <StarRating rating={rating} />
+                      {doctor.total_ratings != null && (
+                        <span className="text-[11px] text-gray-400">
+                          ({doctor.total_ratings})
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      {doctor.total_ratings != null && (
+                        <span className="text-[11px] text-gray-400">
+                          ({doctor.total_ratings})
+                        </span>
+                      )}
+                      <StarRating rating={rating} />
+                    </>
                   )}
                 </div>
               </div>
@@ -173,43 +262,50 @@ function DoctorCard({ doctor, index }: { doctor: DoctorWithClinic; index: number
           </div>
         </div>
 
-        {/* Divider */}
         <div className="my-4 h-px bg-gray-100" />
 
-        {/* Info row */}
-        <div className="grid grid-cols-2 gap-3 text-right">
-          <div className="flex flex-col items-end rounded-xl bg-[#f7f9ff] p-3">
-            <p className="text-[11px] font-medium text-gray-400">سعر الجلسة</p>
+        <div className={`grid grid-cols-2 gap-3 ${isRtl ? "text-right" : "text-left"}`}>
+          <div className={`flex flex-col rounded-xl bg-[#f7f9ff] p-3 ${isRtl ? "items-end" : "items-start"}`}>
+            <p className="text-[11px] font-medium text-gray-400">{tPage("sessionFee", locale)}</p>
             <p className="mt-1 text-[15px] font-bold text-[#001a6e]">
-              {doctor.consultation_price}
-              <span className="text-[11px] font-medium"> ج.م</span>
+              {isRtl ? (
+                <>
+                  {doctor.consultation_price}
+                  <span className="text-[11px] font-medium"> {tPage("currency", locale)}</span>
+                </>
+              ) : (
+                <>
+                  <span className="text-[11px] font-medium">{tPage("currency", locale)} </span>
+                  {doctor.consultation_price}
+                </>
+              )}
             </p>
           </div>
-          <div className="flex flex-col items-end rounded-xl bg-[#f7f9ff] p-3">
-            <p className="text-[11px] font-medium text-gray-400">مواعيد العمل</p>
+          <div className={`flex flex-col rounded-xl bg-[#f7f9ff] p-3 ${isRtl ? "items-end" : "items-start"}`}>
+            <p className="text-[11px] font-medium text-gray-400">{tPage("workingHours", locale)}</p>
             <div className="mt-1 flex items-center gap-1">
+              {!isRtl && <Clock className="h-3 w-3 shrink-0 text-[#001a6e]" />}
               <p className="text-[13px] font-bold text-[#001a6e]">
                 {doctor.work_from} – {doctor.work_to}
               </p>
-              <Clock className="h-3 w-3 shrink-0 text-[#001a6e]" />
+              {isRtl && <Clock className="h-3 w-3 shrink-0 text-[#001a6e]" />}
             </div>
           </div>
         </div>
 
-        {/* Location row */}
         {doctor.location && (
-          <div className="mt-3 flex items-center justify-end gap-2 rounded-xl bg-[#f8fafc] px-3 py-2 text-right">
+          <div className={`mt-3 flex items-center gap-2 rounded-xl bg-[#f8fafc] px-3 py-2 ${isRtl ? "justify-end text-right" : "justify-start text-left"}`}>
+            {!isRtl && <MapPin className="h-3.5 w-3.5 shrink-0 text-[#001a6e]" />}
             <span className="text-[12px] font-medium text-[#475569]">{doctor.location}</span>
-            <MapPin className="h-3.5 w-3.5 shrink-0 text-[#001a6e]" />
+            {isRtl && <MapPin className="h-3.5 w-3.5 shrink-0 text-[#001a6e]" />}
           </div>
         )}
 
-        {/* CTA */}
         <Link
           href={`/doctors/${doctor.id}`}
           className="mt-4 flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#001a6e] to-[#0036d9] text-[13px] font-semibold text-white shadow-md shadow-[#001a6e]/20 transition-all duration-200 hover:shadow-lg hover:shadow-[#001a6e]/30 hover:brightness-110"
         >
-          عرض الملف الشخصي
+          {tPage("viewProfile", locale)}
           <BadgeCheck className="h-4 w-4" />
         </Link>
       </div>
@@ -223,12 +319,14 @@ function DropdownFilter<T extends string>({
   options,
   value,
   onChange,
+  isRtl,
 }: {
   label: string;
   icon: React.ReactNode;
   options: { label: string; value: T }[];
   value: T;
   onChange: (v: T) => void;
+  isRtl: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -265,7 +363,7 @@ function DropdownFilter<T extends string>({
       </button>
 
       {open && (
-        <div className="absolute right-0 top-[calc(100%+6px)] z-50 min-w-[170px] overflow-hidden rounded-xl border border-[#e6eaf0] bg-white shadow-[0_16px_48px_rgba(0,26,110,0.14)]">
+        <div className={`absolute ${isRtl ? "right-0" : "left-0"} top-[calc(100%+6px)] z-50 min-w-[170px] overflow-hidden rounded-xl border border-[#e6eaf0] bg-white shadow-[0_16px_48px_rgba(0,26,110,0.14)]`}>
           {options.map((opt) => (
             <button
               key={opt.value}
@@ -274,7 +372,7 @@ function DropdownFilter<T extends string>({
                 onChange(opt.value);
                 setOpen(false);
               }}
-              className={`flex w-full items-center justify-end px-4 py-2.5 text-right text-[13px] font-medium transition-colors ${
+              className={`flex w-full items-center ${isRtl ? "justify-end text-right" : "justify-start text-left"} px-4 py-2.5 text-[13px] font-medium transition-colors ${
                 value === opt.value
                   ? "bg-[#001a6e] text-white"
                   : "text-[#0f1b3d] hover:bg-[#f0f4ff]"
@@ -320,6 +418,9 @@ function DoctorsPageContent() {
   const searchParams = useSearchParams();
   const urlSpecialist = searchParams?.get("specialist")?.trim() || "";
 
+  const locale = useLocale();
+  const isRtl = locale === "ar";
+
   const [allDoctors, setAllDoctors] = useState<DoctorWithClinic[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -343,13 +444,13 @@ function DoctorsPageContent() {
         const data = await getDoctors();
         setAllDoctors(data);
       } catch (e) {
-        setError(e instanceof Error ? e.message : "حدث خطأ في تحميل البيانات");
+        setError(tPage("failedToLoad", locale));
       } finally {
         setLoading(false);
       }
     }
     load();
-  }, []);
+  }, [locale]);
 
   // Sync specialty filter whenever the URL ?specialist param changes
   useEffect(() => {
@@ -366,22 +467,18 @@ function DoctorsPageContent() {
   // Client-side filtering & sorting
   const filtered = allDoctors
     .filter((d) => {
-      // Specialty filter — trim both sides to guard against trailing spaces
       if (
         specialtyFilter !== "جميع التخصصات" &&
         d.specialist?.trim() !== specialtyFilter.trim()
       )
         return false;
-      // Price range
-      const range = PRICE_RANGES[priceRangeIdx];
+      const range = getPriceRanges(locale)[priceRangeIdx];
       if (
         d.consultation_price < range.min ||
         d.consultation_price > range.max
       )
         return false;
-      // Gender
       if (gender !== "all" && d.gender && d.gender !== gender) return false;
-      // Search
       if (
         searchInput.trim() &&
         !d.full_name.includes(searchInput.trim()) &&
@@ -402,7 +499,7 @@ function DoctorsPageContent() {
         case "price_desc":
           return b.consultation_price - a.consultation_price;
         case "name":
-          return a.full_name.localeCompare(b.full_name, "ar");
+          return a.full_name.localeCompare(b.full_name, locale);
         default:
           return 0;
       }
@@ -441,24 +538,26 @@ function DoctorsPageContent() {
   }
 
   return (
-    <main dir="rtl" className="min-h-screen pb-20 pt-28" style={{ background: "linear-gradient(160deg, #f5f7ff 0%, #f9fafb 100%)" }}>
+    <main dir={isRtl ? "rtl" : "ltr"} className="min-h-screen pb-20 pt-28" style={{ background: "linear-gradient(160deg, #f5f7ff 0%, #f9fafb 100%)" }}>
       <section className="mx-auto w-full max-w-[1260px] px-4">
 
         {/* ── Hero header ── */}
         <header className="text-center">
           <div className="inline-flex items-center gap-2 rounded-full bg-[#001a6e]/8 px-4 py-1.5 text-[13px] font-semibold text-[#001a6e] mb-4">
             <Stethoscope className="h-4 w-4" />
-            <span>أفضل الأطباء المعتمدين في مصر</span>
+            <span>{tPage("badgeText", locale)}</span>
           </div>
           <h1 className="text-[32px] font-bold leading-tight text-[#0f1b3d] sm:text-[44px]">
             {urlSpecialist
-              ? `أطباء تخصص ${urlSpecialist}`
-              : "الأطباء الأكثر حجزاً"}
+              ? tPage("doctorsInSpecialty", locale).replace("{specialty}", getSpecialtyLabel(urlSpecialist, locale))
+              : tPage("mostBooked", locale)}
           </h1>
           <p className="mt-2 text-[16px] font-medium text-[#8b93a5]">
             {urlSpecialist
-              ? `${filtered.length} طبيب متاح في تخصص ${urlSpecialist}`
-              : `${allDoctors.length} طبيب موثق في جميع التخصصات`}
+              ? tPage("availableCountInSpecialty", locale)
+                  .replace("{count}", String(filtered.length))
+                  .replace("{specialty}", getSpecialtyLabel(urlSpecialist, locale))
+              : tPage("certifiedCountAll", locale).replace("{count}", String(allDoctors.length))}
           </p>
         </header>
 
@@ -470,8 +569,8 @@ function DoctorsPageContent() {
               type="text"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="ابحث باسم الطبيب أو التخصص..."
-              className="flex-1 bg-transparent text-right text-[14px] text-[#0f1b3d] placeholder:text-[#8b93a5] outline-none"
+              placeholder={tPage("searchPlaceholder", locale)}
+              className={`flex-1 bg-transparent ${isRtl ? "text-right" : "text-left"} text-[14px] text-[#0f1b3d] placeholder:text-[#8b93a5] outline-none`}
             />
             {searchInput && (
               <button onClick={() => setSearchInput("")} className="text-[#8b93a5] hover:text-[#001a6e]">
@@ -486,43 +585,47 @@ function DoctorsPageContent() {
           <SlidersHorizontal className="h-4 w-4 text-[#8b93a5]" />
 
           <DropdownFilter
-            label="اختر تخصص"
+            label={tPage("filterLabelSpecialty", locale)}
             icon={<Stethoscope className="h-3.5 w-3.5 shrink-0" />}
-            options={SPECIALTIES.map((s) => ({ label: s, value: s }))}
+            options={SPECIALTIES.map((s) => ({ label: getSpecialtyLabel(s, locale), value: s }))}
             value={specialtyFilter}
             onChange={(v) => {
               setSpecialtyFilter(v);
               if (v === "جميع التخصصات") router.push("/doctors");
               else router.push(`/doctors?specialist=${encodeURIComponent(v)}`);
             }}
+            isRtl={isRtl}
           />
 
           <DropdownFilter
-            label="سعر الاستشارة"
-            icon={<span className="text-[11px] font-bold">ج.م</span>}
-            options={PRICE_RANGES.map((r, i) => ({ label: r.label, value: String(i) as any }))}
+            label={tPage("filterLabelPrice", locale)}
+            icon={<span className="text-[11px] font-bold">{tPage("currency", locale)}</span>}
+            options={getPriceRanges(locale).map((r, i) => ({ label: r.label, value: String(i) as any }))}
             value={String(priceRangeIdx) as any}
             onChange={(v) => setPriceRangeIdx(Number(v))}
+            isRtl={isRtl}
           />
 
           <DropdownFilter
-            label="النوع"
+            label={tPage("filterLabelGender", locale)}
             icon={<UserRound className="h-3.5 w-3.5 shrink-0" />}
             options={[
-              { label: "الكل", value: "all" as GenderFilter },
-              { label: "ذكر", value: "male" as GenderFilter },
-              { label: "أنثى", value: "female" as GenderFilter },
+              { label: tPage("genderAll", locale), value: "all" as GenderFilter },
+              { label: tPage("genderMale", locale), value: "male" as GenderFilter },
+              { label: tPage("genderFemale", locale), value: "female" as GenderFilter },
             ]}
             value={gender}
             onChange={setGender}
+            isRtl={isRtl}
           />
 
           <DropdownFilter
-            label="الترتيب"
+            label={tPage("filterLabelSort", locale)}
             icon={<ArrowUpDown className="h-3.5 w-3.5 shrink-0" />}
-            options={SORT_OPTIONS}
+            options={getSortOptions(locale)}
             value={sortKey}
             onChange={setSortKey}
+            isRtl={isRtl}
           />
 
           {hasActiveFilters && (
@@ -532,7 +635,7 @@ function DoctorsPageContent() {
               className="flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[12px] font-semibold text-red-600 transition hover:bg-red-100"
             >
               <X className="h-3.5 w-3.5" />
-              مسح الفلاتر
+              {tPage("clearFilters", locale)}
             </button>
           )}
         </div>
@@ -541,18 +644,18 @@ function DoctorsPageContent() {
         {!loading && !error && (
           <div className="mt-6 flex items-center justify-between text-[13px] text-[#8b93a5]">
             <span>
-              عرض{" "}
+              {tPage("showing", locale)}{" "}
               <span className="font-bold text-[#0f1b3d]">
                 {Math.min((page - 1) * PAGE_SIZE + 1, filtered.length)} –{" "}
                 {Math.min(page * PAGE_SIZE, filtered.length)}
               </span>{" "}
-              من{" "}
+              {tPage("of", locale)}{" "}
               <span className="font-bold text-[#0f1b3d]">{filtered.length}</span>{" "}
-              طبيب
+              {tPage("doctors", locale)}
             </span>
             <span>
-              صفحة{" "}
-              <span className="font-bold text-[#0f1b3d]">{page}</span> من{" "}
+              {tPage("page", locale)}{" "}
+              <span className="font-bold text-[#0f1b3d]">{page}</span> {tPage("of", locale)}{" "}
               <span className="font-bold text-[#0f1b3d]">{totalPages}</span>
             </span>
           </div>
@@ -584,17 +687,17 @@ function DoctorsPageContent() {
               <Stethoscope className="h-10 w-10 text-[#001a6e]/40" />
             </div>
             <p className="text-[18px] font-bold text-[#0f1b3d]">
-              لا يوجد أطباء متاحون
+              {tPage("noDoctors", locale)}
             </p>
             <p className="text-[14px] text-[#8b93a5]">
-              حاول تغيير الفلاتر أو ابحث بكلمات مختلفة
+              {tPage("changeFilters", locale)}
             </p>
             {hasActiveFilters && (
               <button
                 onClick={clearFilters}
                 className="mt-2 rounded-xl bg-[#001a6e] px-6 py-2.5 text-[13px] font-semibold text-white hover:opacity-90"
               >
-                مسح جميع الفلاتر
+                {tPage("clearAllFilters", locale)}
               </button>
             )}
           </div>
@@ -604,7 +707,7 @@ function DoctorsPageContent() {
         {!loading && !error && filtered.length > 0 && (
           <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {paginated.map((doctor, index) => (
-              <DoctorCard key={doctor.id ?? index} doctor={doctor} index={index} />
+              <DoctorCard key={doctor.id ?? index} doctor={doctor} index={index} locale={locale} />
             ))}
           </div>
         )}
@@ -616,9 +719,9 @@ function DoctorsPageContent() {
               onClick={() => setPage((p) => Math.max(p - 1, 1))}
               disabled={page === 1}
               className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#dbe2f5] bg-white text-[#001a6e] shadow-sm transition-all hover:border-[#001a6e] hover:bg-[#f0f4ff] disabled:cursor-not-allowed disabled:opacity-40"
-              aria-label="الصفحة السابقة"
+              aria-label="Previous Page"
             >
-              <ChevronRight className="h-4 w-4" />
+              {isRtl ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
             </button>
 
             <div className="flex items-center gap-1.5">
@@ -650,9 +753,9 @@ function DoctorsPageContent() {
               onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
               disabled={page === totalPages}
               className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#dbe2f5] bg-white text-[#001a6e] shadow-sm transition-all hover:border-[#001a6e] hover:bg-[#f0f4ff] disabled:cursor-not-allowed disabled:opacity-40"
-              aria-label="الصفحة التالية"
+              aria-label="Next Page"
             >
-              <ChevronLeft className="h-4 w-4" />
+              {isRtl ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
             </button>
           </div>
         )}
@@ -662,12 +765,20 @@ function DoctorsPageContent() {
 }
 
 export default function DoctorsPage() {
+  const [locale, setLocale] = useState("ar");
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setLocale(localStorage.getItem("locale") || "ar");
+    }
+  }, []);
+  const loadingText = locale === "en" ? "Loading..." : "جاري التحميل...";
+
   return (
     <Suspense fallback={
       <div className="flex min-h-screen items-center justify-center bg-[#f8faff]">
         <div className="text-center">
           <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#001a6e] border-t-transparent mx-auto"></div>
-          <p className="mt-4 text-sm text-gray-500 font-semibold">جاري التحميل...</p>
+          <p className="mt-4 text-sm text-gray-500 font-semibold">{loadingText}</p>
         </div>
       </div>
     }>

@@ -161,14 +161,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       method: "POST",
       credentials: "include",
     })
-      .then(() => undefined)
-      .catch(() => undefined);
+      .then((res) => {
+        if (!res.ok) {
+          return false;
+        }
+        return true;
+      })
+      .catch(() => false);
 
-    setInitialRefreshPromise(refreshPromise);
+    setInitialRefreshPromise(refreshPromise.then(() => undefined));
 
-    refreshPromise.finally(() => {
+    refreshPromise.then((isSuccess) => {
       if (!cancelled) {
-        checkAuth();
+        if (isSuccess) {
+          checkAuth();
+        } else {
+          setLoading(false);
+        }
       }
     });
 

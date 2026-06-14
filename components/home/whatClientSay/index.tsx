@@ -1,26 +1,18 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useLocale } from "@/lib/hooks";
 import { t } from "@/i18n";
 import { motion } from "framer-motion";
 
 export default function WhatClientSay() {
-  const [locale, setLocale] = useState("ar");
-
-  useEffect(() => {
-    function onLocale(e: any) {
-      setLocale(e?.detail || "ar");
-    }
-    window.addEventListener("localeChange", onLocale as EventListener);
-    return () =>
-      window.removeEventListener("localeChange", onLocale as EventListener);
-  }, []);
+  const locale = useLocale();
 
   const testimonials = t("whatClientSay.testimonials", locale) as any[];
 
   return (
     <motion.section
+      key={locale}
       initial={{ opacity: 0, y: 60 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.2 }}

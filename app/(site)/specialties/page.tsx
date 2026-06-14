@@ -7,6 +7,7 @@ import {
   Bone,
   Brain,
   ChevronLeft,
+  ChevronRight,
   Droplet,
   Droplets,
   Ear,
@@ -18,6 +19,7 @@ import {
   Syringe,
   X,
 } from "lucide-react";
+import { useLocale } from "@/lib/hooks";
 
 const API_BASE = "/api";
 
@@ -141,7 +143,6 @@ async function fetchCountForSpecialty(apiLabel: string): Promise<number> {
     );
     if (!res.ok) return 0;
     const data = await res.json();
-    // API returns { results: N, doctors: [...] } — prefer the results field
     if (typeof data.results === "number") return data.results;
     if (typeof data.count === "number") return data.count;
     const doctors: unknown[] = data.doctors ?? data.data ?? [];
@@ -150,6 +151,35 @@ async function fetchCountForSpecialty(apiLabel: string): Promise<number> {
     return 0;
   }
 }
+
+// ── Local Translation Dictionary ──────────────────────────────────────────────
+const tPage = (key: string, locale: string) => {
+  const translations: Record<string, { en: string; ar: string }> = {
+    allSpecialties: { en: "All Medical Specialties", ar: "جميع التخصصات الطبية" },
+    chooseSpecialty: { en: "Choose the Right Specialty", ar: "اختر التخصص المناسب" },
+    chooseDesc: { en: "Book your appointment with the best doctors in minutes", ar: "احجز موعدك مع أفضل الأطباء في غضون دقائق" },
+    specialtyStats: { en: "Medical Specialties", ar: "تخصص طبي" },
+    availableDoctors: { en: "Available Doctors", ar: "طبيب متاح" },
+    searchPlaceholder: { en: "Search for a specialty...", ar: "ابحث عن تخصص..." },
+    searchResults: { en: "Search Results", ar: "نتائج البحث" },
+    medicalSpecialtiesTitle: { en: "Medical Specialties", ar: "التخصصات الطبية" },
+    viewAllDoctors: { en: "View all doctors", ar: "عرض كل الأطباء" },
+    retry: { en: "Retry", ar: "إعادة المحاولة" },
+    noResultsFor: { en: "No results for", ar: "لا توجد نتائج لـ" },
+    tryDifferentSearch: { en: "Try a different search term", ar: "جرب كلمة بحث مختلفة" },
+    clearSearch: { en: "Clear search", ar: "مسح البحث" },
+    viewDoctors: { en: "View Doctors", ar: "عرض الأطباء" },
+    failedToLoad: { en: "Failed to load specialties. Please try again.", ar: "فشل في تحميل التخصصات. حاول مرة أخرى." }
+  };
+  return translations[key]?.[locale === "en" ? "en" : "ar"] || key;
+};
+
+const getDoctorCountLabel = (count: number, locale: string) => {
+  if (locale === "en") {
+    return `${count} ${count === 1 ? "Doctor" : "Doctors"}`;
+  }
+  return `${count} طبيب`;
+};
 
 // ── Skeleton card ─────────────────────────────────────────────────────────────
 function SkeletonCard() {
@@ -168,6 +198,8 @@ function SkeletonCard() {
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function SpecialtiesPage() {
+  const locale = useLocale();
+  const isRtl = locale === "ar";
   const [search, setSearch] = useState("");
   const [specialties, setSpecialties] = useState<SpecialtyWithCount[]>([]);
   const [loading, setLoading] = useState(true);
@@ -186,11 +218,11 @@ export default function SpecialtiesPage() {
       );
       setSpecialties(results);
     } catch {
-      setError("فشل في تحميل التخصصات. حاول مرة أخرى.");
+      setError(tPage("failedToLoad", locale));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [locale]);
 
   // Fetch on mount
   useEffect(() => {
@@ -223,7 +255,7 @@ export default function SpecialtiesPage() {
 
   return (
     <main
-      dir="rtl"
+      dir={isRtl ? "rtl" : "ltr"}
       className="min-h-screen pb-20 pt-28"
       style={{ background: "linear-gradient(160deg,#f5f7ff 0%,#f9fafb 100%)" }}
     >
@@ -233,13 +265,13 @@ export default function SpecialtiesPage() {
         <header className="text-center">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-[#001a6e]/8 px-4 py-1.5 text-[13px] font-semibold text-[#001a6e]">
             <Stethoscope className="h-4 w-4" />
-            <span>جميع التخصصات الطبية</span>
+            <span>{tPage("allSpecialties", locale)}</span>
           </div>
           <h1 className="text-[32px] font-extrabold leading-tight text-[#0f1a4f] sm:text-[44px]">
-            اختر التخصص المناسب
+            {tPage("chooseSpecialty", locale)}
           </h1>
           <p className="mt-2 text-[17px] font-medium text-[#8a96b2]">
-            احجز موعدك مع أفضل الأطباء في غضون دقائق
+            {tPage("chooseDesc", locale)}
           </p>
 
           {/* Stats */}
@@ -249,14 +281,14 @@ export default function SpecialtiesPage() {
                 <span className="text-[20px] font-extrabold text-[#0f1a4f]">
                   {SPECIALTY_DEFS.length}
                 </span>{" "}
-                تخصص طبي
+                {tPage("specialtyStats", locale)}
               </span>
               <span className="text-[#d0d8f0]">•</span>
               <span>
                 <span className="text-[20px] font-extrabold text-[#0f1a4f]">
                   {totalDoctors}+
                 </span>{" "}
-                طبيب متاح
+                {tPage("availableDoctors", locale)}
               </span>
             </div>
           )}
@@ -270,8 +302,8 @@ export default function SpecialtiesPage() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="ابحث عن تخصص..."
-              className="flex-1 bg-transparent text-right text-[14px] text-[#0f1b3d] placeholder:text-[#8b93a5] outline-none"
+              placeholder={tPage("searchPlaceholder", locale)}
+              className={`flex-1 bg-transparent ${isRtl ? "text-right" : "text-left"} text-[14px] text-[#0f1b3d] placeholder:text-[#8b93a5] outline-none`}
             />
             {search && (
               <button
@@ -288,15 +320,15 @@ export default function SpecialtiesPage() {
         <div className="mt-10 flex items-center justify-between">
           <h2 className="text-[22px] font-bold text-[#0f1a4f]">
             {search.trim()
-              ? `نتائج البحث (${filtered.length})`
-              : "التخصصات الطبية"}
+              ? `${tPage("searchResults", locale)} (${filtered.length})`
+              : tPage("medicalSpecialtiesTitle", locale)}
           </h2>
           <Link
             href="/doctors"
             className="inline-flex items-center gap-1 text-[14px] font-semibold text-[#22459f] transition hover:opacity-75"
           >
-            عرض كل الأطباء
-            <ChevronLeft size={16} />
+            {tPage("viewAllDoctors", locale)}
+            {isRtl ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
           </Link>
         </div>
 
@@ -308,7 +340,7 @@ export default function SpecialtiesPage() {
               onClick={() => window.location.reload()}
               className="rounded-xl bg-red-600 px-5 py-2 text-[13px] font-semibold text-white hover:opacity-90"
             >
-              إعادة المحاولة
+              {tPage("retry", locale)}
             </button>
           </div>
         )}
@@ -329,16 +361,16 @@ export default function SpecialtiesPage() {
               <Search className="h-9 w-9 text-[#001a6e]/30" />
             </div>
             <p className="text-[17px] font-bold text-[#0f1b3d]">
-              لا توجد نتائج لـ "{search}"
+              {tPage("noResultsFor", locale)} "{search}"
             </p>
             <p className="text-[13px] text-gray-400">
-              جرب كلمة بحث مختلفة
+              {tPage("tryDifferentSearch", locale)}
             </p>
             <button
               onClick={() => setSearch("")}
               className="mt-1 rounded-xl bg-[#001a6e] px-5 py-2 text-[13px] font-semibold text-white hover:opacity-90"
             >
-              مسح البحث
+              {tPage("clearSearch", locale)}
             </button>
           </div>
         )}
@@ -347,7 +379,7 @@ export default function SpecialtiesPage() {
         {!loading && !error && filtered.length > 0 && (
           <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
             {filtered.map((item, idx) => (
-              <SpecialtyCard key={item.key} item={item} idx={idx} />
+              <SpecialtyCard key={item.key} item={item} idx={idx} locale={locale} />
             ))}
           </div>
         )}
@@ -360,10 +392,13 @@ export default function SpecialtiesPage() {
 function SpecialtyCard({
   item,
   idx,
+  locale,
 }: {
   item: SpecialtyWithCount;
   idx: number;
+  locale: string;
 }) {
+  const isRtl = locale === "ar";
   return (
     <Link
       href={`/doctors?specialist=${encodeURIComponent(item.apiLabel)}`}
@@ -383,23 +418,22 @@ function SpecialtyCard({
 
         {/* Title */}
         <h3 className="mt-3 text-[14px] font-bold leading-5 text-[#0f1a4f]">
-          {item.titleAr}
+          {isRtl ? item.titleAr : item.titleEn}
         </h3>
         <p className="mt-0.5 text-[11px] font-medium text-[#8a96b2]">
-          {item.titleEn}
+          {isRtl ? item.titleEn : item.titleAr}
         </p>
 
         {/* Doctor count badge */}
         <div className="mt-3 flex items-center gap-1.5 rounded-full bg-[#f0f4ff] px-3 py-1 text-[12px] font-bold text-[#22459f]">
-          <span>{item.count}</span>
-          <span className="font-medium text-[#5a6ea8]">طبيب</span>
+          <span>{getDoctorCountLabel(item.count, locale)}</span>
         </div>
 
         {/* CTA */}
         <div
           className={`mt-3 w-full rounded-xl bg-gradient-to-r ${item.gradient} py-2 text-[12px] font-semibold text-white opacity-0 shadow-sm transition-all duration-200 group-hover:opacity-100`}
         >
-          عرض الأطباء
+          {tPage("viewDoctors", locale)}
         </div>
       </div>
     </Link>

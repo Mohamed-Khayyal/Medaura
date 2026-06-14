@@ -92,7 +92,8 @@ function getMethodStyle(method?: string) {
 
 function getRoleStyle(role?: string) {
   const r = role?.toLowerCase();
-  if (r === "admin") return "bg-[#1f6feb]/10 text-[#1f6feb] border-[#1f6feb]/20";
+  if (r === "admin")
+    return "bg-[#1f6feb]/10 text-[#1f6feb] border-[#1f6feb]/20";
   if (r === "doctor") return "bg-violet-50 text-violet-700 border-violet-200";
   if (r === "patient") return "bg-teal-50 text-teal-700 border-teal-200";
   if (r === "clinic") return "bg-amber-50 text-amber-700 border-amber-200";
@@ -142,7 +143,8 @@ function getActorName(log: AuditLog) {
 function getActorEmail(log: AuditLog) {
   if (log.actor_email) return log.actor_email;
   const body = log.body && typeof log.body === "object" ? log.body : null;
-  if (body && "email" in body && typeof body.email === "string") return body.email;
+  if (body && "email" in body && typeof body.email === "string")
+    return body.email;
   return null;
 }
 
@@ -178,12 +180,16 @@ interface StatCardProps {
 function StatCard({ label, value, icon, color, bgColor }: StatCardProps) {
   return (
     <div className="flex items-center gap-3 bg-white border border-[#e6eaf0] rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow">
-      <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${bgColor}`}>
+      <div
+        className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${bgColor}`}
+      >
         <span className={color}>{icon}</span>
       </div>
       <div>
         <p className="text-xs text-[#5e6b85] mb-0.5">{label}</p>
-        <p className="text-2xl font-bold text-[#0f1b3d] leading-none">{value.toLocaleString()}</p>
+        <p className="text-2xl font-bold text-[#0f1b3d] leading-none">
+          {value.toLocaleString()}
+        </p>
       </div>
     </div>
   );
@@ -225,12 +231,13 @@ export default function AuditLogsPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [filters, setFilters] = useState<Filters>(INITIAL_FILTERS);
-  const [pendingFilters, setPendingFilters] = useState<Filters>(INITIAL_FILTERS);
+  const [pendingFilters, setPendingFilters] =
+    useState<Filters>(INITIAL_FILTERS);
   const fetchController = useRef<AbortController | null>(null);
 
   const hasActiveFilters = useMemo(
     () => Object.values(filters).some((v) => v !== ""),
-    [filters]
+    [filters],
   );
 
   // Build fetch URL from backend-side filters (role, method, location)
@@ -284,12 +291,14 @@ export default function AuditLogsPage() {
         }
       } catch (err: unknown) {
         if (err instanceof Error && err.name === "AbortError") return;
-        setError(err instanceof Error ? err.message : "Failed to load audit data");
+        setError(
+          err instanceof Error ? err.message : "Failed to load audit data",
+        );
       } finally {
         setLoading(false);
       }
     },
-    [buildFetchUrl]
+    [buildFetchUrl],
   );
 
   useEffect(() => {
@@ -307,7 +316,7 @@ export default function AuditLogsPage() {
         (l) =>
           l.path?.toLowerCase().includes(q) ||
           l.action?.toLowerCase().includes(q) ||
-          l.method?.toLowerCase().includes(q)
+          l.method?.toLowerCase().includes(q),
       );
     }
 
@@ -315,7 +324,7 @@ export default function AuditLogsPage() {
       const from = Date.parse(filters.dateFrom);
       if (!Number.isNaN(from)) {
         result = result.filter(
-          (l) => l.timestamp && Date.parse(l.timestamp) >= from
+          (l) => l.timestamp && Date.parse(l.timestamp) >= from,
         );
       }
     }
@@ -324,7 +333,7 @@ export default function AuditLogsPage() {
       const to = Date.parse(filters.dateTo + "T23:59:59");
       if (!Number.isNaN(to)) {
         result = result.filter(
-          (l) => l.timestamp && Date.parse(l.timestamp) <= to
+          (l) => l.timestamp && Date.parse(l.timestamp) <= to,
         );
       }
     }
@@ -335,18 +344,18 @@ export default function AuditLogsPage() {
         result = result.filter(
           (l) =>
             l.level?.toLowerCase() === "success" ||
-            (typeof l.status_code === "number" && l.status_code >= 200 && l.status_code < 400)
+            (typeof l.status_code === "number" &&
+              l.status_code >= 200 &&
+              l.status_code < 400),
         );
       } else if (statusFilter === "failed") {
         result = result.filter(
           (l) =>
             l.level?.toLowerCase() === "failed" ||
-            (typeof l.status_code === "number" && l.status_code >= 400)
+            (typeof l.status_code === "number" && l.status_code >= 400),
         );
       } else if (statusFilter === "error") {
-        result = result.filter(
-          (l) => l.level?.toLowerCase() === "error"
-        );
+        result = result.filter((l) => l.level?.toLowerCase() === "error");
       }
     }
 
@@ -426,8 +435,13 @@ export default function AuditLogsPage() {
     `${log.id ?? "log"}-${index}`;
 
   const handleClearLogs = async () => {
-    if (!window.confirm("Are you sure you want to delete all audit logs? This action cannot be undone.")) return;
-    
+    if (
+      !window.confirm(
+        "Are you sure you want to delete all audit logs? This action cannot be undone.",
+      )
+    )
+      return;
+
     setLoading(true);
     try {
       const res = await fetch("/api/admin/audit-logs", {
@@ -558,7 +572,10 @@ export default function AuditLogsPage() {
                 Search Path / Action
               </label>
               <div className="relative">
-                <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#a0aab8]" />
+                <Search
+                  size={14}
+                  className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#a0aab8]"
+                />
                 <input
                   type="text"
                   value={pendingFilters.search}
@@ -579,7 +596,10 @@ export default function AuditLogsPage() {
               <select
                 value={pendingFilters.actor_role}
                 onChange={(e) =>
-                  setPendingFilters((p) => ({ ...p, actor_role: e.target.value }))
+                  setPendingFilters((p) => ({
+                    ...p,
+                    actor_role: e.target.value,
+                  }))
                 }
                 className="w-full px-3 py-2 rounded-xl border border-[#e6eaf0] bg-[#f6f8fb] text-sm text-[#0f1b3d] focus:outline-none focus:ring-2 focus:ring-[#1f6feb]/30 focus:border-[#1f6feb] transition"
               >
@@ -619,12 +639,18 @@ export default function AuditLogsPage() {
                 Location (city / country)
               </label>
               <div className="relative">
-                <MapPin size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#a0aab8]" />
+                <MapPin
+                  size={14}
+                  className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#a0aab8]"
+                />
                 <input
                   type="text"
                   value={pendingFilters.location}
                   onChange={(e) =>
-                    setPendingFilters((p) => ({ ...p, location: e.target.value }))
+                    setPendingFilters((p) => ({
+                      ...p,
+                      location: e.target.value,
+                    }))
                   }
                   placeholder="e.g. Cairo, Egypt"
                   className="w-full pl-8 pr-3 py-2 rounded-xl border border-[#e6eaf0] bg-[#f6f8fb] text-sm text-[#0f1b3d] placeholder-[#a0aab8] focus:outline-none focus:ring-2 focus:ring-[#1f6feb]/30 focus:border-[#1f6feb] transition"
@@ -703,45 +729,66 @@ export default function AuditLogsPage() {
       {hasActiveFilters && !filtersOpen && (
         <div className="flex flex-wrap gap-2">
           {filters.search && (
-            <FilterChip label={`Search: ${filters.search}`} onRemove={() => {
-              setFilters((p) => ({ ...p, search: "" }));
-            }} />
+            <FilterChip
+              label={`Search: ${filters.search}`}
+              onRemove={() => {
+                setFilters((p) => ({ ...p, search: "" }));
+              }}
+            />
           )}
           {filters.actor_role && (
-            <FilterChip label={`Role: ${filters.actor_role}`} onRemove={() => {
-              const next = { ...filters, actor_role: "" };
-              setFilters(next);
-              loadAuditData(next);
-            }} />
+            <FilterChip
+              label={`Role: ${filters.actor_role}`}
+              onRemove={() => {
+                const next = { ...filters, actor_role: "" };
+                setFilters(next);
+                loadAuditData(next);
+              }}
+            />
           )}
           {filters.method && (
-            <FilterChip label={`Method: ${filters.method}`} onRemove={() => {
-              const next = { ...filters, method: "" };
-              setFilters(next);
-              loadAuditData(next);
-            }} />
+            <FilterChip
+              label={`Method: ${filters.method}`}
+              onRemove={() => {
+                const next = { ...filters, method: "" };
+                setFilters(next);
+                loadAuditData(next);
+              }}
+            />
           )}
           {filters.location && (
-            <FilterChip label={`Location: ${filters.location}`} onRemove={() => {
-              const next = { ...filters, location: "" };
-              setFilters(next);
-              loadAuditData(next);
-            }} />
+            <FilterChip
+              label={`Location: ${filters.location}`}
+              onRemove={() => {
+                const next = { ...filters, location: "" };
+                setFilters(next);
+                loadAuditData(next);
+              }}
+            />
           )}
           {filters.dateFrom && (
-            <FilterChip label={`From: ${filters.dateFrom}`} onRemove={() => {
-              setFilters((p) => ({ ...p, dateFrom: "" }));
-            }} />
+            <FilterChip
+              label={`From: ${filters.dateFrom}`}
+              onRemove={() => {
+                setFilters((p) => ({ ...p, dateFrom: "" }));
+              }}
+            />
           )}
           {filters.dateTo && (
-            <FilterChip label={`To: ${filters.dateTo}`} onRemove={() => {
-              setFilters((p) => ({ ...p, dateTo: "" }));
-            }} />
+            <FilterChip
+              label={`To: ${filters.dateTo}`}
+              onRemove={() => {
+                setFilters((p) => ({ ...p, dateTo: "" }));
+              }}
+            />
           )}
           {filters.status && (
-            <FilterChip label={`Status: ${filters.status === "success" ? "Successful" : filters.status === "failed" ? "Failed" : "Errors"}`} onRemove={() => {
-              setFilters((p) => ({ ...p, status: "" }));
-            }} />
+            <FilterChip
+              label={`Status: ${filters.status === "success" ? "Successful" : filters.status === "failed" ? "Failed" : "Errors"}`}
+              onRemove={() => {
+                setFilters((p) => ({ ...p, status: "" }));
+              }}
+            />
           )}
           <button
             onClick={clearFilters}
@@ -760,7 +807,10 @@ export default function AuditLogsPage() {
             Log Entries
             {filteredLogs.length > 0 && (
               <span className="ml-2 text-xs font-normal text-[#5e6b85]">
-                ({filteredLogs.length} {filteredLogs.length !== logs.length ? `of ${logs.length} ` : ""}
+                ({filteredLogs.length}{" "}
+                {filteredLogs.length !== logs.length
+                  ? `of ${logs.length} `
+                  : ""}
                 {filteredLogs.length === 1 ? "entry" : "entries"})
               </span>
             )}
@@ -774,7 +824,10 @@ export default function AuditLogsPage() {
         {loading && (
           <div className="p-6 space-y-3">
             {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="h-12 bg-[#f1f4f9] rounded-xl animate-pulse" />
+              <div
+                key={i}
+                className="h-12 bg-[#f1f4f9] rounded-xl animate-pulse"
+              />
             ))}
           </div>
         )}
@@ -822,16 +875,30 @@ export default function AuditLogsPage() {
                       <div className="flex items-start justify-between gap-2 mb-2">
                         <div className="flex items-center gap-2 min-w-0 flex-wrap">
                           {log.method && (
-                            <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold border ${getMethodStyle(log.method)}`}>
+                            <span
+                              className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold border ${getMethodStyle(log.method)}`}
+                            >
                               {log.method}
                             </span>
                           )}
-                          <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold border ${levelStyle.cls}`}>
+                          <span
+                            className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold border ${levelStyle.cls}`}
+                          >
                             {levelStyle.icon}
                             {log.level || "info"}
                           </span>
                         </div>
-                        {expanded ? <ChevronUp size={14} className="text-[#5e6b85] flex-shrink-0 mt-0.5" /> : <ChevronDown size={14} className="text-[#5e6b85] flex-shrink-0 mt-0.5" />}
+                        {expanded ? (
+                          <ChevronUp
+                            size={14}
+                            className="text-[#5e6b85] flex-shrink-0 mt-0.5"
+                          />
+                        ) : (
+                          <ChevronDown
+                            size={14}
+                            className="text-[#5e6b85] flex-shrink-0 mt-0.5"
+                          />
+                        )}
                       </div>
 
                       <p className="text-sm font-medium text-[#0f1b3d] truncate mb-1">
@@ -840,34 +907,42 @@ export default function AuditLogsPage() {
 
                       <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
                         <span className="text-[#5e6b85]">Actor</span>
-                        <span className="text-[#0f1b3d] truncate font-medium">{actorName}</span>
+                        <span className="text-[#0f1b3d] truncate font-medium">
+                          {actorName}
+                        </span>
 
                         {actorEmail && (
                           <>
                             <span className="text-[#5e6b85]">Email</span>
-                            <span className="text-[#0f1b3d] truncate">{actorEmail}</span>
+                            <span className="text-[#0f1b3d] truncate">
+                              {actorEmail}
+                            </span>
                           </>
                         )}
 
                         <span className="text-[#5e6b85]">IP</span>
-                        <span className="text-[#0f1b3d] font-mono">{log.ip || "—"}</span>
+                        <span className="text-[#0f1b3d] font-mono">
+                          {log.ip || "—"}
+                        </span>
 
                         {locationStr && (
                           <>
                             <span className="text-[#5e6b85]">Location</span>
-                            <span className="text-[#0f1b3d]">{locationStr}</span>
+                            <span className="text-[#0f1b3d]">
+                              {locationStr}
+                            </span>
                           </>
                         )}
 
                         <span className="text-[#5e6b85]">Time</span>
-                        <span className="text-[#0f1b3d]">{formatTimestampShort(log.timestamp)}</span>
+                        <span className="text-[#0f1b3d]">
+                          {formatTimestampShort(log.timestamp)}
+                        </span>
                       </div>
                     </div>
 
                     {/* Expanded detail */}
-                    {expanded && (
-                      <ExpandedDetail log={log} role={role} />
-                    )}
+                    {expanded && <ExpandedDetail log={log} role={role} />}
                   </div>
                 );
               })}
@@ -879,13 +954,27 @@ export default function AuditLogsPage() {
                 <thead className="bg-[#f6f8fb] border-b border-[#e6eaf0]">
                   <tr>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-[#5e6b85] uppercase tracking-wide w-8" />
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-[#5e6b85] uppercase tracking-wide">Method / Level</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-[#5e6b85] uppercase tracking-wide">Path / Action</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-[#5e6b85] uppercase tracking-wide hidden md:table-cell">Actor</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-[#5e6b85] uppercase tracking-wide hidden lg:table-cell">Email</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-[#5e6b85] uppercase tracking-wide hidden xl:table-cell">IP / Location</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-[#5e6b85] uppercase tracking-wide">Time</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-[#5e6b85] uppercase tracking-wide hidden md:table-cell">Status</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-[#5e6b85] uppercase tracking-wide">
+                      Method / Level
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-[#5e6b85] uppercase tracking-wide">
+                      Path / Action
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-[#5e6b85] uppercase tracking-wide hidden md:table-cell">
+                      Actor
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-[#5e6b85] uppercase tracking-wide hidden lg:table-cell">
+                      Email
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-[#5e6b85] uppercase tracking-wide hidden xl:table-cell">
+                      IP / Location
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-[#5e6b85] uppercase tracking-wide">
+                      Time
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-[#5e6b85] uppercase tracking-wide hidden md:table-cell">
+                      Status
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -910,7 +999,11 @@ export default function AuditLogsPage() {
                           {/* Expand toggle */}
                           <td className="px-3 py-3">
                             <div className="w-6 h-6 flex items-center justify-center rounded-lg text-[#a0aab8] hover:text-[#5e6b85] hover:bg-[#e6eaf0] transition">
-                              {expanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                              {expanded ? (
+                                <ChevronUp size={13} />
+                              ) : (
+                                <ChevronDown size={13} />
+                              )}
                             </div>
                           </td>
 
@@ -918,11 +1011,15 @@ export default function AuditLogsPage() {
                           <td className="px-4 py-3">
                             <div className="flex flex-col gap-1">
                               {log.method && (
-                                <span className={`inline-flex items-center w-fit px-1.5 py-0.5 rounded text-[10px] font-bold border ${getMethodStyle(log.method)}`}>
+                                <span
+                                  className={`inline-flex items-center w-fit px-1.5 py-0.5 rounded text-[10px] font-bold border ${getMethodStyle(log.method)}`}
+                                >
                                   {log.method}
                                 </span>
                               )}
-                              <span className={`inline-flex items-center gap-0.5 w-fit px-1.5 py-0.5 rounded-full text-[10px] font-semibold border ${levelStyle.cls}`}>
+                              <span
+                                className={`inline-flex items-center gap-0.5 w-fit px-1.5 py-0.5 rounded-full text-[10px] font-semibold border ${levelStyle.cls}`}
+                              >
                                 {levelStyle.icon}
                                 {log.level || "info"}
                               </span>
@@ -935,15 +1032,21 @@ export default function AuditLogsPage() {
                               {log.path || log.action || "—"}
                             </p>
                             {log.action && log.path && (
-                              <p className="text-[#5e6b85] text-[11px] truncate">{log.action}</p>
+                              <p className="text-[#5e6b85] text-[11px] truncate">
+                                {log.action}
+                              </p>
                             )}
                           </td>
 
                           {/* Actor */}
                           <td className="px-4 py-3 hidden md:table-cell">
                             <div>
-                              <p className="text-[#0f1b3d] text-xs font-medium truncate max-w-[130px]">{actorName}</p>
-                              <span className={`inline-flex items-center px-1.5 py-0.5 mt-0.5 rounded-full text-[10px] font-semibold border ${getRoleStyle(role)}`}>
+                              <p className="text-[#0f1b3d] text-xs font-medium truncate max-w-[130px]">
+                                {actorName}
+                              </p>
+                              <span
+                                className={`inline-flex items-center px-1.5 py-0.5 mt-0.5 rounded-full text-[10px] font-semibold border ${getRoleStyle(role)}`}
+                              >
                                 {role}
                               </span>
                             </div>
@@ -959,11 +1062,18 @@ export default function AuditLogsPage() {
                           {/* IP / Location */}
                           <td className="px-4 py-3 hidden xl:table-cell">
                             <div>
-                              <p className="text-[#0f1b3d] text-xs font-mono">{log.ip || "—"}</p>
+                              <p className="text-[#0f1b3d] text-xs font-mono">
+                                {log.ip || "—"}
+                              </p>
                               {locationStr && (
                                 <div className="flex items-center gap-1 mt-0.5">
-                                  <MapPin size={10} className="text-[#1f6feb] flex-shrink-0" />
-                                  <span className="text-[11px] text-[#5e6b85] truncate max-w-[140px]">{locationStr}</span>
+                                  <MapPin
+                                    size={10}
+                                    className="text-[#1f6feb] flex-shrink-0"
+                                  />
+                                  <span className="text-[11px] text-[#5e6b85] truncate max-w-[140px]">
+                                    {locationStr}
+                                  </span>
                                   {log.ip_location?.map_url && (
                                     <a
                                       href={log.ip_location.map_url}
@@ -991,7 +1101,9 @@ export default function AuditLogsPage() {
                           {/* Status */}
                           <td className="px-4 py-3 hidden md:table-cell">
                             {log.status_code ? (
-                              <span className={`text-xs font-mono ${getStatusStyle(log.status_code)}`}>
+                              <span
+                                className={`text-xs font-mono ${getStatusStyle(log.status_code)}`}
+                              >
                                 {log.status_code}
                               </span>
                             ) : (
@@ -1002,7 +1114,10 @@ export default function AuditLogsPage() {
 
                         {/* Expanded detail row */}
                         {expanded && (
-                          <tr key={`${rowId}-detail`} className="border-t border-[#e6f0ff]">
+                          <tr
+                            key={`${rowId}-detail`}
+                            className="border-t border-[#e6f0ff]"
+                          >
                             <td colSpan={8} className="px-0 py-0">
                               <ExpandedDetail log={log} role={role} />
                             </td>
@@ -1022,7 +1137,9 @@ export default function AuditLogsPage() {
       {totalPages > 1 && (
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-xs text-[#5e6b85]">
-            Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filteredLogs.length)} of {filteredLogs.length}
+            Showing {(page - 1) * PAGE_SIZE + 1}–
+            {Math.min(page * PAGE_SIZE, filteredLogs.length)} of{" "}
+            {filteredLogs.length}
           </p>
           <div className="flex items-center gap-1.5" dir="ltr">
             <button
@@ -1061,7 +1178,13 @@ export default function AuditLogsPage() {
 
 // ──────────────────────────── sub-components ────────────────────────────
 
-function FilterChip({ label, onRemove }: { label: string; onRemove: () => void }) {
+function FilterChip({
+  label,
+  onRemove,
+}: {
+  label: string;
+  onRemove: () => void;
+}) {
   return (
     <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-[#1f6feb]/10 text-[#1f6feb] border border-[#1f6feb]/20 rounded-full text-xs font-medium">
       {label}
@@ -1084,7 +1207,6 @@ function ExpandedDetail({ log, role }: { log: AuditLog; role: string }) {
   return (
     <div className="bg-[#f6fbff] border-t border-[#dbeafe] px-5 py-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
-
         {/* Actor detail */}
         <div className="space-y-2">
           <h4 className="text-xs font-bold text-[#0f1b3d] uppercase tracking-wide flex items-center gap-1">
@@ -1096,14 +1218,13 @@ function ExpandedDetail({ log, role }: { log: AuditLog; role: string }) {
             <InfoRow
               label="Role"
               value={
-                <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold border ${getRoleStyle(role)}`}>
+                <span
+                  className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold border ${getRoleStyle(role)}`}
+                >
                   {role}
                 </span>
               }
             />
-            {log.user_agent && (
-              <InfoRow label="User Agent" value={log.user_agent} truncate />
-            )}
           </div>
         </div>
 
@@ -1115,10 +1236,20 @@ function ExpandedDetail({ log, role }: { log: AuditLog; role: string }) {
           <div className="space-y-1 text-xs">
             <InfoRow label="Method" value={log.method || "—"} />
             <InfoRow label="Path" value={log.path || "—"} mono />
-            <InfoRow label="Status" value={log.status_code ? String(log.status_code) : "—"} />
-            <InfoRow label="Duration" value={log.duration_ms != null ? `${log.duration_ms}ms` : "—"} />
+            <InfoRow
+              label="Status"
+              value={log.status_code ? String(log.status_code) : "—"}
+            />
+            <InfoRow
+              label="Duration"
+              value={log.duration_ms != null ? `${log.duration_ms}ms` : "—"}
+            />
             {log.error_message && (
-              <InfoRow label="Error" value={log.error_message} cls="text-red-600" />
+              <InfoRow
+                label="Error"
+                value={log.error_message}
+                cls="text-red-600"
+              />
             )}
           </div>
         </div>
@@ -1132,32 +1263,15 @@ function ExpandedDetail({ log, role }: { log: AuditLog; role: string }) {
             <InfoRow label="IP Address" value={log.ip || "—"} mono />
             {hasLocation ? (
               <>
-                {loc.city && <InfoRow label="City" value={safeDecode(loc.city)} />}
-                {loc.region && <InfoRow label="Region" value={safeDecode(loc.region)} />}
-                {loc.country && <InfoRow label="Country" value={safeDecode(loc.country)} />}
-                {loc.latitude != null && loc.longitude != null && (
-                  <InfoRow
-                    label="Coordinates"
-                    value={`${loc.latitude?.toFixed(5)}, ${loc.longitude?.toFixed(5)}`}
-                    mono
-                  />
+                {loc.city && (
+                  <InfoRow label="City" value={safeDecode(loc.city)} />
                 )}
-                {loc.source && (
-                  <InfoRow label="Source" value={loc.source} />
+                {loc.region && (
+                  <InfoRow label="Region" value={safeDecode(loc.region)} />
                 )}
-                {loc.map_url && (
-                  <div className="flex items-center gap-2 pt-1">
-                    <a
-                      href={loc.map_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#1f6feb] hover:bg-[#1b5bd7] text-white text-[11px] font-semibold rounded-lg transition"
-                    >
-                      <MapPin size={11} /> View on Map
-                      <ExternalLink size={10} />
-                    </a>
-                  </div>
-                )}
+                {loc.country && (
+                  <InfoRow label="Country" value={safeDecode(loc.country)} />
+                )} 
               </>
             ) : (
               <p className="text-[#a0aab8]">No location data</p>
@@ -1190,7 +1304,9 @@ function InfoRow({
 }) {
   return (
     <div className="flex items-start gap-2">
-      <span className="text-[#5e6b85] min-w-[70px] flex-shrink-0">{label}:</span>
+      <span className="text-[#5e6b85] min-w-[70px] flex-shrink-0">
+        {label}:
+      </span>
       <span
         className={`text-[#0f1b3d] flex-1 ${mono ? "font-mono" : ""} ${truncate ? "truncate" : "break-words"} ${cls}`}
       >

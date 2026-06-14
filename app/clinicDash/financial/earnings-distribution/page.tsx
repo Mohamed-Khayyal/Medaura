@@ -221,7 +221,7 @@ export default function EarningsDistributionPage() {
             const doctorId = String(doctorAppts[0].doctorId);
             const docRecord = txData?.doctorRecords.find((d) => String(d.doctorId) === doctorId);
             const docName = docRecord?.doctorName ?? doctorAppts[0].doctorName;
-            const docSpecialty = docRecord?.specialty ?? doctorAppts[0].specialist;
+            const docSpecialty = docRecord?.specialist ?? doctorAppts[0].specialist;
 
             return (
               <div key={doctorId} className="rounded-2xl border border-(--card-border) bg-(--card-bg) p-5 shadow-[var(--shadow-soft)]">

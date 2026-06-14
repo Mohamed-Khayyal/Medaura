@@ -778,7 +778,7 @@ export default function BookingPage() {
         type: "warning",
         title: t("booking.validation.alreadyBooked.title", locale),
         message:
-          locale === "en"
+          locale === "ar"
             ? "هذا الطبيب غير متاح للحجز حاليا."
             : "This staff member is not available for booking right now.",
       });
@@ -899,7 +899,7 @@ export default function BookingPage() {
           className="mb-8 flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-bold text-[#001A6E] shadow-sm transition hover:bg-[#eef3ff]"
         >
           <ArrowRight
-            className={`h-5 w-5 ${locale === "en" ? "rotate-180" : ""}`}
+            className={`h-5 w-5 ${locale === "ar" ? "rotate-180" : ""}`}
           />
           {t("booking.back", locale)}
         </button>

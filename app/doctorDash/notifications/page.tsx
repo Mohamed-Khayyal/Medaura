@@ -6,6 +6,7 @@ import { formatDistanceToNow } from "date-fns";
 import { ar, enUS } from "date-fns/locale";
 import { useLocale } from "@/lib/hooks";
 import { t } from "@/i18n";
+import { useAuth } from "@/context/AuthContext";
 
 interface Notification {
   id: number;
@@ -18,6 +19,7 @@ interface Notification {
 const PAGE_SIZE = 10;
 
 export default function DoctorNotificationsPage() {
+  const { isAuthenticated } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,6 +29,7 @@ export default function DoctorNotificationsPage() {
   const isRtl = locale === "ar";
 
   const loadNotifications = useCallback(async () => {
+    if (!isAuthenticated) return;
     try {
       setLoading(true);
       setError(null);
@@ -51,11 +54,13 @@ export default function DoctorNotificationsPage() {
     } finally {
       setLoading(false);
     }
-  }, [locale]);
+  }, [locale, isAuthenticated]);
 
   useEffect(() => {
-    loadNotifications();
-  }, [loadNotifications]);
+    if (isAuthenticated) {
+      loadNotifications();
+    }
+  }, [loadNotifications, isAuthenticated]);
 
   const filtered = useMemo(() => {
     return notifications.filter((n) => {

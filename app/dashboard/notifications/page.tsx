@@ -5,16 +5,19 @@ import { formatDistanceToNow } from "date-fns";
 import { Bell, RefreshCw, CheckCircle2 } from "lucide-react";
 import type { Notification } from "@/lib/types/api";
 import { fetchNotificationsClient } from "@/lib/utils/fetchNotifications";
+import { useAuth } from "@/context/AuthContext";
 
 const PAGE_SIZE = 10;
 
 export default function AdminNotificationsPage() {
+  const { isAuthenticated } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
 
   const loadNotifications = useCallback(async () => {
+    if (!isAuthenticated) return;
     try {
       setLoading(true);
       setError(null);
@@ -39,11 +42,13 @@ export default function AdminNotificationsPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isAuthenticated]);
 
   useEffect(() => {
-    loadNotifications();
-  }, [loadNotifications]);
+    if (isAuthenticated) {
+      loadNotifications();
+    }
+  }, [loadNotifications, isAuthenticated]);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
   const totalPages = Math.max(1, Math.ceil(notifications.length / PAGE_SIZE));
