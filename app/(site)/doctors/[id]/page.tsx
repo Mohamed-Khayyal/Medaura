@@ -789,7 +789,7 @@ export default function DoctorProfilePage() {
           className="flex items-center gap-2 text-[#001A6E] font-bold mb-8 hover:opacity-80 transition-opacity"
         >
           <ArrowRight
-            className={`h-5 w-5 ${locale === "en" ? "rotate-180" : ""}`}
+            className={`h-5 w-5 ${locale === "ar" ? "rotate-180" : ""}`}
           />
           {t("booking.back", locale)}
         </button>
