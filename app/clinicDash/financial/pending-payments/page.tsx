@@ -146,13 +146,16 @@ export default function PendingPaymentsPage() {
       else if (status === "cancelled") showToast("تم الإلغاء بنجاح", "error");
       else if (status === "pending") showToast("تم التراجع بنجاح");
 
-      // Set refresh countdown to fetch fresh data
+      // Broadcast to financial dashboard so it updates instantly
+      try {
+        const bc = new BroadcastChannel("payment_updates");
+        bc.postMessage({ type: "payment_status_changed", bookingId, status });
+        bc.close();
+      } catch { /* BroadcastChannel not supported — ignore */ }
+
+      // Immediately re-fetch to reflect the confirmed state
       if (refreshTimeoutRef.current) clearTimeout(refreshTimeoutRef.current);
-      setRefreshCountdown(15);
-      refreshTimeoutRef.current = setTimeout(() => {
-        setRefreshCountdown(null);
-        void fetchAllAppointments();
-      }, 15000);
+      void fetchAllAppointments();
 
     } catch (err) {
       showToast("حدث خطأ أثناء حفظ التغييرات", "error");

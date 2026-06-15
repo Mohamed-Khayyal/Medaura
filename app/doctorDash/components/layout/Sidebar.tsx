@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   Users,
@@ -114,12 +115,23 @@ function Sidebar({ open, onClose }: SidebarProps) {
         </svg>
       </button>
 
-      <div className={`flex items-center justify-between border-b border-white/10 pb-2 ${isRtl ? "flex-row-reverse" : "flex-row"}`}>
-        <div className={isRtl ? "text-right" : "text-left"}>
-          <h1 className="text-lg font-semibold tracking-tight">Medaura</h1>
-          <p className="text-[11px] text-white/60 mt-1">{sidebarTitle}</p>
+      <div className={`flex items-center justify-between border-b border-white/10 pb-4 mb-4 ${isRtl ? "flex-row-reverse" : "flex-row"}`}>
+        <div className={`flex items-center gap-2 ${isRtl ? "flex-row-reverse" : "flex-row"}`}>
+          <div className="relative h-10 w-10 shrink-0">
+            <Image
+              src="/images/Logo1.png"
+              alt="Medaura logo"
+              fill
+              sizes="40px"
+              className="object-contain"
+            />
+          </div>
+          <div className={isRtl ? "text-right" : "text-left"}>
+            <h1 className="text-xl font-bold tracking-wide">Medaura</h1>
+            <p className="text-[10px] text-white/60">{sidebarTitle}</p>
+          </div>
         </div>
-        <span className="h-7 w-7 rounded-lg bg-white/10 flex items-center justify-center text-[10px] font-bold uppercase">
+        <span className="h-7 w-7 rounded-lg bg-white/10 flex items-center justify-center text-[10px] font-bold uppercase shrink-0">
           {isStaff ? "ST" : "MD"}
         </span>
       </div>

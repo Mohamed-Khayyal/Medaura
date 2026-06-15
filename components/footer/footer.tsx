@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { t } from "@/i18n";
 
@@ -32,9 +33,20 @@ export default function Footer() {
       >
         {/* Brand / description */}
         <div className="md:col-span-2">
-          <h3 className="text-2xl font-extrabold text-white">
-            {t("footer.title", locale)}
-          </h3>
+          <div className="flex items-center gap-2 mb-4">
+            <div className="relative h-10 w-10 shrink-0">
+              <Image
+                src="/images/Logo1.png"
+                alt="Medaura logo"
+                fill
+                sizes="40px"
+                className="object-contain"
+              />
+            </div>
+            <h3 className="text-2xl font-extrabold text-white tracking-wide">
+              Medaura
+            </h3>
+          </div>
           <p className="mt-3 text-sm text-[#9fb0d6] max-w-[320px]">
             {t("footer.description", locale)}
           </p>

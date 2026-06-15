@@ -272,8 +272,8 @@ export default function FinancialPage() {
    * appointments from any period are always visible regardless of the
    * current date filter selected by the user.
    */
-  const fetchAllAppointments = useCallback(async () => {
-    setAllApptLoading(true);
+  const fetchAllAppointments = useCallback(async (background = false) => {
+    if (!background) setAllApptLoading(true);
     try {
       const res  = await fetch("/api/clinic/financial/transactions"); // no date params
       const json = await res.json() as { success: boolean; data: TransactionData; error?: string };
@@ -281,7 +281,7 @@ export default function FinancialPage() {
     } catch {
       // silently ignore — main error banner covers API failures
     } finally {
-      setAllApptLoading(false);
+      if (!background) setAllApptLoading(false);
     }
   }, []);
 
@@ -299,10 +299,15 @@ export default function FinancialPage() {
 
     tickRef.current = setInterval(() => setTickCount((n) => n + 1), 60_000);
 
+    const livePoll = setInterval(() => {
+      void fetchAllAppointments(true);
+    }, 10_000); // 10 seconds live polling
+
     return () => {
       if (checkRef.current) clearInterval(checkRef.current);
       if (tickRef.current)  clearInterval(tickRef.current);
       if (refreshTimeoutRef.current) clearTimeout(refreshTimeoutRef.current);
+      clearInterval(livePoll);
     };
   }, [fetchSummary, fetchAllAppointments]);
 
@@ -310,6 +315,21 @@ export default function FinancialPage() {
   useEffect(() => {
     void fetchTransactions(filters);
   }, [filters, fetchTransactions]);
+
+  // ── BroadcastChannel: instantly update when payment confirmed elsewhere ─────────
+  useEffect(() => {
+    let bc: BroadcastChannel | null = null;
+    try {
+      bc = new BroadcastChannel("payment_updates");
+      bc.onmessage = (event) => {
+        if (event.data?.type === "payment_status_changed") {
+          // Instantly re-fetch appointments so KPI cards update without waiting for the poll
+          void fetchAllAppointments(true);
+        }
+      };
+    } catch { /* BroadcastChannel not supported — ignore */ }
+    return () => { try { bc?.close(); } catch { /* ignore */ } };
+  }, [fetchAllAppointments]);
 
   // Handle the 15-second countdown timer UI
   useEffect(() => {
@@ -330,7 +350,7 @@ export default function FinancialPage() {
   const handleRefresh = () => {
     void fetchSummary(true);
     void fetchTransactions(filters);
-    void fetchAllAppointments();
+    void fetchAllAppointments(false);
   };
 
   // ── Derived ───────────────────────────────────────────────────────────────
@@ -344,43 +364,54 @@ export default function FinancialPage() {
    *
    * Revenue KPIs (today/month/year) still come from the 9 PM cache.
    */
-  const currentYear = String(new Date().getFullYear());
-  const currentMonth = String(new Date().getMonth() + 1).padStart(2, "0");
-  const todayDateStr = new Date().toISOString().slice(0, 10);
+  const egyptDate = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Africa/Cairo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+  const todayDateStr = egyptDate; // YYYY-MM-DD in Egypt time
+  const currentYear = egyptDate.slice(0, 4);
+  const currentMonth = egyptDate.slice(5, 7);
 
-  const paidThisYear = allApptLoading
-    ? null
-    : allApptData.filter(
-        (r) => r.paymentStatus === "paid" && r.bookingDate.startsWith(currentYear)
-      );
+  // Compute live KPIs from allApptData regardless of loading state.
+  // allApptLoading is only true on the very first fetch; background polls
+  // run silently without setting it, so we always have data to work with.
+  const hasLiveData = allApptData.length > 0 || !allApptLoading;
 
-  const liveYearlyRevenue = paidThisYear
+  const paidThisYear = hasLiveData
+    ? allApptData.filter(
+        (r) => r.paymentStatus === "paid" && r.paymentDate.startsWith(currentYear)
+      )
+    : null;
+
+  const liveYearlyRevenue = paidThisYear !== null
     ? paidThisYear.reduce((sum, r) => sum + r.consultationFee, 0)
     : (summaryData?.summary.yearlyRevenue ?? 0);
 
-  const liveMonthlyRevenue = paidThisYear
+  const liveMonthlyRevenue = paidThisYear !== null
     ? paidThisYear
-        .filter((r) => r.bookingDate.startsWith(`${currentYear}-${currentMonth}`))
+        .filter((r) => r.paymentDate.startsWith(`${currentYear}-${currentMonth}`))
         .reduce((sum, r) => sum + r.consultationFee, 0)
     : (summaryData?.summary.monthlyRevenue ?? 0);
 
-  const liveTodayRevenue = paidThisYear
+  const liveTodayRevenue = paidThisYear !== null
     ? paidThisYear
-        .filter((r) => r.bookingDate === todayDateStr)
+        .filter((r) => r.paymentDate === todayDateStr)
         .reduce((sum, r) => sum + r.consultationFee, 0)
     : (summaryData?.summary.todayRevenue ?? 0);
 
-  const livePendingPayments = allApptLoading
-    ? (summaryData?.summary.pendingPayments ?? 0)
-    : allApptData
+  const livePendingPayments = hasLiveData
+    ? allApptData
         .filter((r) => r.paymentStatus === "pending")
-        .reduce((sum, r) => sum + r.consultationFee, 0);
+        .reduce((sum, r) => sum + r.consultationFee, 0)
+    : (summaryData?.summary.pendingPayments ?? 0);
 
-  const liveClinicProfit = paidThisYear
+  const liveClinicProfit = paidThisYear !== null
     ? paidThisYear.reduce((sum, r) => sum + r.clinicShare, 0)
     : (summaryData?.summary.clinicProfit ?? 0);
 
-  const liveDoctorsTotalEarnings = paidThisYear
+  const liveDoctorsTotalEarnings = paidThisYear !== null
     ? paidThisYear.reduce((sum, r) => sum + r.doctorShare, 0)
     : (summaryData?.summary.doctorsTotalEarnings ?? 0);
 
@@ -398,6 +429,60 @@ export default function FinancialPage() {
 
   // tickCount used only to trigger re-render for time displays
   void tickCount;
+
+  // ── Live chart data computed from allApptData ─────────────────────────────
+  // These mirror computeDailyRevenue / computeMonthlyRevenue on the server
+  // but run on the client so they react instantly to payment confirmations.
+
+  const ARABIC_MONTHS = [
+    "يناير","فبراير","مارس","أبريل","مايو","يونيو",
+    "يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر",
+  ];
+
+  // Build live daily revenue for last 30 days
+  const liveDaily: DailyRevenue[] = (() => {
+    const days = 30;
+    const map = new Map<string, number>();
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const key = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Africa/Cairo",
+        year: "numeric", month: "2-digit", day: "2-digit",
+      }).format(d);
+      map.set(key, 0);
+    }
+    for (const r of allApptData) {
+      if (r.paymentStatus !== "paid") continue;
+      const d = r.paymentDate;
+      if (map.has(d)) map.set(d, (map.get(d) ?? 0) + r.consultationFee);
+    }
+    return Array.from(map.entries()).map(([date, revenue]) => ({ date, revenue }));
+  })();
+
+  // Build live monthly revenue for last 12 months
+  const liveMonthly: MonthlyRevenue[] = (() => {
+    const months = 12;
+    const result: MonthlyRevenue[] = [];
+    const now = new Date();
+    for (let i = months - 1; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      result.push({ month: key, label: `${ARABIC_MONTHS[d.getMonth()]} ${d.getFullYear()}`, revenue: 0 });
+    }
+    const monthMap = new Map(result.map((r) => [r.month, r]));
+    for (const r of allApptData) {
+      if (r.paymentStatus !== "paid") continue;
+      const monthKey = r.paymentDate.slice(0, 7);
+      const entry = monthMap.get(monthKey);
+      if (entry) entry.revenue += r.consultationFee;
+    }
+    return result;
+  })();
+
+  // Use live data when available, fall back to cached summary data
+  const chartDaily   = hasLiveData ? liveDaily   : (summaryData?.daily   ?? []);
+  const chartMonthly = hasLiveData ? liveMonthly : (summaryData?.monthly ?? []);
 
 
   // ── Render ────────────────────────────────────────────────────────────────
@@ -459,16 +544,16 @@ export default function FinancialPage() {
         </div>
       )}
 
-      {/* ── Overview Cards (revenue cached at 9 PM, pendingPayments live) ── */}
-      <FinancialOverviewCards summary={displaySummary} loading={summaryLoading || allApptLoading} />
+      {/* ── Overview Cards (live data from allApptData, skeleton only on first load) ── */}
+      <FinancialOverviewCards summary={displaySummary} loading={summaryLoading} />
 
       {/* ── Charts ── */}
       <RevenueCharts
-        daily={summaryData?.daily ?? []}
-        monthly={summaryData?.monthly ?? []}
+        daily={chartDaily}
+        monthly={chartMonthly}
         clinicProfit={liveClinicProfit}
         doctorsTotalEarnings={liveDoctorsTotalEarnings}
-        loading={summaryLoading}
+        loading={summaryLoading && !hasLiveData}
       />
 
     </div>

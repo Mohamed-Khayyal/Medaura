@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
@@ -71,12 +72,6 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
           exact: false,
         },
         {
-          text: locale === "ar" ? "توزيع الأرباح" : "Earnings Distribution",
-          icon: <PieChart size={16} />,
-          href: "/clinicDash/financial/earnings-distribution",
-          exact: false,
-        },
-        {
           text: t("dashboard.sidebar.settings", locale),
           icon: <Settings size={16} />,
           href: "/clinicDash/settings",
@@ -108,12 +103,23 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
       </button>
 
       {/* Logo */}
-      <div className={`flex items-center justify-between px-1 pb-2 border-b border-white/10 ${isRtl ? "flex-row-reverse" : "flex-row"}`}>
-        <div className={isRtl ? "text-right" : "text-left"}>
-          <h1 className="text-lg font-semibold tracking-tight">Medaura</h1>
-          <p className="text-[11px] text-white/50 mt-0.5">{t("dashboard.sidebar.titleClinic", locale)}</p>
+      <div className={`flex items-center justify-between px-1 pb-4 mb-4 border-b border-white/10 ${isRtl ? "flex-row-reverse" : "flex-row"}`}>
+        <div className={`flex items-center gap-2 ${isRtl ? "flex-row-reverse" : "flex-row"}`}>
+          <div className="relative h-10 w-10 shrink-0">
+            <Image
+              src="/images/Logo1.png"
+              alt="Medaura logo"
+              fill
+              sizes="40px"
+              className="object-contain"
+            />
+          </div>
+          <div className={isRtl ? "text-right" : "text-left"}>
+            <h1 className="text-xl font-bold tracking-wide">Medaura</h1>
+            <p className="text-[10px] text-white/50">{t("dashboard.sidebar.titleClinic", locale)}</p>
+          </div>
         </div>
-        <span className="h-8 w-8 rounded-xl bg-teal-500/20 border border-teal-400/30 flex items-center justify-center">
+        <span className="h-8 w-8 rounded-xl bg-teal-500/20 border border-teal-400/30 flex items-center justify-center shrink-0">
           <Building2 size={15} className="text-teal-300" />
         </span>
       </div>

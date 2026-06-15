@@ -41,9 +41,17 @@ export function getDoctorId(member: RawStaffMember): string | number | null {
   return null;
 }
 
-/** Return today's date as "YYYY-MM-DD" */
+/** Return today's date as "YYYY-MM-DD" in Egypt local time */
 export function todayStr(): string {
-  return new Date().toISOString().slice(0, 10);
+  const now = new Date();
+  // Use Egypt timezone (UTC+2 / UTC+3) so dates match what the user sees
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Africa/Cairo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(now);
+  return parts; // en-CA gives YYYY-MM-DD naturally
 }
 
 /** Return current month as "YYYY-MM" */
@@ -244,6 +252,7 @@ export function computeAppointmentRecords(
     // Shares are 0 for cancelled appointments
     const docShare    = paymentStatus !== "cancelled" ? (fee * docPct)    / 100 : 0;
     const clinicShare = paymentStatus !== "cancelled" ? (fee * clinicPct) / 100 : 0;
+    const paymentDate = getApptPaymentDate(b.id, apptStore, date);
 
     records.push({
       bookingId:        b.id,
@@ -259,6 +268,7 @@ export function computeAppointmentRecords(
       doctorShare:      docShare,   // ← fix: was `doctorShare` shorthand but variable is `docShare`
       clinicShare,
       paymentStatus,
+      paymentDate,
     });
   }
 

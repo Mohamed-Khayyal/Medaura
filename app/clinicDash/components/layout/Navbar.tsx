@@ -1,6 +1,7 @@
 "use client";
 
 import { Bell, Search, LogOut, X, Menu, Globe } from "lucide-react";
+import Image from "next/image";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
@@ -131,14 +132,28 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
         <div className="mx-auto max-w-[1400px] px-4 sm:px-8 py-3">
           <div className="flex items-center justify-between gap-3">
             {/* Hamburger (mobile) */}
-            <button
-              type="button"
-              onClick={onToggleSidebar}
-              className="inline-flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-2xl border border-(--card-border) bg-(--card-bg) text-(--foreground) hover:bg-(--hover-bg) transition xl:hidden"
-            >
-              <span className="sr-only">Open sidebar</span>
-              <Menu size={18} />
-            </button>
+            <div className="flex items-center gap-2 xl:hidden">
+              <button
+                type="button"
+                onClick={onToggleSidebar}
+                className="inline-flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-2xl border border-(--card-border) bg-(--card-bg) text-(--foreground) hover:bg-(--hover-bg) transition"
+              >
+                <span className="sr-only">Open sidebar</span>
+                <Menu size={18} />
+              </button>
+              <div className="flex items-center gap-2">
+                <div className="relative h-8 w-8 shrink-0">
+                  <Image
+                    src="/images/Logo1.png"
+                    alt="Medaura logo"
+                    fill
+                    sizes="32px"
+                    className="object-contain"
+                  />
+                </div>
+                <span className="text-lg font-bold text-(--text-primary)">Medaura</span>
+              </div>
+            </div>
 
             {/* Search */}
             <div className="flex-1 min-w-0">

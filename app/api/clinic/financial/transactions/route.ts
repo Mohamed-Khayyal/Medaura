@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerAccessToken } from "@/lib/api/server-auth";
+export const dynamic = "force-dynamic";
 import { bookingService } from "@/lib/api/bookings";
 import { apiClient } from "@/lib/api/client";
 import fs from "fs";
@@ -77,9 +78,21 @@ export async function GET(request: NextRequest) {
     
     const paymentsRes = await apiClient.get<any>("/api/payments/clinic/financials?limit=10000", { token });
     const payments = paymentsRes?.payments || [];
-    const apptStore: Record<string, string> = {};
+
+    // Use Egypt local date so "today" matches what the admin sees (UTC+2/+3).
+    const egyptToday = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Africa/Cairo",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date()); // gives "YYYY-MM-DD"
+
+    const apptStore: Record<string, { status: "paid" | "cancelled"; date: string }> = {};
     for (const p of payments) {
-      apptStore[String(p.booking_id)] = "paid";
+      const rawDate: string =
+        p.paid_at ?? p.confirmed_at ?? p.payment_date ?? p.updated_at ?? p.created_at ?? "";
+      const payDate = rawDate ? rawDate.slice(0, 10) : egyptToday;
+      apptStore[String(p.booking_id)] = { status: "paid", date: payDate };
     }
 
     // Doctor-level aggregates (paid appointments only) — used by charts & export

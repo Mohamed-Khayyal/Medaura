@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   Users,
@@ -79,7 +80,18 @@ function Sidebar({ open, onClose }: SidebarProps) {
         </svg>
       </button>
 
-      <h1 className={`text-2xl font-bold mb-6 ${isRtl ? "text-right" : "text-left"}`}>{t("dashboard.sidebar.titleAdmin", locale)}</h1>
+      <div className={`flex items-center gap-2 mb-6 ${isRtl ? "flex-row-reverse" : "flex-row"}`}>
+        <div className="relative h-10 w-10 shrink-0">
+          <Image
+            src="/images/Logo1.png"
+            alt="Medaura logo"
+            fill
+            sizes="40px"
+            className="object-contain"
+          />
+        </div>
+        <h1 className={`text-2xl font-bold tracking-wide flex-1 ${isRtl ? "text-right" : "text-left"}`}>Medaura</h1>
+      </div>
 
       {menu.map((section, i) => (
         <div key={i}>
