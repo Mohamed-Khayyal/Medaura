@@ -30,13 +30,13 @@ export default function DashboardLayout({
   return (
     <RouteGuard allowedRoles={["admin"]}>
       <DashboardThemeProvider>
-        <div className="min-h-screen flex bg-(--background)" data-theme-dashboard dir={isRtl ? "rtl" : "ltr"}>
+        <div className="h-screen flex bg-(--background) overflow-hidden w-full" data-theme-dashboard dir={isRtl ? "rtl" : "ltr"}>
         
         {/* Sidebar */}
         <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
         {/* Main Content */}
-        <div className="flex flex-1 flex-col min-w-0 transition-all duration-300 ease-in-out">
+        <div className="flex flex-1 flex-col min-w-0 h-full overflow-hidden transition-all duration-300 ease-in-out">
           
           <Navbar onToggleSidebar={() => setSidebarOpen((prev) => !prev)} />
 

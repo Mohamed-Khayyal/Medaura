@@ -25,6 +25,9 @@ import {
   Search,
   Trash2,
   XCircle,
+  Laptop,
+  Smartphone,
+  Code,
 } from "lucide-react";
 import type { AuditLog, AuditStats } from "@/lib/types/api";
 
@@ -167,6 +170,28 @@ function getLocationString(log: AuditLog) {
   return parts.length ? parts.join(", ") : null;
 }
 
+function parseUserAgent(ua?: string | null) {
+  if (!ua) return { browser: "Unknown", os: "Unknown", device: "desktop" };
+  const str = ua.toLowerCase();
+  
+  let browser = "Unknown";
+  if (str.includes("firefox")) browser = "Firefox";
+  else if (str.includes("edg")) browser = "Edge";
+  else if (str.includes("chrome")) browser = "Chrome";
+  else if (str.includes("safari") && !str.includes("chrome")) browser = "Safari";
+  
+  let os = "Unknown";
+  if (str.includes("win")) os = "Windows";
+  else if (str.includes("mac")) os = "macOS";
+  else if (str.includes("linux")) os = "Linux";
+  else if (str.includes("android")) os = "Android";
+  else if (str.includes("iphone") || str.includes("ipad")) os = "iOS";
+  
+  const device = str.includes("mobi") || str.includes("android") || str.includes("iphone") ? "mobile" : "desktop";
+  
+  return { browser, os, device };
+}
+
 // ──────────────────────────── stat card ────────────────────────────
 
 interface StatCardProps {
@@ -202,6 +227,7 @@ interface Filters {
   actor_role: string;
   method: string;
   location: string;
+  ip: string;
   dateFrom: string;
   dateTo: string;
   status: string;
@@ -212,6 +238,7 @@ const INITIAL_FILTERS: Filters = {
   actor_role: "",
   method: "",
   location: "",
+  ip: "",
   dateFrom: "",
   dateTo: "",
   status: "",
@@ -240,12 +267,15 @@ export default function AuditLogsPage() {
     [filters],
   );
 
-  // Build fetch URL from backend-side filters (role, method, location)
+  // Build fetch URL from backend-side filters (role, method, location, ip, dates)
   const buildFetchUrl = useCallback((f: Filters) => {
     const params = new URLSearchParams();
     if (f.actor_role) params.set("actor_role", f.actor_role);
     if (f.method) params.set("method", f.method);
     if (f.location) params.set("location_contains", f.location);
+    if (f.ip) params.set("ip", f.ip);
+    if (f.dateFrom) params.set("dateFrom", f.dateFrom);
+    if (f.dateTo) params.set("dateTo", f.dateTo);
     const qs = params.toString();
     return `/api/admin/audit-logs${qs ? "?" + qs : ""}`;
   }, []);
@@ -414,7 +444,10 @@ export default function AuditLogsPage() {
     if (
       next.actor_role !== filters.actor_role ||
       next.method !== filters.method ||
-      next.location !== filters.location
+      next.location !== filters.location ||
+      next.ip !== filters.ip ||
+      next.dateFrom !== filters.dateFrom ||
+      next.dateTo !== filters.dateTo
     ) {
       loadAuditData(next);
     }
@@ -653,6 +686,31 @@ export default function AuditLogsPage() {
                     }))
                   }
                   placeholder="e.g. Cairo, Egypt"
+                  className="w-full pl-8 pr-3 py-2 rounded-xl border border-[#e6eaf0] bg-[#f6f8fb] text-sm text-[#0f1b3d] placeholder-[#a0aab8] focus:outline-none focus:ring-2 focus:ring-[#1f6feb]/30 focus:border-[#1f6feb] transition"
+                />
+              </div>
+            </div>
+
+            {/* IP Address */}
+            <div>
+              <label className="block text-xs font-medium text-[#5e6b85] mb-1">
+                IP Address
+              </label>
+              <div className="relative">
+                <Search
+                  size={14}
+                  className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#a0aab8]"
+                />
+                <input
+                  type="text"
+                  value={pendingFilters.ip}
+                  onChange={(e) =>
+                    setPendingFilters((p) => ({
+                      ...p,
+                      ip: e.target.value,
+                    }))
+                  }
+                  placeholder="e.g. 192.168."
                   className="w-full pl-8 pr-3 py-2 rounded-xl border border-[#e6eaf0] bg-[#f6f8fb] text-sm text-[#0f1b3d] placeholder-[#a0aab8] focus:outline-none focus:ring-2 focus:ring-[#1f6feb]/30 focus:border-[#1f6feb] transition"
                 />
               </div>
@@ -914,14 +972,14 @@ export default function AuditLogsPage() {
                         {actorEmail && (
                           <>
                             <span className="text-[#5e6b85]">Email</span>
-                            <span className="text-[#0f1b3d] truncate">
+                            <span className="text-[#0f1b3d] truncate" dir="ltr">
                               {actorEmail}
                             </span>
                           </>
                         )}
 
                         <span className="text-[#5e6b85]">IP</span>
-                        <span className="text-[#0f1b3d] font-mono">
+                        <span className="text-[#0f1b3d] font-mono" dir="ltr">
                           {log.ip || "—"}
                         </span>
 
@@ -935,7 +993,7 @@ export default function AuditLogsPage() {
                         )}
 
                         <span className="text-[#5e6b85]">Time</span>
-                        <span className="text-[#0f1b3d]">
+                        <span className="text-[#0f1b3d]" dir="ltr">
                           {formatTimestampShort(log.timestamp)}
                         </span>
                       </div>
@@ -1062,7 +1120,7 @@ export default function AuditLogsPage() {
                           {/* IP / Location */}
                           <td className="px-4 py-3 hidden xl:table-cell">
                             <div>
-                              <p className="text-[#0f1b3d] text-xs font-mono">
+                              <p className="text-[#0f1b3d] text-xs font-mono" dir="ltr">
                                 {log.ip || "—"}
                               </p>
                               {locationStr && (
@@ -1203,10 +1261,12 @@ function ExpandedDetail({ log, role }: { log: AuditLog; role: string }) {
   const loc = log.ip_location;
   const hasLocation = loc && (loc.city || loc.country || loc.latitude);
   const actorEmail = getActorEmail(log);
+  const ua = parseUserAgent(log.user_agent);
+  const hasPayload = log.body || log.query;
 
   return (
     <div className="bg-[#f6fbff] border-t border-[#dbeafe] px-5 py-4">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 text-sm">
         {/* Actor detail */}
         <div className="space-y-2">
           <h4 className="text-xs font-bold text-[#0f1b3d] uppercase tracking-wide flex items-center gap-1">
@@ -1271,17 +1331,67 @@ function ExpandedDetail({ log, role }: { log: AuditLog; role: string }) {
                 )}
                 {loc.country && (
                   <InfoRow label="Country" value={safeDecode(loc.country)} />
-                )} 
+                )}
+                {loc.map_url && (
+                  <InfoRow 
+                    label="Map" 
+                    value={
+                      <a href={loc.map_url} target="_blank" rel="noopener noreferrer" className="text-[#1f6feb] hover:underline flex items-center gap-1">
+                        View on Map <ExternalLink size={10} />
+                      </a>
+                    } 
+                  />
+                )}
               </>
             ) : (
               <p className="text-[#a0aab8]">No location data</p>
             )}
           </div>
         </div>
+
+        {/* Device & OS */}
+        <div className="space-y-2">
+          <h4 className="text-xs font-bold text-[#0f1b3d] uppercase tracking-wide flex items-center gap-1">
+            {ua.device === "mobile" ? <Smartphone size={12} className="text-[#1f6feb]" /> : <Laptop size={12} className="text-[#1f6feb]" />}
+            Device
+          </h4>
+          <div className="space-y-1 text-xs">
+            <InfoRow label="Browser" value={ua.browser} />
+            <InfoRow label="OS" value={ua.os} />
+            <InfoRow label="Type" value={ua.device === "mobile" ? "Mobile" : "Desktop"} />
+          </div>
+        </div>
       </div>
 
+      {/* Payload (Body & Query) */}
+      {hasPayload && (
+        <div className="mt-4 pt-4 border-t border-[#dbeafe] space-y-2">
+          <h4 className="text-xs font-bold text-[#0f1b3d] uppercase tracking-wide flex items-center gap-1">
+            <Code size={12} className="text-[#1f6feb]" /> Request Payload
+          </h4>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {log.body && Object.keys(log.body).length > 0 && (
+              <div className="space-y-1">
+                <span className="text-xs font-medium text-[#5e6b85]">Body:</span>
+                <pre dir="ltr" className="bg-white border border-[#e6eaf0] rounded-lg p-2 text-[10px] sm:text-xs overflow-auto max-h-40 text-[#0f1b3d] text-left text-wrap" style={{ wordBreak: 'break-all' }}>
+                  {JSON.stringify(log.body, null, 2)}
+                </pre>
+              </div>
+            )}
+            {log.query && Object.keys(log.query).length > 0 && (
+              <div className="space-y-1">
+                <span className="text-xs font-medium text-[#5e6b85]">Query:</span>
+                <pre dir="ltr" className="bg-white border border-[#e6eaf0] rounded-lg p-2 text-[10px] sm:text-xs overflow-auto max-h-40 text-[#0f1b3d] text-left text-wrap" style={{ wordBreak: 'break-all' }}>
+                  {JSON.stringify(log.query, null, 2)}
+                </pre>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Timestamp full */}
-      <div className="mt-3 pt-3 border-t border-[#dbeafe] flex items-center gap-1.5 text-xs text-[#5e6b85]">
+      <div className="mt-3 pt-3 border-t border-[#dbeafe] flex items-center gap-1.5 text-xs text-[#5e6b85]" dir="ltr">
         <Clock size={11} />
         <span>Full timestamp: {formatTimestamp(log.timestamp)}</span>
       </div>

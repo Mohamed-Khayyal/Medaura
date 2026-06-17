@@ -49,7 +49,7 @@ export default function ChatbotWidget() {
           {/* Iframe Container */}
           <div className="flex-1 relative w-full h-full">
             <iframe 
-              src="https://web-production-d09f.up.railway.app/"
+              src={process.env.NEXT_PUBLIC_CHATBOT_URL}
               className="w-full h-full border-0 absolute inset-0"
               title="Chatbot Interface"
               allow="microphone; camera;"

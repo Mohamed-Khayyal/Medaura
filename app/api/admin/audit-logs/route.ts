@@ -36,6 +36,9 @@ export async function GET(request: NextRequest) {
       actor_role: sp.get("actor_role") || undefined,
       method: sp.get("method") || undefined,
       location_contains: sp.get("location_contains") || undefined,
+      ip: sp.get("ip") || undefined,
+      dateFrom: sp.get("dateFrom") || undefined,
+      dateTo: sp.get("dateTo") || undefined,
       limit: sp.get("limit") ? Number(sp.get("limit")) : undefined,
     };
 

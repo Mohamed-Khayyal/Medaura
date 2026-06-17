@@ -186,7 +186,7 @@ export default function ClinicRequests() {
   ];
 
   return (
-    <div className="flex h-screen bg-gray-50" dir="rtl">
+    <div className="flex lg:h-[calc(100vh-112px)] h-auto bg-gray-50 rounded-2xl overflow-hidden border border-(--card-border)">
       {/* ── Sidebar ── */}
       <aside className="hidden lg:flex w-80 flex-shrink-0 bg-white border-l border-gray-100 flex-col overflow-hidden">
         {/* Header */}

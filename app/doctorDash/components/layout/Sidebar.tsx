@@ -86,54 +86,57 @@ function Sidebar({ open, onClose }: SidebarProps) {
   ];
 
   const sidebarPositionClass = isRtl
-    ? `fixed inset-y-0 right-0 z-50 h-screen w-64 bg-[#182a53] text-white p-4 space-y-4 overflow-auto shadow-2xl lg:shadow-none transform lg:sticky lg:top-0 transition-transform duration-300 ease-in-out border-l border-white/10 ${
+    ? `fixed inset-y-0 right-0 z-50 h-screen w-64 bg-[#182a53] text-white px-4 pb-4 space-y-4 overflow-auto shadow-2xl lg:shadow-none transform lg:sticky lg:top-0 transition-transform duration-300 ease-in-out border-l border-white/10 ${
         open ? "translate-x-0 lg:translate-x-0" : "translate-x-full lg:translate-x-0"
       }`
-    : `fixed inset-y-0 left-0 z-50 h-screen w-64 bg-[#182a53] text-white p-4 space-y-4 overflow-auto shadow-2xl lg:shadow-none transform lg:sticky lg:top-0 transition-transform duration-300 ease-in-out border-r border-white/10 ${
+    : `fixed inset-y-0 left-0 z-50 h-screen w-64 bg-[#182a53] text-white px-4 pb-4 space-y-4 overflow-auto shadow-2xl lg:shadow-none transform lg:sticky lg:top-0 transition-transform duration-300 ease-in-out border-r border-white/10 ${
         open ? "translate-x-0 lg:translate-x-0" : "-translate-x-full lg:translate-x-0"
       }`;
 
   return (
     <div className={sidebarPositionClass} dir={isRtl ? "rtl" : "ltr"}>
-      <button
-        className="lg:hidden mb-3 p-2 rounded-lg hover:bg-white/10 transition-colors"
-        onClick={onClose}
-        aria-label="Close sidebar"
-      >
-        <svg
-          className="w-5 h-5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
+      {/* Sticky Header Container */}
+      <div className="sticky top-0 z-10 bg-[#182a53] pt-4 pb-2">
+        <button
+          className="lg:hidden mb-3 p-2 rounded-lg hover:bg-white/10 transition-colors"
+          onClick={onClose}
+          aria-label="Close sidebar"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M6 18L18 6M6 6l12 12"
-          />
-        </svg>
-      </button>
-
-      <div className={`flex items-center justify-between border-b border-white/10 pb-4 mb-4 ${isRtl ? "flex-row-reverse" : "flex-row"}`}>
-        <div className={`flex items-center gap-2 ${isRtl ? "flex-row-reverse" : "flex-row"}`}>
-          <div className="relative h-10 w-10 shrink-0">
-            <Image
-              src="/images/Logo1.png"
-              alt="Medaura logo"
-              fill
-              sizes="40px"
-              className="object-contain"
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
             />
+          </svg>
+        </button>
+
+        <div className={`flex items-center justify-between border-b border-white/10 pb-4 ${isRtl ? "flex-row-reverse" : "flex-row"}`}>
+          <div className={`flex items-center gap-2 ${isRtl ? "flex-row-reverse" : "flex-row"}`}>
+            <div className="relative h-10 w-10 shrink-0">
+              <Image
+                src="/images/Logo1.png"
+                alt="Medaura logo"
+                fill
+                sizes="40px"
+                className="object-contain"
+              />
+            </div>
+            <div className={isRtl ? "text-right" : "text-left"}>
+              <h1 className="text-xl font-bold tracking-wide">Medaura</h1>
+              <p className="text-[10px] text-white/60">{sidebarTitle}</p>
+            </div>
           </div>
-          <div className={isRtl ? "text-right" : "text-left"}>
-            <h1 className="text-xl font-bold tracking-wide">Medaura</h1>
-            <p className="text-[10px] text-white/60">{sidebarTitle}</p>
-          </div>
+          <span className="h-7 w-7 rounded-lg bg-white/10 flex items-center justify-center text-[10px] font-bold uppercase shrink-0">
+            {isStaff ? "ST" : "MD"}
+          </span>
         </div>
-        <span className="h-7 w-7 rounded-lg bg-white/10 flex items-center justify-center text-[10px] font-bold uppercase shrink-0">
-          {isStaff ? "ST" : "MD"}
-        </span>
       </div>
 
       {menu.map((section, i) => (

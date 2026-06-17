@@ -71,9 +71,7 @@ function Dashboard({ childern }: { childern: React.ReactNode }) {
   const stats = dashboardData?.stats ?? dashboardData ?? {};
 
   return (
-    <div className="flex w-full" dir={isRtl ? "rtl" : "ltr"}>
-      <div className="flex w-full flex-col bg-(--background) min-h-screen transition-colors duration-300">
-        <div className="p-6">
+    <div className="space-y-6">
           <DashboardHeader range={range} setRange={setRange} />
 
           {/* Stats */}
@@ -167,11 +165,11 @@ function Dashboard({ childern }: { childern: React.ReactNode }) {
 
           {/* Table + Pie */}
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-8">
-            <div className="lg:col-span-2">
+            <div className="xl:col-span-2">
               <PatientsTable patients={dashboardData?.patients} />
             </div>
 
-            <div className="lg:col-span-1">
+            <div className="xl:col-span-1">
               <DepartmentsChart />
             </div>
           </div>
@@ -180,8 +178,6 @@ function Dashboard({ childern }: { childern: React.ReactNode }) {
           <div className="grid grid-cols-1 gap-6 mb-8">
             <AppointmentsTable appointments={dashboardData?.recentBookings} />
           </div>
-        </div>
-      </div>
     </div>
   );
 }

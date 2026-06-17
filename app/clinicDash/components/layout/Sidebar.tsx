@@ -82,46 +82,49 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
   ];
 
   const sidebarPositionClass = isRtl
-    ? `fixed inset-y-0 right-0 z-50 h-screen w-64 bg-[#0f2044] text-white p-4 space-y-4 overflow-auto shadow-2xl xl:shadow-none transform transition-transform duration-300 ease-in-out border-l border-white/10 xl:sticky xl:top-0 ${
+    ? `fixed inset-y-0 right-0 z-50 h-screen w-64 bg-[#0f2044] text-white px-4 pb-4 space-y-4 overflow-auto shadow-2xl xl:shadow-none transform transition-transform duration-300 ease-in-out border-l border-white/10 xl:sticky xl:top-0 ${
         open ? "translate-x-0 xl:translate-x-0" : "translate-x-full xl:translate-x-0"
       }`
-    : `fixed inset-y-0 left-0 z-50 h-screen w-64 bg-[#0f2044] text-white p-4 space-y-4 overflow-auto shadow-2xl xl:shadow-none transform transition-transform duration-300 ease-in-out border-r border-white/10 xl:sticky xl:top-0 ${
+    : `fixed inset-y-0 left-0 z-50 h-screen w-64 bg-[#0f2044] text-white px-4 pb-4 space-y-4 overflow-auto shadow-2xl xl:shadow-none transform transition-transform duration-300 ease-in-out border-r border-white/10 xl:sticky xl:top-0 ${
         open ? "translate-x-0 xl:translate-x-0" : "-translate-x-full xl:translate-x-0"
       }`;
 
   return (
     <div className={sidebarPositionClass} dir={isRtl ? "rtl" : "ltr"}>
-      {/* Close button (mobile only) */}
-      <button
-        className="xl:hidden mb-3 p-2 rounded-lg hover:bg-white/10 transition-colors"
-        onClick={onClose}
-        aria-label="Close sidebar"
-      >
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
+      {/* Sticky Header Container */}
+      <div className="sticky top-0 z-10 bg-[#0f2044] pt-4 pb-2">
+        {/* Close button (mobile only) */}
+        <button
+          className="xl:hidden mb-3 p-2 rounded-lg hover:bg-white/10 transition-colors"
+          onClick={onClose}
+          aria-label="Close sidebar"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
 
-      {/* Logo */}
-      <div className={`flex items-center justify-between px-1 pb-4 mb-4 border-b border-white/10 ${isRtl ? "flex-row-reverse" : "flex-row"}`}>
-        <div className={`flex items-center gap-2 ${isRtl ? "flex-row-reverse" : "flex-row"}`}>
-          <div className="relative h-10 w-10 shrink-0">
-            <Image
-              src="/images/Logo1.png"
-              alt="Medaura logo"
-              fill
-              sizes="40px"
-              className="object-contain"
-            />
+        {/* Logo */}
+        <div className={`flex items-center justify-between px-1 pb-4 border-b border-white/10 ${isRtl ? "flex-row-reverse" : "flex-row"}`}>
+          <div className={`flex items-center gap-2 ${isRtl ? "flex-row-reverse" : "flex-row"}`}>
+            <div className="relative h-10 w-10 shrink-0">
+              <Image
+                src="/images/Logo1.png"
+                alt="Medaura logo"
+                fill
+                sizes="40px"
+                className="object-contain"
+              />
+            </div>
+            <div className={isRtl ? "text-right" : "text-left"}>
+              <h1 className="text-xl font-bold tracking-wide">Medaura</h1>
+              <p className="text-[10px] text-white/50">{t("dashboard.sidebar.titleClinic", locale)}</p>
+            </div>
           </div>
-          <div className={isRtl ? "text-right" : "text-left"}>
-            <h1 className="text-xl font-bold tracking-wide">Medaura</h1>
-            <p className="text-[10px] text-white/50">{t("dashboard.sidebar.titleClinic", locale)}</p>
-          </div>
+          <span className="h-8 w-8 rounded-xl bg-teal-500/20 border border-teal-400/30 flex items-center justify-center shrink-0">
+            <Building2 size={15} className="text-teal-300" />
+          </span>
         </div>
-        <span className="h-8 w-8 rounded-xl bg-teal-500/20 border border-teal-400/30 flex items-center justify-center shrink-0">
-          <Building2 size={15} className="text-teal-300" />
-        </span>
       </div>
 
       {/* Menu */}

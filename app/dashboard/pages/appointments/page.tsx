@@ -204,7 +204,7 @@ export default function Appointments() {
   }
 
   return (
-    <div className="bg-(--card-bg) rounded-2xl p-5 shadow-sm border border-(--card-border) w-full" dir="rtl">
+    <div className="bg-(--card-bg) rounded-2xl p-5 shadow-sm border border-(--card-border) w-full">
       
       {/* Header */}
       <div className="flex items-center justify-between mb-5 border-b border-(--card-border) pb-4">

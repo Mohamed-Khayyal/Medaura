@@ -32,7 +32,7 @@ export class ApiClient {
     // Forward the real client IP and GPS/location headers from the browser's request
     if (typeof window === "undefined") {
       try {
-        const { headers: nextHeadersFn } = require("next/headers");
+        const { headers: nextHeadersFn, cookies: nextCookiesFn } = require("next/headers");
         const nextHeaders = await nextHeadersFn();
 
         // Forward the real client IP so the backend logs the user's IP, not Vercel's server IP.
@@ -59,11 +59,29 @@ export class ApiClient {
         const region = nextHeaders.get("x-client-region");
         const country = nextHeaders.get("x-client-country");
 
+        // Forward User-Agent so backend logs capture the actual client device
+        const userAgent = nextHeaders.get("user-agent") || nextHeaders.get("User-Agent");
+        console.log("[ApiClient] Forwarding User-Agent:", userAgent);
+        if (userAgent) headers.set("user-agent", userAgent);
+
         if (lat) headers.set("x-client-latitude", lat);
         if (lon) headers.set("x-client-longitude", lon);
         if (city) headers.set("x-client-city", city);
         if (region) headers.set("x-client-region", region);
         if (country) headers.set("x-client-country", country);
+
+        // Automatically forward token from cookies if not explicitly provided
+        let finalToken = token;
+        if (!finalToken) {
+          const cookies = await nextCookiesFn();
+          const jwtCookie = cookies.get("jwt")?.value;
+          if (jwtCookie) {
+            finalToken = jwtCookie;
+          }
+        }
+        
+        // Pass the resolved token via a custom property so we can use it below
+        (fetchOptions as any)._resolvedToken = finalToken;
       } catch (err) {
         // Silently catch if require("next/headers") or nextHeadersFn() is called outside request context
       }
@@ -80,9 +98,16 @@ export class ApiClient {
       headers.set("Content-Type", "application/json");
     }
 
-    if (token) {
-      headers.set("Authorization", `Bearer ${token}`);
+    const finalToken = (fetchOptions as any)._resolvedToken !== undefined 
+      ? (fetchOptions as any)._resolvedToken 
+      : token;
+
+    if (finalToken) {
+      headers.set("Authorization", `Bearer ${finalToken}`);
     }
+    
+    // Clean up our custom property
+    delete (fetchOptions as any)._resolvedToken;
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);

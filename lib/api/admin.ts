@@ -295,6 +295,9 @@ export const adminService = {
       actor_role?: string;
       method?: string;
       location_contains?: string;
+      ip?: string;
+      dateFrom?: string;
+      dateTo?: string;
       limit?: number;
     }
   ) {
@@ -302,6 +305,9 @@ export const adminService = {
     if (filters?.actor_role) params.set("actor_role", filters.actor_role);
     if (filters?.method) params.set("method", filters.method);
     if (filters?.location_contains) params.set("location_contains", filters.location_contains);
+    if (filters?.ip) params.set("ip", filters.ip);
+    if (filters?.dateFrom) params.set("dateFrom", filters.dateFrom);
+    if (filters?.dateTo) params.set("dateTo", filters.dateTo);
     if (filters?.limit) params.set("limit", String(filters.limit));
 
     const qs = params.toString();

@@ -20,7 +20,7 @@ export default function DashboardLayout({
     <RouteGuard allowedRoles={["doctor", "staff"]}>
       <DashboardThemeProvider>
         <div
-          className="min-h-screen flex bg-(--background) transition-all duration-700 ease-in-out"
+          className="h-screen flex bg-(--background) transition-all duration-700 ease-in-out overflow-hidden w-full"
           data-theme-dashboard
           dir={isRtl ? "rtl" : "ltr"}
         >
@@ -28,7 +28,7 @@ export default function DashboardLayout({
           <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
           {/* Main Content */}
-          <div className="flex flex-1 flex-col transition-all duration-300 ease-in-out">
+          <div className="flex flex-1 flex-col h-full overflow-hidden transition-all duration-300 ease-in-out">
             <Navbar onToggleSidebar={() => setSidebarOpen((prev) => !prev)} />
 
             <main className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5">

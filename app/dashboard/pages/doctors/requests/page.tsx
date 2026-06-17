@@ -396,7 +396,7 @@ export default function DoctorRequestsPage() {
   };
 
   return (
-    <div className="min-h-screen space-y-6 p-6" dir="rtl">
+    <div className="space-y-6 p-1">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="mb-2 inline-flex items-center gap-2 rounded-full bg-[#EBF2F9] px-3 py-1 text-sm font-medium text-[#1F2B6C]">

@@ -182,7 +182,7 @@ export default function StaffAdminsPage() {
   const activeCount = admins.filter((a) => a.is_active).length;
 
   return (
-    <div className="min-h-screen space-y-6 p-1" dir="rtl">
+    <div className="space-y-6 p-1">
       {/* Header */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>

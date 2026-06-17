@@ -60,37 +60,40 @@ function Sidebar({ open, onClose }: SidebarProps) {
   ];
 
   const sidebarPositionClass = isRtl
-    ? `fixed inset-y-0 right-0 z-50 w-64 h-screen bg-[#1F2B6C] text-white p-6 space-y-6 overflow-auto shadow-2xl lg:shadow-none transform lg:sticky lg:top-0 transition-transform duration-300 ease-in-out border-l border-white/10 ${
+    ? `fixed inset-y-0 right-0 z-50 w-64 h-screen bg-[#1F2B6C] text-white px-6 pb-6 space-y-6 overflow-auto shadow-2xl lg:shadow-none transform lg:sticky lg:top-0 transition-transform duration-300 ease-in-out border-l border-white/10 ${
         open ? "translate-x-0 lg:translate-x-0" : "translate-x-full lg:translate-x-0"
       }`
-    : `fixed inset-y-0 left-0 z-50 w-64 h-screen bg-[#1F2B6C] text-white p-6 space-y-6 overflow-auto shadow-2xl lg:shadow-none transform lg:sticky lg:top-0 transition-transform duration-300 ease-in-out border-r border-white/10 ${
+    : `fixed inset-y-0 left-0 z-50 w-64 h-screen bg-[#1F2B6C] text-white px-6 pb-6 space-y-6 overflow-auto shadow-2xl lg:shadow-none transform lg:sticky lg:top-0 transition-transform duration-300 ease-in-out border-r border-white/10 ${
         open ? "translate-x-0 lg:translate-x-0" : "-translate-x-full lg:translate-x-0"
       }`;
 
   return (
     <div className={sidebarPositionClass} dir={isRtl ? "rtl" : "ltr"}>
       
-      <button
-        className="lg:hidden mb-4 p-2 rounded-lg hover:bg-white/10 transition-colors"
-        onClick={onClose}
-        aria-label="Close sidebar"
-      >
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
+      {/* Sticky Header Container */}
+      <div className="sticky top-0 z-10 bg-[#1F2B6C] pt-6 pb-2">
+        <button
+          className="lg:hidden mb-4 p-2 rounded-lg hover:bg-white/10 transition-colors"
+          onClick={onClose}
+          aria-label="Close sidebar"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
 
-      <div className={`flex items-center gap-2 mb-6 ${isRtl ? "flex-row-reverse" : "flex-row"}`}>
-        <div className="relative h-10 w-10 shrink-0">
-          <Image
-            src="/images/Logo1.png"
-            alt="Medaura logo"
-            fill
-            sizes="40px"
-            className="object-contain"
-          />
+        <div className={`flex items-center gap-2 ${isRtl ? "flex-row-reverse" : "flex-row"}`}>
+          <div className="relative h-10 w-10 shrink-0">
+            <Image
+              src="/images/Logo1.png"
+              alt="Medaura logo"
+              fill
+              sizes="40px"
+              className="object-contain"
+            />
+          </div>
+          <h1 className={`text-2xl font-bold tracking-wide flex-1 ${isRtl ? "text-right" : "text-left"}`}>Medaura</h1>
         </div>
-        <h1 className={`text-2xl font-bold tracking-wide flex-1 ${isRtl ? "text-right" : "text-left"}`}>Medaura</h1>
       </div>
 
       {menu.map((section, i) => (

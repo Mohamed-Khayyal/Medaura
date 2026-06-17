@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
   try {
     const ip = getRequestIp(request);
     const ipPath = isPrivateIp(ip) ? "" : `/${encodeURIComponent(ip!)}`;
-    const url = `http://ip-api.com/json${ipPath}?fields=status,country,regionName,city,lat,lon,query,message`;
+    const url = `https://ipinfo.io${ipPath}/json`;
 
     const response = await fetch(url, {
       cache: "no-store",
@@ -58,26 +58,31 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const data = (await response.json()) as IpApiResponse;
-    if (data.status !== "success") {
+    const data = await response.json();
+    if (data.error) {
       return NextResponse.json(
         {
           success: false,
-          error: data.message || "Location is unavailable",
+          error: data.error.message || "Location is unavailable",
         },
         { status: 404 }
       );
     }
 
-    const latitude = typeof data.lat === "number" ? data.lat : null;
-    const longitude = typeof data.lon === "number" ? data.lon : null;
+    let latitude: number | null = null;
+    let longitude: number | null = null;
+    if (data.loc) {
+      const parts = data.loc.split(",");
+      latitude = parseFloat(parts[0]);
+      longitude = parseFloat(parts[1]);
+    }
 
     return NextResponse.json({
       success: true,
       data: {
-        ip: data.query || ip,
+        ip: data.ip || ip,
         city: data.city || null,
-        region: data.regionName || null,
+        region: data.region || null,
         country: data.country || null,
         latitude,
         longitude,
@@ -85,7 +90,7 @@ export async function GET(request: NextRequest) {
           latitude !== null && longitude !== null
             ? `https://www.google.com/maps?q=${latitude},${longitude}`
             : null,
-        source: "ip_api",
+        source: "ipinfo",
       },
     });
   } catch (error) {

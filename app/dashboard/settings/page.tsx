@@ -309,7 +309,7 @@ export default function AdminSettingsPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto p-1" dir="rtl">
+    <div className="space-y-6 max-w-6xl mx-auto p-1">
       {/* Header */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between border-b border-(--card-border) pb-4 mb-6">
         <div>

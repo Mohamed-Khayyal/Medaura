@@ -218,7 +218,7 @@ export default function EditSchedule() {
   };
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   return (
-    <div className="p-6  min-h-screen">
+    <div className="space-y-6 p-1">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <button
@@ -380,7 +380,7 @@ export default function EditSchedule() {
           <div className="text-right w-full">
             <h3 className="font-bold text-(--text-primary)">ملخص الجدول</h3>
           </div>
-          <div className="flex gap-28 text-right">
+          <div className="flex flex-wrap gap-6 sm:gap-16 justify-end text-right">
             <div className=" text-left">
               <p className="text-sm text-(--text-secondary)">الاستراحة</p>
               <p className="font-bold text-(--text-primary)">{summary.status}</p>

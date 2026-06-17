@@ -181,7 +181,7 @@ export default function ClinicDoctorsPage() {
   }, [doctors, searchQuery, specialistFilter]);
 
   return (
-    <div className="space-y-6 p-1 text-right" dir="rtl">
+    <div className="space-y-6 p-1">
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
