@@ -30,6 +30,7 @@ import {
   Code,
 } from "lucide-react";
 import type { AuditLog, AuditStats } from "@/lib/types/api";
+import { UAParser } from "ua-parser-js";
 
 const PAGE_SIZE = 15;
 
@@ -170,26 +171,28 @@ function getLocationString(log: AuditLog) {
   return parts.length ? parts.join(", ") : null;
 }
 
-function parseUserAgent(ua?: string | null) {
-  if (!ua) return { browser: "Unknown", os: "Unknown", device: "desktop" };
-  const str = ua.toLowerCase();
+function parseUserAgent(uaString?: string | null) {
+  if (!uaString) return { browser: "Unknown", os: "Unknown", device: "desktop", deviceDetails: null };
   
-  let browser = "Unknown";
-  if (str.includes("firefox")) browser = "Firefox";
-  else if (str.includes("edg")) browser = "Edge";
-  else if (str.includes("chrome")) browser = "Chrome";
-  else if (str.includes("safari") && !str.includes("chrome")) browser = "Safari";
+  const parser = new UAParser(uaString);
+  const result = parser.getResult();
   
-  let os = "Unknown";
-  if (str.includes("win")) os = "Windows";
-  else if (str.includes("mac")) os = "macOS";
-  else if (str.includes("linux")) os = "Linux";
-  else if (str.includes("android")) os = "Android";
-  else if (str.includes("iphone") || str.includes("ipad")) os = "iOS";
+  const browser = result.browser.name 
+    ? `${result.browser.name} ${result.browser.version || ""}`.trim() 
+    : "Unknown";
+    
+  const os = result.os.name 
+    ? `${result.os.name} ${result.os.version || ""}`.trim() 
+    : "Unknown";
+    
+  const type = result.device.type === "mobile" || result.device.type === "tablet" ? "mobile" : "desktop";
   
-  const device = str.includes("mobi") || str.includes("android") || str.includes("iphone") ? "mobile" : "desktop";
+  let deviceDetails = null;
+  if (result.device.vendor || result.device.model) {
+    deviceDetails = `${result.device.vendor || ""} ${result.device.model || ""}`.trim();
+  }
   
-  return { browser, os, device };
+  return { browser, os, device: type, deviceDetails };
 }
 
 // ──────────────────────────── stat card ────────────────────────────
@@ -1356,6 +1359,7 @@ function ExpandedDetail({ log, role }: { log: AuditLog; role: string }) {
             Device
           </h4>
           <div className="space-y-1 text-xs">
+            {ua.deviceDetails && <InfoRow label="Model" value={ua.deviceDetails} />}
             <InfoRow label="Browser" value={ua.browser} />
             <InfoRow label="OS" value={ua.os} />
             <InfoRow label="Type" value={ua.device === "mobile" ? "Mobile" : "Desktop"} />
