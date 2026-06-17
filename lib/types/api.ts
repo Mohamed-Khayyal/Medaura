@@ -377,6 +377,13 @@ export interface AuditLog {
   query?: Record<string, unknown> | null;
   status_code?: number | null;
   user_agent?: string;
+  client_hints?: {
+    model?: string | null;
+    platform?: string | null;
+    platformVersion?: string | null;
+    mobile?: string | null;
+    uaList?: string | null;
+  } | null;
   error_code?: string | null;
   error_message?: string | null;
   error_details?: unknown;

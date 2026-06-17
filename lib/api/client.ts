@@ -61,8 +61,34 @@ export class ApiClient {
 
         // Forward User-Agent so backend logs capture the actual client device
         const userAgent = nextHeaders.get("user-agent") || nextHeaders.get("User-Agent");
-        console.log("[ApiClient] Forwarding User-Agent:", userAgent);
         if (userAgent) headers.set("user-agent", userAgent);
+
+        // Forward Client Hints: read the x-device-hints cookie set by DeviceHintsCollector.tsx
+        // This is set client-side via navigator.userAgentData.getHighEntropyValues() which
+        // returns the REAL device model/platform, unlike the frozen UA string.
+        const cookies = await nextCookiesFn();
+        const deviceHintsCookie = cookies.get("x-device-hints")?.value;
+        if (deviceHintsCookie) {
+          try {
+            const dh = JSON.parse(decodeURIComponent(deviceHintsCookie));
+            if (dh.model) headers.set("sec-ch-ua-model", dh.model);
+            if (dh.platform) headers.set("sec-ch-ua-platform", dh.platform);
+            if (dh.platformVersion) headers.set("sec-ch-ua-platform-version", dh.platformVersion);
+            if (dh.mobile) headers.set("sec-ch-ua-mobile", dh.mobile);
+          } catch {
+            // malformed cookie — ignore
+          }
+        }
+
+        // Also try native sec-ch-ua-* headers as a fallback (only present after Accept-CH round-trip)
+        const chUaModel = nextHeaders.get("sec-ch-ua-model");
+        const chUaPlatform = nextHeaders.get("sec-ch-ua-platform");
+        const chUaPlatformVersion = nextHeaders.get("sec-ch-ua-platform-version");
+        const chUaMobile = nextHeaders.get("sec-ch-ua-mobile");
+        if (chUaModel && !headers.get("sec-ch-ua-model")) headers.set("sec-ch-ua-model", chUaModel);
+        if (chUaPlatform && !headers.get("sec-ch-ua-platform")) headers.set("sec-ch-ua-platform", chUaPlatform);
+        if (chUaPlatformVersion && !headers.get("sec-ch-ua-platform-version")) headers.set("sec-ch-ua-platform-version", chUaPlatformVersion);
+        if (chUaMobile && !headers.get("sec-ch-ua-mobile")) headers.set("sec-ch-ua-mobile", chUaMobile);
 
         if (lat) headers.set("x-client-latitude", lat);
         if (lon) headers.set("x-client-longitude", lon);
@@ -73,12 +99,12 @@ export class ApiClient {
         // Automatically forward token from cookies if not explicitly provided
         let finalToken = token;
         if (!finalToken) {
-          const cookies = await nextCookiesFn();
           const jwtCookie = cookies.get("jwt")?.value;
           if (jwtCookie) {
             finalToken = jwtCookie;
           }
         }
+
         
         // Pass the resolved token via a custom property so we can use it below
         (fetchOptions as any)._resolvedToken = finalToken;

@@ -171,27 +171,42 @@ function getLocationString(log: AuditLog) {
   return parts.length ? parts.join(", ") : null;
 }
 
-function parseUserAgent(uaString?: string | null) {
-  if (!uaString) return { browser: "Unknown", os: "Unknown", device: "desktop", deviceDetails: null };
-  
-  const parser = new UAParser(uaString);
-  const result = parser.getResult();
-  
-  const browser = result.browser.name 
-    ? `${result.browser.name} ${result.browser.version || ""}`.trim() 
+function parseUserAgent(log: { user_agent?: string | null; client_hints?: { model?: string | null; platform?: string | null; platformVersion?: string | null; mobile?: string | null; uaList?: string | null } | null }) {
+  const uaString = log.user_agent;
+  const hints = log.client_hints;
+
+  if (!uaString && !hints) return { browser: "Unknown", os: "Unknown", device: "desktop", deviceDetails: null };
+
+  // Use UAParser only for browser name/version — it reads the UA string reliably for this
+  const result = new UAParser(uaString || "").getResult();
+
+  const browser = result.browser.name
+    ? `${result.browser.name} ${result.browser.version || ""}`.trim()
     : "Unknown";
-    
-  const os = result.os.name 
-    ? `${result.os.name} ${result.os.version || ""}`.trim() 
-    : "Unknown";
-    
-  const type = result.device.type === "mobile" || result.device.type === "tablet" ? "mobile" : "desktop";
-  
-  let deviceDetails = null;
-  if (result.device.vendor || result.device.model) {
-    deviceDetails = `${result.device.vendor || ""} ${result.device.model || ""}`.trim();
+
+  // Prefer Client Hints for OS — they give the real platform & version (not frozen)
+  let os = "Unknown";
+  if (hints?.platform && hints.platform !== "") {
+    const version = hints.platformVersion ? ` ${hints.platformVersion}` : "";
+    os = `${hints.platform}${version}`.trim();
+  } else if (result.os.name) {
+    os = `${result.os.name} ${result.os.version || ""}`.trim();
   }
-  
+
+  // Prefer Client Hints for device type — sec-ch-ua-mobile is authoritative
+  const isMobileHint = hints?.mobile === "?1";
+  const type = isMobileHint || result.device.type === "mobile" || result.device.type === "tablet"
+    ? "mobile"
+    : "desktop";
+
+  // Prefer Client Hints model — UA string freezes the model to "K" on modern Android
+  let deviceDetails: string | null = null;
+  if (hints?.model && hints.model !== "") {
+    deviceDetails = hints.model;
+  } else if (result.device.vendor || result.device.model) {
+    deviceDetails = `${result.device.vendor || ""} ${result.device.model || ""}`.trim() || null;
+  }
+
   return { browser, os, device: type, deviceDetails };
 }
 
@@ -1264,7 +1279,7 @@ function ExpandedDetail({ log, role }: { log: AuditLog; role: string }) {
   const loc = log.ip_location;
   const hasLocation = loc && (loc.city || loc.country || loc.latitude);
   const actorEmail = getActorEmail(log);
-  const ua = parseUserAgent(log.user_agent);
+  const ua = parseUserAgent(log);
   const hasPayload = log.body || log.query;
 
   return (

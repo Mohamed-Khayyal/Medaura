@@ -4,6 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import ThemeProvider from "./providers/ThemeProvider";
 import AppChrome from "./AppChrome";
+import DeviceHintsCollector from "@/components/DeviceHintsCollector";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -41,6 +42,7 @@ export default function RootLayout({
       >
         <ThemeProvider>
           <AuthProvider>
+            <DeviceHintsCollector />
             <AppChrome>{children}</AppChrome>
           </AuthProvider>
         </ThemeProvider>
