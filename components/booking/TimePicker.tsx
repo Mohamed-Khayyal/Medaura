@@ -3,6 +3,7 @@
 import { X } from "lucide-react";
 import { useState } from "react";
 import { t } from "@/i18n";
+import { formatTime12Hour } from "@/lib/utils";
 
 interface TimeSlot {
   from: string;
@@ -97,8 +98,8 @@ export default function TimePicker({
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {slots.map((slot) => {
               const isSelected = selectedTime === slot.from;
-              const from12 = formatTo12Hour(slot.from);
-              const to12 = slot.to ? formatTo12Hour(slot.to) : "";
+              const from12 = formatTime12Hour(slot.from, locale);
+              const to12 = slot.to ? formatTime12Hour(slot.to, locale) : "";
               const label = to12 ? `${from12} - ${to12}` : from12;
 
               return (

@@ -10,6 +10,7 @@ import ValidationModal from "@/components/booking/ValidationModal";
 import { t } from "@/i18n";
 import Swal from "sweetalert2";
 import { useAuth } from "@/context/AuthContext";
+import { formatTime12Hour } from "@/lib/utils";
 
 const DOCTOR_FALLBACK_IMAGE = "/images/blank-profile-picture.png";
 const API_BASE_URL = "/api";
@@ -628,7 +629,9 @@ export default function DoctorProfilePage() {
         (isRecord(payload) && payload.success === false)
       ) {
         throw new Error(
-          getPayloadMessage(
+          response.status === 403
+            ? t("providerProfile.rateOnlyBookedDoctor", locale)
+            : getPayloadMessage(
             payload,
             t("providerProfile.submitRatingError", locale),
           ),
@@ -918,7 +921,7 @@ export default function DoctorProfilePage() {
                     className="flex items-center gap-2 text-sm text-gray-500 border border-gray-100 px-4 py-2 rounded-xl hover:bg-gray-50 transition-colors"
                   >
                     <Clock className="w-4 h-4 text-[#001A6E]" />
-                    {selectedTime ? formatTo12Hour(selectedTime) : t("booking.timePlaceholder", locale)}
+                    {selectedTime ? formatTime12Hour(selectedTime, locale) : t("booking.timePlaceholder", locale)}
                   </button>
                 </div>
 
@@ -946,9 +949,9 @@ export default function DoctorProfilePage() {
 
                 {(doctor.work_from || doctor.work_to) && (
                   <p className="mt-4 text-xs text-gray-400">
-                    {t("booking.workingHours", locale)} {doctor.work_from || ""}
+                    {t("booking.workingHours", locale)} {formatTime12Hour(doctor.work_from, locale)}
                     {doctor.work_from && doctor.work_to ? " - " : ""}
-                    {doctor.work_to || ""}
+                    {formatTime12Hour(doctor.work_to, locale)}
                   </p>
                 )}
               </div>

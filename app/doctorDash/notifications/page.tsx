@@ -7,6 +7,7 @@ import { ar, enUS } from "date-fns/locale";
 import { useLocale } from "@/lib/hooks";
 import { t } from "@/i18n";
 import { useAuth } from "@/context/AuthContext";
+import { formatNotificationMessage } from "@/lib/utils";
 
 interface Notification {
   id: number;
@@ -277,7 +278,7 @@ export default function DoctorNotificationsPage() {
                   </span>
                 </div>
                 <p className="mt-1 text-sm text-(--text-secondary) leading-relaxed">
-                  {notification.message}
+                  {formatNotificationMessage(notification.message, locale)}
                 </p>
                 {!notification.read && (
                   <button

@@ -11,6 +11,32 @@ import {
 } from "@/lib/utils/api-errors";
 import type { DoctorSignupProfile } from "@/lib/types/api";
 import { EyeIcon } from "../utils";
+import { useLocale } from "@/lib/hooks";
+import { t } from "@/i18n";
+
+function getSpecialistLabel(specialist: string | null | undefined, locale: string) {
+  if (!specialist) return "-";
+  const arSpecialties: Record<string, string> = {
+    neurology: 'مخ واعصاب',
+    orthopedics: 'عظام',
+    oncology: 'الأورام',
+    ent: 'طب الأذن والأنف والحنجرة',
+    ophthalmology: 'طب العيون',
+    cardiology: 'قلب و اوعية دموية',
+    pulmonology: 'صدر و جهاز تنفسي',
+    nephrology: 'كلى',
+    dentistry: 'اسنان',
+    pediatrics: 'اطفال و حديثي الولادة',
+    dermatology: 'جلدية',
+    gynecology: 'نسا و توليد'
+  };
+
+  const key = Object.keys(arSpecialties).find(k => arSpecialties[k] === specialist);
+  if (key) {
+    return t(`authPage.doctor.specialties.${key}`, locale) || specialist;
+  }
+  return specialist;
+}
 
 const SPECIALTIES = [
   "مخ واعصاب",
@@ -40,6 +66,7 @@ const WORK_DAYS = [
 export default function DoctorRegisterPage() {
   const router = useRouter();
   const { signup } = useAuth();
+  const locale = useLocale();
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -180,9 +207,9 @@ export default function DoctorRegisterPage() {
           aria-invalid={!!errors.specialist}
           className={inputCls("specialist")}
         >
-          <option value="">اختر التخصص...</option>
+          <option value="">{locale === 'en' ? 'Select specialty...' : 'اختر التخصص...'}</option>
           {SPECIALTIES.map((s) => (
-            <option key={s} value={s}>{s}</option>
+            <option key={s} value={s}>{getSpecialistLabel(s, locale)}</option>
           ))}
         </select>
         {errors.specialist && <p className="text-sm text-red-700 mt-1">{errors.specialist}</p>}

@@ -20,6 +20,7 @@ import type { Notification } from "@/lib/types/api";
 import { fetchNotificationsClient } from "@/lib/utils/fetchNotifications";
 import { useLocale } from "@/lib/hooks";
 import { t } from "@/i18n";
+import { formatNotificationMessage } from "@/lib/utils";
 
 function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
   const { logout, user, isAuthenticated } = useAuth();
@@ -381,7 +382,7 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
                               {formatNotificationTime(n.created_at)}
                             </span>
                           </div>
-                          <p className="text-xs text-[#5e6b85] mt-0.5 truncate">{n.message}</p>
+                          <p className="text-xs text-[#5e6b85] mt-0.5 truncate">{formatNotificationMessage(n.message, locale)}</p>
                         </div>
                       </div>
                     ))}

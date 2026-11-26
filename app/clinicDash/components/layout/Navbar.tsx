@@ -7,6 +7,7 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useLocale } from "@/lib/hooks";
 import { t } from "@/i18n";
+import { formatNotificationMessage } from "@/lib/utils";
 
 type NotificationItem = {
   id: string;
@@ -83,12 +84,13 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
             res.data.map((n: NotificationResponseItem) => ({
               id: String(n.id),
               title: n.title || "",
-              body: n.message || "",
+              body: formatNotificationMessage(n.message || "", locale),
               time: new Date(n.created_at || Date.now()).toLocaleTimeString(
                 "ar-EG",
                 {
-                  hour: "2-digit",
+                  hour: "numeric",
                   minute: "2-digit",
+                  hour12: true,
                 },
               ),
               read: n.read === true,

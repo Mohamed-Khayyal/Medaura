@@ -22,6 +22,7 @@ import {
 import type { DoctorProfile } from "@/lib/types/api";
 import { useLocale } from "@/lib/hooks";
 import { t } from "@/i18n";
+import { formatTime12Hour } from "@/lib/utils";
 
 const API_BASE_URL = "";
 const DOCTORS_API_URL = "/api/doctors";
@@ -154,18 +155,21 @@ function getDoctorImage(doctor: DoctorWithClinic) {
 
 async function getDoctors(): Promise<DoctorWithClinic[]> {
   try {
-    const response = await fetch(DOCTORS_API_URL);
+    const response = await fetch(DOCTORS_API_URL, { cache: "no-store" });
     const payload = await response.json();
-    
-    const list = Array.isArray(payload) 
-      ? payload 
+
+    // Support both API shapes: { doctors: [...] }, { data: [...] }, or a bare array
+    const list: any[] = Array.isArray(payload)
+      ? payload
+      : Array.isArray(payload.doctors)
+      ? payload.doctors
       : Array.isArray(payload.data)
-        ? payload.data
-        : payload.data?.doctors || payload.doctors || [];
+      ? payload.data
+      : payload.data?.doctors || [];
 
     return list.map((doctor: any) => ({
       ...doctor,
-      id: doctor.id ?? doctor.doctor_id,
+      id: doctor.id ?? doctor.doctor_id ?? doctor.staff_id,
     })) as DoctorWithClinic[];
   } catch (err) {
     console.error("Error fetching doctors client side:", err);
@@ -286,7 +290,7 @@ function DoctorCard({ doctor, index, locale }: { doctor: DoctorWithClinic; index
             <div className="mt-1 flex items-center gap-1">
               {!isRtl && <Clock className="h-3 w-3 shrink-0 text-[#001a6e]" />}
               <p className="text-[13px] font-bold text-[#001a6e]">
-                {doctor.work_from} – {doctor.work_to}
+                {formatTime12Hour(doctor.work_from, locale)} – {formatTime12Hour(doctor.work_to, locale)}
               </p>
               {isRtl && <Clock className="h-3 w-3 shrink-0 text-[#001a6e]" />}
             </div>

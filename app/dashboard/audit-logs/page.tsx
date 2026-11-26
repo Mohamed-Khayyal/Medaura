@@ -44,8 +44,9 @@ function formatTimestamp(value?: string) {
     month: "short",
     day: "numeric",
     year: "numeric",
-    hour: "2-digit",
+    hour: "numeric",
     minute: "2-digit",
+    hour12: true,
   }).format(new Date(parsed));
 }
 
@@ -56,8 +57,9 @@ function formatTimestampShort(value?: string) {
   return new Intl.DateTimeFormat("en-US", {
     month: "short",
     day: "numeric",
-    hour: "2-digit",
+    hour: "numeric",
     minute: "2-digit",
+    hour12: true,
   }).format(new Date(parsed));
 }
 

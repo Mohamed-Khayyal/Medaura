@@ -6,6 +6,7 @@ import { Bell, RefreshCw, CheckCircle2 } from "lucide-react";
 import type { Notification } from "@/lib/types/api";
 import { fetchNotificationsClient } from "@/lib/utils/fetchNotifications";
 import { useAuth } from "@/context/AuthContext";
+import { formatNotificationMessage } from "@/lib/utils";
 
 const PAGE_SIZE = 10;
 
@@ -216,7 +217,7 @@ export default function AdminNotificationsPage() {
                   </span>
                 </div>
                 <p className="mt-1 text-sm text-(--text-secondary)">
-                  {notification.message}
+                  {formatNotificationMessage(notification.message, "ar")}
                 </p>
                 {!notification.read && (
                   <button

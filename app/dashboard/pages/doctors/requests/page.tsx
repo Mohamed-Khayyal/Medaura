@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { formatTime12Hour } from "@/lib/utils";
 import {
   BadgeCheck,
   CalendarDays,
@@ -158,7 +159,7 @@ function mapDoctorToRequest(
     phone: "غير متاح",
     submittedAt:
       doctor.work_from && doctor.work_to
-        ? `${doctor.work_from} - ${doctor.work_to}`
+        ? `${formatTime12Hour(doctor.work_from, "ar")} - ${formatTime12Hour(doctor.work_to, "ar")}`
         : "غير محدد",
     licenseNumber: `DOC-${doctor.doctor_id}`,
     clinic: "غير محدد",

@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useLocale } from "@/lib/hooks";
 import { t } from "@/i18n";
+import { formatTime12Hour } from "@/lib/utils";
 
 const statusColors: Record<string, string> = {
   completed: "bg-green-100 text-green-600",
@@ -118,7 +119,7 @@ export default function TodayAppointmentsTaple() {
           email: (item.patient_phone as string) || t("doctorDashPages.todayAppointments.patientPhone", locale),
           age: "--",
           status: item.status as string,
-          time: `${item.booking_from} - ${item.booking_to}`,
+          time: `${formatTime12Hour(item.booking_from as string, locale)} - ${formatTime12Hour(item.booking_to as string, locale)}`,
           type: t("appointmentsPage.visit", locale) || (isRtl ? "زيارة" : "Visit"),
           date: bDate,
           rawStatus: item.status as string,

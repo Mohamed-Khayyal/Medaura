@@ -30,12 +30,13 @@ async function getAdminStats() {
 
 const stats = (locale: string, statsData: StatsData) => [
   {
-    value: `+${statsData.totalPatients}`,
+    value: statsData.totalPatients > 0 ? `+${statsData.totalPatients}` : "—",
     label: t("hero.stats.happyPatients", locale),
     icon: <Users className="h-5 w-5" />,
   },
   {
-    value: `+${statsData.totalDoctors}`,
+    // totalMedicalUsers = verified doctors + verified staff (clinic doctors)
+    value: statsData.totalMedicalUsers > 0 ? `+${statsData.totalMedicalUsers}` : "—",
     label: t("hero.stats.licensedDoctors", locale),
     icon: <Stethoscope className="h-5 w-5" />,
   },
@@ -88,15 +89,24 @@ export default function Hero() {
     totalClinics: 0,
     totalMedicalUsers: 0,
   });
+  const [statsLoaded, setStatsLoaded] = useState(false);
 
   useEffect(() => {
     async function loadStats() {
       try {
         const data = await getAdminStats();
-
-        setStatsData(data.data);
+        // Backend shape: { status: "success", data: { totalDoctors, totalStaff, totalPatients, totalMedicalUsers, totalClinics } }
+        const payload = data?.data ?? data;
+        setStatsData({
+          totalDoctors: payload?.totalDoctors ?? 0,
+          totalPatients: payload?.totalPatients ?? 0,
+          totalClinics: payload?.totalClinics ?? 0,
+          totalMedicalUsers: payload?.totalMedicalUsers ?? (payload?.totalDoctors ?? 0) + (payload?.totalStaff ?? 0),
+        });
       } catch (error) {
         console.log("Stats fetch error:", error);
+      } finally {
+        setStatsLoaded(true);
       }
     }
 
@@ -230,7 +240,11 @@ export default function Hero() {
                 {stat.icon}
               </span>
               <div>
-                <p className="text-lg font-bold text-[#0f1a4f]">{stat.value}</p>
+                {!statsLoaded ? (
+                  <div className="h-5 w-12 animate-pulse rounded bg-[#d6e0ff]" />
+                ) : (
+                  <p className="text-lg font-bold text-[#0f1a4f]">{stat.value}</p>
+                )}
                 <p className="text-xs text-[#5c6f9f]">{stat.label}</p>
               </div>
             </motion.div>

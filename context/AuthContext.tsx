@@ -110,6 +110,7 @@ async function readAuthResponse(response: Response, fallbackMessage: string) {
       email: result.user.email,
       user_type: result.user.role,
       profile: result.user.profile,
+      ...(typeof result.user.photo === "string" ? { photo: result.user.photo } : {}),
     };
   } else {
     throw new Error("Unexpected response format");

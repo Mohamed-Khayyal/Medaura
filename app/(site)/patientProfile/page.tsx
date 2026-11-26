@@ -17,6 +17,7 @@ import {
   EyeOff,
 } from "lucide-react";
 import Swal from "sweetalert2";
+import { formatTime12Hour } from "@/lib/utils";
 
 type ProfileForm = {
   full_name: string;
@@ -277,7 +278,7 @@ export default function PatientProfilePage() {
     { id: "followup", label: translations[locale].navFollowup },
   ];
 
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, refreshAuth } = useAuth();
   const profileApi = useApi<ProfileResponse>();
   const bookingsApi = useApi<BookingResponse[]>();
   const prescriptionsApi = useApi<Prescription[]>();
@@ -409,7 +410,7 @@ export default function PatientProfilePage() {
             ? (isRtl ? "حجز مؤكد" : "Confirmed Booking")
             : (isRtl ? "حجز جديد" : "New Booking"),
       subtitle: booking.booking_date,
-      extra: booking.booking_from,
+      extra: formatTime12Hour(booking.booking_from, locale),
       status: booking.status,
     }));
   }, [bookings, isRtl]);
@@ -599,6 +600,7 @@ export default function PatientProfilePage() {
       setPhotoState("success");
       setPhotoFile(null);
       profileApi.execute("/api/user/me");
+      await refreshAuth();
     } catch (error: unknown) {
       setPhotoState("error");
       setPhotoError(
@@ -1229,7 +1231,7 @@ export default function PatientProfilePage() {
                               {bookingDate || "—"}
                             </p>
                             <p className="mt-1 text-sm text-slate-600">
-                              {translations[locale].time}: {booking.booking_from}
+                              {translations[locale].time}: {formatTime12Hour(booking.booking_from, locale)}
                             </p>
                           </div>
                           <span className="rounded-full bg-slate-900 px-3 py-1 text-xs font-semibold text-white uppercase tracking-[0.12em]">

@@ -108,9 +108,10 @@ async function deleteStaffById(id: string | number): Promise<void> {
 
 function formatRefreshTime(date: Date, locale: string) {
   return date.toLocaleTimeString(locale === "ar" ? "ar-EG" : "en-US", {
-    hour: "2-digit",
+    hour: "numeric",
     minute: "2-digit",
     second: "2-digit",
+    hour12: true,
   });
 }
 

@@ -16,9 +16,22 @@ export async function GET(request: NextRequest) {
 
     const response = await doctorService.list(query);
 
+    // Normalize doctors array: ensure every entry has an `id` field for the frontend
+    const rawDoctors: any[] = Array.isArray((response as any).doctors)
+      ? (response as any).doctors
+      : Array.isArray(response)
+      ? response
+      : [];
+
+    const doctors = rawDoctors.map((d: any) => ({
+      ...d,
+      id: d.id ?? d.doctor_id ?? d.staff_id,
+    }));
+
     return NextResponse.json({
       success: true,
-      ...response,
+      results: doctors.length,
+      doctors,
     });
   } catch (error: any) {
     console.error("GET /api/doctors error:", error);

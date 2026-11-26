@@ -21,6 +21,8 @@ interface Notification {
   created_at?: string;
 }
 
+import { formatTime12Hour, formatNotificationMessage } from "@/lib/utils";
+
 function formatDate(dateStr?: string) {
   if (!dateStr) return "";
   try {
@@ -29,8 +31,9 @@ function formatDate(dateStr?: string) {
       year: "numeric",
       month: "short",
       day: "numeric",
-      hour: "2-digit",
+      hour: "numeric",
       minute: "2-digit",
+      hour12: true,
     });
   } catch {
     return "";
@@ -339,7 +342,7 @@ function NotificationCard({
                 {notif.title}
               </p>
               <p className="mt-1 text-[13px] leading-5 text-gray-500">
-                {notif.message}
+                {formatNotificationMessage(notif.message)}
               </p>
             </div>
 

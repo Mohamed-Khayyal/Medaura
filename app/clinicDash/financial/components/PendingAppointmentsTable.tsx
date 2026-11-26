@@ -3,6 +3,7 @@
 import { CheckCircle, XCircle, Clock, RotateCcw } from "lucide-react";
 import { formatCurrency } from "../lib/calculations";
 import type { AppointmentRecord } from "../lib/types";
+import { formatTime12Hour } from "@/lib/utils";
 
 interface Props {
   records: AppointmentRecord[];
@@ -93,7 +94,7 @@ export default function PendingAppointmentsTable({ records, loading, onMarkPayme
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div>
                   <p className="text-(--text-secondary) mb-0.5">التاريخ</p>
-                  <p className="font-medium text-(--text-primary)">{r.bookingDate} {r.bookingFrom !== "—" ? r.bookingFrom : ""}</p>
+                  <p className="font-medium text-(--text-primary)">{r.bookingDate} {r.bookingFrom !== "—" ? formatTime12Hour(r.bookingFrom, "ar") : ""}</p>
                 </div>
                 <div>
                   <p className="text-(--text-secondary) mb-0.5">رسوم الكشف</p>
@@ -180,7 +181,7 @@ export default function PendingAppointmentsTable({ records, loading, onMarkPayme
                 <td className="py-3 px-3 text-(--text-secondary) tabular-nums text-xs">
                   {r.bookingDate}
                   {r.bookingFrom !== "—" && (
-                    <span className="block text-[10px] opacity-60">{r.bookingFrom}</span>
+                    <span className="block text-[10px] opacity-60">{formatTime12Hour(r.bookingFrom, "ar")}</span>
                   )}
                 </td>
                 {/* Fee */}

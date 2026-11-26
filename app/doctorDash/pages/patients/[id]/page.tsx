@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { formatTime12Hour } from "@/lib/utils";
 import {
   ArrowRight,
   X,
@@ -434,7 +435,7 @@ export default function PatientDetails() {
                   <Clock size={14} className="text-(--text-secondary)" />
                 </div>
                 <p className="font-semibold text-(--text-primary)">
-                  {booking.booking_from} — {booking.booking_to}
+                  {formatTime12Hour(booking.booking_from, "ar")} — {formatTime12Hour(booking.booking_to, "ar")}
                 </p>
               </div>
             </div>

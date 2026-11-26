@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { formatCurrency } from "../lib/calculations";
 import type { AppointmentRecord, DoctorFinancialRecord } from "../lib/types";
+import { formatTime12Hour } from "@/lib/utils";
 
 interface Props {
   records: AppointmentRecord[];
@@ -201,7 +202,7 @@ export default function DoctorEarningsTable({
               <div className="grid grid-cols-2 gap-y-3 gap-x-4 text-xs">
                 <div>
                   <p className="text-(--text-secondary) mb-0.5">التاريخ</p>
-                  <p className="font-medium text-(--text-primary)">{rec.bookingDate} {rec.bookingFrom !== "—" ? rec.bookingFrom : ""}</p>
+                  <p className="font-medium text-(--text-primary)">{rec.bookingDate} {rec.bookingFrom !== "—" ? formatTime12Hour(rec.bookingFrom, "ar") : ""}</p>
                 </div>
                 <div>
                   <p className="text-(--text-secondary) mb-0.5">سعر الاستشارة</p>
@@ -294,7 +295,7 @@ export default function DoctorEarningsTable({
                         <div className="flex items-center gap-2 text-xs text-(--text-secondary) mt-1">
                           <span className="flex items-center gap-1">
                             <Clock size={10} />
-                            {rec.bookingDate} {rec.bookingFrom !== "—" ? `• ${rec.bookingFrom}` : ""}
+                            {rec.bookingDate} {rec.bookingFrom !== "—" ? `• ${formatTime12Hour(rec.bookingFrom, "ar")}` : ""}
                           </span>
                           <span className="opacity-50">|</span>
                           <span className={`font-semibold ${isPaid ? "text-emerald-500" : "text-(--text-secondary)"}`}>

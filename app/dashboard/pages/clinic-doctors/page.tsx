@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
+import { formatTime12Hour } from "@/lib/utils";
 import {
   Search,
   Hospital,
@@ -438,7 +439,7 @@ export default function ClinicDoctorsPage() {
                       {/* Work Hours */}
                       <div className="flex items-center justify-between border-t border-(--card-border) pt-2">
                         <span className="font-bold text-(--text-primary) dir-ltr">
-                          {doc.work_from || "00:00"} – {doc.work_to || "00:00"}
+                          {doc.work_from ? formatTime12Hour(doc.work_from, "ar") : "—"} – {doc.work_to ? formatTime12Hour(doc.work_to, "ar") : "—"}
                         </span>
                         <div className="flex items-center gap-1.5">
                           <span>مواعيد الكشف</span>

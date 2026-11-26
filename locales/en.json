@@ -17,7 +17,7 @@
     "title": "Your health starts here",
     "subtitle": "Book the best doctors in minutes",
     "description": "Find the right specialty, compare top-rated doctors, and schedule your next visit in a fast and simple way.",
-    "aiDescription": "Register now in Medaura and benefit from AI in the medical field. Describe your symptoms to our smart assistant, and let us guide you to the right doctor.",
+    "aiDescription": "Register now in Medaura to find the right specialty, compare doctors, and book care with confidence.",
     "bookNow": "Book now",
     "exploreSpecialties": "Explore specialties",
     "stats": {
@@ -254,11 +254,12 @@
     "next": "Next",
     "pageOf": "Page {page} of {total}",
     "rateDoctor": "Rate this doctor",
-    "rateStaff": "Rate this staff member",
+    "rateStaff": "Rate this doctor",
     "commentPlaceholder": "Write your comment (optional)",
     "selectRating": "Please select a rating from 1 to 5.",
     "ratingSubmitted": "Rating submitted successfully.",
     "submitRatingError": "Failed to submit rating.",
+    "rateOnlyBookedDoctor": "You can rate only doctors you previously booked with.",
     "submitting": "Submitting...",
     "submitRating": "Submit rating"
   },

@@ -7,6 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { getDashboardPathByUserType } from "@/lib/utils/redirect";
 import { t } from "@/i18n";
+import { formatNotificationMessage } from "@/lib/utils";
 import {
   Bell,
   ChevronRight,
@@ -184,7 +185,14 @@ const Navbar: FC = () => {
 
   // ── user photo ────────────────────────────────────────────
   const userPhoto: string | undefined =
-    (user as any)?.photo || (user?.profile as any)?.photo || undefined;
+    (user as any)?.photo?.trim() || (user?.profile as any)?.photo?.trim() || undefined;
+  const [avatarLoadError, setAvatarLoadError] = useState(false);
+
+  useEffect(() => {
+    setAvatarLoadError(false);
+  }, [userPhoto]);
+
+  const showUserAvatar = Boolean(userPhoto && !avatarLoadError);
 
   const userName: string =
     (user?.profile as any)?.full_name || user?.email || "";
@@ -348,7 +356,7 @@ const Navbar: FC = () => {
                                   {notif.title}
                                 </p>
                                 <p className="mt-0.5 line-clamp-2 text-[12px] text-gray-500">
-                                  {notif.message}
+                                  {formatNotificationMessage(notif.message, locale)}
                                 </p>
                               </div>
                             </div>
@@ -384,12 +392,11 @@ const Navbar: FC = () => {
                   className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border-2 border-[#c5d0f0] bg-white transition hover:border-[#0f1a4f]"
                   aria-label="قائمة المستخدم"
                 >
-                  {userPhoto ? (
-                    <Image
+                  {showUserAvatar ? (
+                    <img
                       src={userPhoto}
                       alt="avatar"
-                      width={36}
-                      height={36}
+                      onError={() => setAvatarLoadError(true)}
                       className="h-full w-full rounded-full object-cover"
                     />
                   ) : (
@@ -405,12 +412,11 @@ const Navbar: FC = () => {
                     {/* User info card */}
                     <div className="flex items-center gap-3 border-b border-zinc-100 bg-[#f5f7ff] px-4 py-3">
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-[#c5d0f0] bg-white">
-                        {userPhoto ? (
-                          <Image
+                        {showUserAvatar ? (
+                          <img
                             src={userPhoto}
                             alt="avatar"
-                            width={36}
-                            height={36}
+                            onError={() => setAvatarLoadError(true)}
                             className="h-full w-full object-cover"
                           />
                         ) : (
@@ -551,7 +557,16 @@ const Navbar: FC = () => {
                 onClick={() => setMobileOpen(false)}
                 className="flex items-center gap-3 rounded-xl px-4 py-2.5 text-[15px] font-medium text-[#0f1a4f] transition hover:bg-[#d9e3ff]"
               >
-                <User className="h-5 w-5" strokeWidth={1.8} />
+                {showUserAvatar ? (
+                  <img
+                    src={userPhoto}
+                    alt="avatar"
+                    onError={() => setAvatarLoadError(true)}
+                    className="h-6 w-6 rounded-full object-cover"
+                  />
+                ) : (
+                  <User className="h-5 w-5" strokeWidth={1.8} />
+                )}
                 {t("nav.profile", locale)}
               </Link>
               <button

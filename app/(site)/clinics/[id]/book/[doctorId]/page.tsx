@@ -20,6 +20,7 @@ import ValidationModal from "@/components/booking/ValidationModal";
 import { t } from "@/i18n";
 import Swal from "sweetalert2";
 import { useAuth } from "@/context/AuthContext";
+import { formatTime12Hour } from "@/lib/utils";
 
 const RATINGS_PAGE_SIZE = 4;
 
@@ -985,7 +986,7 @@ export default function BookingPage() {
                           className="flex items-center gap-2 rounded-xl border border-[#dce5f6] px-4 py-2 text-sm font-semibold text-gray-500 transition-colors hover:bg-[#f4f7ff]"
                         >
                           <Clock className="w-4 h-4 text-[#001A6E]" />
-                          {selectedTime ? formatTo12Hour(selectedTime) : t("booking.timePlaceholder", locale)}
+                          {selectedTime ? formatTime12Hour(selectedTime, locale) : t("booking.timePlaceholder", locale)}
                         </button>
                       </div>
 

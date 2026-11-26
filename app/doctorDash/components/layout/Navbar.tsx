@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useLocale } from "@/lib/hooks";
 import { t } from "@/i18n";
+import { formatNotificationMessage } from "@/lib/utils";
 
 function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
   const { logout, user, isAuthenticated } = useAuth();
@@ -52,7 +53,7 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
             return {
               id: String(item.id),
               title: item.title || "Notification",
-              body: item.message || "",
+              body: formatNotificationMessage(item.message || "", locale),
               time: timeStr || "now",
               read: Boolean(item.read),
               avatar: "/images/blank-profile-picture.png"

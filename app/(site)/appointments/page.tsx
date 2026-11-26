@@ -126,6 +126,7 @@ function formatTimeLabel(dateValue?: string, timeValue?: string) {
     return parsed.toLocaleTimeString(ARABIC_LOCALE, {
       hour: "numeric",
       minute: "2-digit",
+      hour12: true,
     });
   }
 
@@ -141,6 +142,7 @@ function formatTimeLabel(dateValue?: string, timeValue?: string) {
   return base.toLocaleTimeString(ARABIC_LOCALE, {
     hour: "numeric",
     minute: "2-digit",
+    hour12: true,
   });
 }
 

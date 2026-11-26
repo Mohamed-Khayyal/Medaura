@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { CalendarCheck, X, Wifi, WifiOff } from "lucide-react";
 import type { LiveBookingEvent } from "../../hooks/useBookingStream";
+import { formatTime12Hour } from "@/lib/utils";
 
 interface NewBookingToastProps {
   /** Latest booking event that just arrived */
@@ -37,8 +38,9 @@ export function NewBookingToast({ booking, onDismiss }: NewBookingToastProps) {
 
   const formattedTime = booking.timestamp
     ? new Date(booking.timestamp).toLocaleTimeString("ar-EG", {
-        hour: "2-digit",
+        hour: "numeric",
         minute: "2-digit",
+        hour12: true,
       })
     : "";
 
@@ -75,7 +77,7 @@ export function NewBookingToast({ booking, onDismiss }: NewBookingToastProps) {
               ? `تم الحجز بواسطة ${booking.patient_name}`
               : "وصل حجز جديد للعيادة"}
             {booking.booking_date ? ` · ${booking.booking_date}` : ""}
-            {booking.booking_from ? ` ${booking.booking_from}` : ""}
+            {booking.booking_from ? ` ${formatTime12Hour(booking.booking_from, "ar")}` : ""}
           </p>
           {formattedTime && (
             <p className="text-[11px] text-slate-400 mt-1">{formattedTime}</p>

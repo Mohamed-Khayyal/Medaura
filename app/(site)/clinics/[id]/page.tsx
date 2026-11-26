@@ -7,6 +7,7 @@ import Image from "next/image";
 import DoctorCard from "@/components/home/doctorCard/doctorCard";
 import { t } from "@/i18n";
 import { useAuth } from "@/context/AuthContext";
+import { formatTime12Hour } from "@/lib/utils";
 
 const API_BASE_URL = "/api";
 const RATINGS_PAGE_SIZE = 4;
@@ -242,12 +243,12 @@ function normalizeDoctors(value: unknown): ClinicDoctor[] {
   return doctors;
 }
 
-function getClinicHours(doctors: ClinicDoctor[]) {
+function getClinicHours(doctors: ClinicDoctor[], locale: string = "en") {
   const withHours = doctors.find(
     (doctor) => doctor.work_from && doctor.work_to,
   );
   if (!withHours) return "";
-  return `${withHours.work_from} - ${withHours.work_to}`;
+  return `${formatTime12Hour(withHours.work_from, locale)} - ${formatTime12Hour(withHours.work_to, locale)}`;
 }
 
 function getSafeRating(value: unknown) {
