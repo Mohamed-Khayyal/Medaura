@@ -146,7 +146,7 @@ function Navbar({ onToggleSidebar }: { onToggleSidebar: () => void }) {
               <div className="flex items-center gap-2">
                 <div className="relative h-8 w-8 shrink-0">
                   <Image
-                    src="/images/Logo1.png"
+                    src="/images/brand-mark.svg"
                     alt="Medaura logo"
                     fill
                     sizes="32px"

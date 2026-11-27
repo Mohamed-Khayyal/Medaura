@@ -7,7 +7,7 @@ import WhatClientSay from "@/components/home/whatClientSay";
 
 export default function Home() {
   return (
-    <main className="space-y-16 pb-16 pt-6 sm:pt-8">
+    <main className="space-y-16 pb-16">
       <Hero />
       <Specialties />
       <HowItWorks />

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" fill="none" role="img" aria-labelledby="title">
+  <title>Medaura</title>
+  <defs>
+    <linearGradient id="brand" x1="12" y1="10" x2="86" y2="90" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#21C7F3"/>
+      <stop offset="1" stop-color="#1C3FAA"/>
+    </linearGradient>
+  </defs>
+  <circle cx="48" cy="48" r="42" fill="url(#brand)"/>
+  <circle cx="48" cy="48" r="27" stroke="white" stroke-opacity=".7" stroke-width="3"/>
+  <path d="M48 30v36M30 48h36" stroke="white" stroke-linecap="round" stroke-width="8"/>
+  <circle cx="48" cy="48" r="8" fill="#DDF8FF"/>
+</svg>

@@ -1,8 +1,8 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { Star } from "lucide-react";
-import { useEffect, useState } from "react";
 import { t } from "@/i18n";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
@@ -84,11 +84,24 @@ export default function DoctorCard({
       whileHover={{ y: -6 }}
       className="rounded-3xl border border-[#d9e3ff] bg-white p-4 shadow-[0_10px_25px_rgba(20,61,180,0.08)] transition hover:shadow-[0_16px_32px_rgba(20,61,180,0.14)]"
     >
-      <div className="mb-4 overflow-hidden rounded-2xl">
-        <motion.div
-          whileHover={{ scale: 1.04 }}
-          transition={{ duration: 0.5 }}
+      {profileHref ? (
+        <Link
+          href={profileHref}
+          aria-label={`${locale === "ar" ? "عرض صفحة" : "View"} ${name}`}
+          className="mb-4 block overflow-hidden rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1c3faa]"
         >
+          <motion.div whileHover={{ scale: 1.04 }} transition={{ duration: 0.5 }}>
+            <Image
+              src={imageSrc?.trim() || DOCTOR_FALLBACK_IMAGE}
+              alt={name}
+              width={640}
+              height={420}
+              className="h-52 w-full object-cover"
+            />
+          </motion.div>
+        </Link>
+      ) : (
+        <div className="mb-4 overflow-hidden rounded-2xl">
           <Image
             src={imageSrc?.trim() || DOCTOR_FALLBACK_IMAGE}
             alt={name}
@@ -96,8 +109,8 @@ export default function DoctorCard({
             height={420}
             className="h-52 w-full object-cover"
           />
-        </motion.div>
-      </div>
+        </div>
+      )}
 
       <h4 className="text-base font-extrabold text-[#001a6e]">{name}</h4>
 

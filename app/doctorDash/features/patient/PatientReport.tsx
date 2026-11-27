@@ -223,7 +223,7 @@ export default function ClinicsList({
                     </div>
 
                     <div className="w-12 h-12 bg-white flex items-center justify-center border border-gray-200 rounded-lg p-1 shrink-0">
-                      <img src="/images/LOGO.png" alt="Medaura Logo" className="w-full h-full object-contain" />
+                      <img src="/images/brand-mark.svg" alt="Medaura Logo" className="w-full h-full object-contain" />
                     </div>
                   </div>
 

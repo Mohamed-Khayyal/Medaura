@@ -67,7 +67,7 @@ function normalizeClinic(clinic: ApiClinic, index: number): ClinicCardData | nul
   const photo =
     typeof clinic.photo === "string" && clinic.photo.trim()
       ? clinic.photo
-      : "/images/clinic1.png";
+      : "/images/clinic 1.jpg";
 
   return {
     clinic_id: clinicId,

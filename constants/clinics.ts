@@ -45,15 +45,15 @@ export const allClinics: Clinic[] = Array.from({ length: 18 }).map(
     if (type === 0) {
       name = "Heart Medical Center";
       specialties = ["Cardiology", "Heart Surgery", "Catheterization"];
-      image = "/images/clinic1.png";
+      image = "/images/clinic 1.jpg";
     } else if (type === 1) {
       name = "Al Noor Specialized Hospital";
       specialties = ["Internal Medicine", "General Surgery", "Emergency"];
-      image = "/images/clinic2.png";
+      image = "/images/clinic 2.jpg";
     } else {
       name = "Advanced Orthopedics Clinic";
       specialties = ["Orthopedics", "Physical Therapy", "Rheumatology"];
-      image = "/images/clinic3.png";
+      image = "/images/clinic 3.jpg";
     }
 
     return {

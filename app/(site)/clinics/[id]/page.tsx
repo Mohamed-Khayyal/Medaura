@@ -170,7 +170,7 @@ function normalizeClinic(
   const photo =
     typeof value.photo === "string" && value.photo.trim()
       ? value.photo
-      : "/images/clinic1.png";
+      : "/images/clinic 1.jpg";
   const totalRatings = toNumber(
     value.total_ratings ?? value.ratings_count,
     0,

@@ -677,7 +677,7 @@ export default function BookingPage() {
     clinicProfile?.photo ||
     clinicProfile?.image ||
     fallbackClinic?.image ||
-    "/images/clinic1.png";
+    "/images/clinic 1.jpg";
   const staffImage =
     staff?.photo ||
     fallbackClinic?.doctors?.[0]?.imageSrc ||

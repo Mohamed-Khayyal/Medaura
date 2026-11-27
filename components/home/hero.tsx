@@ -61,28 +61,22 @@ const itemVariants: Variants = {
   show: { opacity: 1, y: 0, transition: { duration: 0.4 } },
 };
 
-const titleVariants: Variants = {
-  hidden: { opacity: 0, x: -40 },
-  show: { opacity: 1, x: 0, transition: { duration: 0.5 } },
-};
-
-const descVariants: Variants = {
-  hidden: { opacity: 0, x: -30 },
-  show: { opacity: 1, x: 0, transition: { duration: 0.5 } },
-};
-
-const imageVariants: Variants = {
-  hidden: { opacity: 0, x: 80, scale: 1.05 },
-  show: {
-    opacity: 1,
-    x: 0,
-    scale: 1,
-    transition: { duration: 0.9, ease: "easeOut" },
-  },
-};
-
 export default function Hero() {
   const locale = useLocale();
+  const isRtl = locale === "ar";
+  const contentVariants: Variants = {
+    hidden: { opacity: 0, x: isRtl ? 40 : -40 },
+    show: { opacity: 1, x: 0, transition: { duration: 0.5 } },
+  };
+  const imageVariants: Variants = {
+    hidden: { opacity: 0, x: isRtl ? -80 : 80, scale: 1.05 },
+    show: {
+      opacity: 1,
+      x: 0,
+      scale: 1,
+      transition: { duration: 0.9, ease: "easeOut" },
+    },
+  };
   const [statsData, setStatsData] = useState<StatsData>({
     totalDoctors: 0,
     totalPatients: 0,
@@ -118,6 +112,7 @@ export default function Hero() {
       initial="hidden"
       animate="show"
       variants={containerVariants}
+      dir={isRtl ? "rtl" : "ltr"}
       className="relative overflow-hidden rounded-4xl bg-[#f4f7ff] px-4 pb-8 pt-20 sm:px-8 sm:pt-24"
     >
       {/* Animated Background Glow */}
@@ -129,16 +124,6 @@ export default function Hero() {
         transition={{ duration: 6, repeat: Infinity }}
         className="absolute -top-40 left-1/2 w-96 h-96 sm:w-[500px] sm:h-[500px] -translate-x-1/2 rounded-full bg-[#1c3faa]/10 blur-3xl"
       />
-
-      <div className="absolute inset-0 z-0">
-        <Image
-          src="/images/landingbackground.png"
-          alt=""
-          fill
-          priority
-          className="object-cover object-center opacity-20"
-        />
-      </div>
 
       <div className="relative z-10 mx-auto max-w-6xl">
         <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
@@ -152,7 +137,7 @@ export default function Hero() {
             </motion.p>
 
             <motion.div
-              variants={descVariants}
+              variants={contentVariants}
               className="max-w-xl min-h-[40px] text-base font-bold leading-7 text-[#0f1a4f] sm:text-lg"
             >
               <TypeAnimation
@@ -165,7 +150,7 @@ export default function Hero() {
             </motion.div>
 
             <motion.h1
-              variants={titleVariants}
+              variants={contentVariants}
               className="text-3xl font-extrabold leading-tight sm:text-4xl lg:text-5xl"
             >
               {t("hero.title", locale)}
@@ -175,7 +160,7 @@ export default function Hero() {
             </motion.h1>
 
             <motion.p
-              variants={descVariants}
+              variants={contentVariants}
               className="max-w-xl text-sm leading-7 text-[#4a5b88] sm:text-base"
             >
               {t("hero.description", locale)}
@@ -217,7 +202,7 @@ export default function Hero() {
                   alt="Doctor"
                   width={640}
                   height={780}
-                  className="h-80 sm:h-96 md:h-[420px] w-full object-cover"
+                  className="h-80 w-full bg-white object-contain sm:h-96 md:h-[420px]"
                 />
               </div>
             </motion.div>

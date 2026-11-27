@@ -36,7 +36,7 @@ export default function Footer() {
           <div className="flex items-center gap-2 mb-4">
             <div className="relative h-10 w-10 shrink-0">
               <Image
-                src="/images/Logo1.png"
+                src="/images/brand-mark.svg"
                 alt="Medaura logo"
                 fill
                 sizes="40px"

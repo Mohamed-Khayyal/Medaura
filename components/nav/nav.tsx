@@ -201,10 +201,11 @@ const Navbar: FC = () => {
   // IMPORTANT: dir="ltr" on the nav so it always renders left-to-right
   // regardless of the page's RTL direction.
   return (
-    <nav
-      dir="ltr"
-      className="fixed left-0 top-0 z-50 w-full border-b border-[#d9e3ff] bg-[#edf2ff]"
-    >
+    <>
+      <nav
+        dir="ltr"
+        className="fixed left-0 top-0 z-50 w-full bg-[#edf2ff]"
+      >
       {/* ── Main bar ── */}
       <div className="mx-auto flex max-w-[1400px] items-center justify-between px-4 py-3 sm:px-6 lg:px-12 xl:px-24">
 
@@ -212,7 +213,7 @@ const Navbar: FC = () => {
         <Link href="/" className="flex shrink-0 items-center gap-2">
           <div className="relative h-10 w-10 shrink-0">
             <Image
-              src="/images/Logo1.png"
+              src="/images/brand-mark.svg"
               alt="Medaura logo"
               fill
               sizes="40px"
@@ -584,7 +585,9 @@ const Navbar: FC = () => {
           )}
         </div>
       </div>
-    </nav>
+      </nav>
+      <div aria-hidden="true" className="h-20" />
+    </>
   );
 };
 
